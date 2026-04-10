@@ -8,50 +8,33 @@ use App\Repositories\Interfaces\OrderRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-/**
- * OrderService
- *
- * Handles the order creation process, including:
- * - Generating order numbers
- * - Creating order + line items in a transaction
- * - Reducing product stock
- * - Clearing the cart after successful order
- */
 class OrderService
 {
     public function __construct(
-        private OrderRepositoryInterface $orderRepository,
-        private CartService $cartService,
-        private ProductService $productService,
+        private readonly OrderRepositoryInterface $orderRepository,
+        private readonly CartService $cartService,
+        private readonly ProductService $productService,
     ) {}
 
-    /**
-     * Create a new order from the current cart.
-     *
-     * @param  array $checkoutData  Validated data from CheckoutRequest
-     * @param  int|null $userId     Auth user ID (null for guest checkout)
-     * @return Order                The newly created order
-     * @throws \Exception           If cart is empty or stock is insufficient
-     */
     public function createOrder(array $checkoutData, ?int $userId = null): Order
     {
         $cartSummary = $this->cartService->getSummary();
 
         if (empty($cartSummary['items'])) {
-            throw new \Exception('Cannot create order from an empty cart.');
+            throw new \Exception('لا يمكن إتمام الطلب والسلة فارغة.');
         }
 
-        // Validate stock availability before creating order
-        foreach ($cartSummary['items'] as $productId => $item) {
-            if (!$this->productService->checkStock($productId, $item['quantity'])) {
-                throw new \Exception("Insufficient stock for: {$item['name']}");
+        // 1. التأكد من المخزون قبل بدء المعاملة (Transaction)
+        foreach ($cartSummary['items'] as $itemKey => $item) {
+            // نمرر الـ id الحقيقي والـ variant_id
+            if (!$this->productService->checkStock((int)$item['id'], (int)$item['quantity'], $item['variant_id'] ?? null)) {
+                throw new \Exception("المخزون غير كافٍ للمنتج: {$item['name']}");
             }
         }
 
-        // Wrap in a DB transaction — if anything fails, everything rolls back
         return DB::transaction(function () use ($checkoutData, $cartSummary, $userId) {
 
-            // 1. Create the order record
+            // 2. إنشاء سجل الطلب الأساسي
             $order = $this->orderRepository->create([
                 'user_id'         => $userId,
                 'order_number'    => $this->generateOrderNumber(),
@@ -59,47 +42,45 @@ class OrderService
                 'subtotal'        => $cartSummary['subtotal'],
                 'tax_amount'      => $cartSummary['tax'],
                 'shipping_amount' => $cartSummary['shipping'],
-                'discount_amount' => 0,
                 'total_amount'    => $cartSummary['total'],
                 'shipping_name'   => $checkoutData['name'],
                 'shipping_email'  => $checkoutData['email'],
                 'shipping_phone'  => $checkoutData['phone'] ?? null,
                 'shipping_address'=> $checkoutData['address'],
                 'shipping_city'   => $checkoutData['city'],
-                'shipping_state'  => $checkoutData['state'] ?? null,
                 'shipping_zip'    => $checkoutData['zip'],
-                'shipping_country'=> $checkoutData['country'] ?? 'US',
-                'notes'           => $checkoutData['notes'] ?? null,
-                'payment_method'  => $checkoutData['payment_method'] ?? 'card',
+                'shipping_country'=> $checkoutData['country'] ?? 'EG',
+                'payment_method'  => $checkoutData['payment_method'] ?? 'cod',
                 'payment_status'  => 'unpaid',
             ]);
 
-            // 2. Create order line items
-            foreach ($cartSummary['items'] as $productId => $item) {
+            // 3. إنشاء تفاصيل الطلب وخصم المخزون
+            foreach ($cartSummary['items'] as $itemKey => $item) {
                 OrderItem::create([
                     'order_id'     => $order->id,
-                    'product_id'   => $productId,
-                    'product_name' => $item['name'],
+                    'product_id'   => $item['id'],
+                    'variant_id'   => $item['variant_id'] ?? null, // تخزين الـ variant_id مهم جداً
+                    'product_name' => $item['name'] . ($item['variant_name'] ? " ({$item['variant_name']})" : ""),
                     'quantity'     => $item['quantity'],
                     'unit_price'   => $item['price'],
                     'total_price'  => $item['subtotal'],
                 ]);
 
-                // 3. Reduce stock for each product
-                $this->productService->decreaseStock($productId, $item['quantity']);
+                // خصم المخزون من النسخة المحددة
+                $this->productService->decreaseStock(
+                    (int) $item['id'], 
+                    (int) $item['quantity'], 
+                    $item['variant_id'] ?? null
+                );
             }
 
-            // 4. Clear the cart
+            // 4. تفريغ السلة
             $this->cartService->clearCart();
 
             return $order;
         });
     }
 
-    /**
-     * Generate a unique, human-readable order number.
-     * Format: ORD-2024-XXXXXXXX
-     */
     private function generateOrderNumber(): string
     {
         do {
@@ -109,9 +90,6 @@ class OrderService
         return $number;
     }
 
-    /**
-     * Get order by its number (for confirmation page).
-     */
     public function getOrderByNumber(string $orderNumber): ?Order
     {
         return $this->orderRepository->findByOrderNumber($orderNumber);

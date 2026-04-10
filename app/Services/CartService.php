@@ -1,9 +1,13 @@
 <?php
 
 namespace App\Services;
+namespace App\Services;
 
 use App\Models\Product;
+use App\Models\ProductVariant; // أضفنا المودل الجديد
 use Illuminate\Support\Facades\Session;
+
+
 
 /**
  * CartService
@@ -24,106 +28,143 @@ use Illuminate\Support\Facades\Session;
  *   ]
  * ]
  */
+
+
+
 class CartService
 {
     private const SESSION_KEY = 'cart';
 
-    /**
-     * Get the full cart array from session.
-     */
     public function getCart(): array
     {
         return Session::get(self::SESSION_KEY, ['items' => []]);
     }
 
-    /**
-     * Get all cart items as a flat array.
-     */
     public function getItems(): array
     {
         return $this->getCart()['items'];
     }
 
     /**
-     * Add a product to the cart or increase its quantity.
-     *
-     * @throws \Exception if product not found or out of stock
+     * تعديل: إضافة الـ VariantId لأن العميل يشتري نسخة محددة (مثل مقاس 42)
      */
-    public function addItem(int $productId, int $quantity = 1): array
+    public function addItem(int $productId, int $quantity = 1, ?int $variantId = null): array
     {
         $product = Product::find($productId);
 
-        if (!$product || !$product->is_active) {
-            throw new \Exception('Product not found.');
+        // التأكد من وجود المنتج وأنه نشط (Status من جدول المنتجات)
+        if (!$product || $product->status !== 'active') {
+            throw new \Exception('المنتج غير متوفر حالياً.');
         }
 
-        if ($product->stock_quantity < $quantity) {
-            throw new \Exception("Only {$product->stock_quantity} units available.");
+        // إذا كان المنتج له Variants، يجب اختيار واحد
+        $variant = null;
+        if ($variantId) {
+            $variant = ProductVariant::find($variantId);
+        } else {
+            // إذا لم يرسل variantId، نأخذ أول نسخة متوفرة كمثال (أو النسخة الافتراضية)
+            $variant = $product->variants()->first();
+        }
+
+        if (!$variant) {
+            throw new \Exception('برجاء اختيار النوع (المقاس/اللون) المطلوب.');
+        }
+
+        // التحقق من المخزون من جدول الـ Variants وليس الـ Products
+        if ($variant->stock_quantity < $quantity) {
+            throw new \Exception("عذراً، المتوفر فقط {$variant->stock_quantity} قطع.");
         }
 
         $cart = $this->getCart();
-        $price = $product->effective_price; // Uses sale_price if available
+        
+        // حساب السعر: نستخدم سعر الـ Variant إذا وُجد (Price Override) وإلا سعر المنتج الأساسي
+        $unitPrice = $variant->price_override ?? $product->discount_price ?? $product->base_price;
+        
+        // مفتاح السلة يكون مزيج من المنتج والنسخة لتمييزهم
+        $cartKey = $productId . '_' . ($variantId ?? 'default');
 
-        if (isset($cart['items'][$productId])) {
-            // Check stock including existing cart quantity
-            $newQty = $cart['items'][$productId]['quantity'] + $quantity;
-            if ($product->stock_quantity < $newQty) {
-                throw new \Exception("Only {$product->stock_quantity} units available in total.");
+        if (isset($cart['items'][$cartKey])) {
+            $newQty = $cart['items'][$cartKey]['quantity'] + $quantity;
+            if ($variant->stock_quantity < $newQty) {
+                throw new \Exception("لا يمكن إضافة المزيد، الكمية المتوفرة قد نفدت.");
             }
-            $cart['items'][$productId]['quantity'] = $newQty;
-            $cart['items'][$productId]['subtotal']  = round($price * $newQty, 2);
+            $cart['items'][$cartKey]['quantity'] = $newQty;
+            $cart['items'][$cartKey]['subtotal'] = round($unitPrice * $newQty, 2);
         } else {
-            $cart['items'][$productId] = [
-                'id'       => $product->id,
-                'name'     => $product->name,
-                'slug'     => $product->slug,
-                'price'    => $price,
-                'image'    => $product->image,
-                'quantity' => $quantity,
-                'subtotal' => round($price * $quantity, 2),
-            ];
-        }
-
+    $cart['items'][$cartKey] = [
+        'id'           => $product->id,
+        'variant_id'   => $variant->id,
+        'name'         => $product->name,
+        'slug'         => $product->slug, // <--- أضف هذا السطر هنا
+        'variant_name' => $variant->sku,
+        'price'        => $unitPrice,
+        'image'        => $variant->variant_image ?? $product->image,
+        'quantity'     => $quantity,
+        'subtotal'     => round($unitPrice * $quantity, 2),
+    ];
+}
         Session::put(self::SESSION_KEY, $cart);
         return $cart;
     }
+
+    // ... باقي الدوال (removeItem, clearCart) تبقى كما هي مع تغيير استخدام $productId ليكون $cartKey
+
 
     /**
      * Update quantity of a cart item. Pass 0 to remove.
      */
-    public function updateItem(int $productId, int $quantity): array
-    {
-        if ($quantity <= 0) {
-            return $this->removeItem($productId);
-        }
-
-        $product = Product::find($productId);
-        if ($product && $product->stock_quantity < $quantity) {
-            throw new \Exception("Only {$product->stock_quantity} units available.");
-        }
-
-        $cart = $this->getCart();
-
-        if (isset($cart['items'][$productId])) {
-            $cart['items'][$productId]['quantity'] = $quantity;
-            $cart['items'][$productId]['subtotal']  = round($cart['items'][$productId]['price'] * $quantity, 2);
-            Session::put(self::SESSION_KEY, $cart);
-        }
-
-        return $cart;
+  public function updateItem(string $itemKey, int $quantity): array
+{
+    if ($quantity <= 0) {
+        return $this->removeItem($itemKey);
     }
 
-    /**
-     * Remove a product from the cart entirely.
-     */
-    public function removeItem(int $productId): array
-    {
-        $cart = $this->getCart();
-        unset($cart['items'][$productId]);
-        Session::put(self::SESSION_KEY, $cart);
-        return $cart;
+    $cart = $this->getCart();
+
+    if (isset($cart['items'][$itemKey])) {
+        // --- تعديل منطق التحقق من المخزون ليدعم الـ Variants ---
+        $variantId = $cart['items'][$itemKey]['variant_id'] ?? null;
+        
+        if ($variantId) {
+            $variant = \App\Models\ProductVariant::find($variantId);
+            if ($variant && $variant->stock_quantity < $quantity) {
+                throw new \Exception("عذراً، المتوفر من هذا النوع فقط {$variant->stock_quantity} قطع.");
+            }
+        } else {
+            // للمنتجات البسيطة (إذا كان العمود لا يزال موجوداً)
+            $product = \App\Models\Product::find($cart['items'][$itemKey]['id']);
+            if ($product && isset($product->stock_quantity) && $product->stock_quantity < $quantity) {
+                throw new \Exception("عذراً، المتوفر فقط {$product->stock_quantity} قطع.");
+            }
+        }
+        // ---------------------------------------------------
+
+        // تحديث الكمية والمجموع الفرعي في السلة
+        $cart['items'][$itemKey]['quantity'] = $quantity;
+        $cart['items'][$itemKey]['subtotal'] = round($cart['items'][$itemKey]['price'] * $quantity, 2);
+        
+        // استخدام نفس طريقة الحفظ القديمة الخاصة بك
+        \Illuminate\Support\Facades\Session::put(self::SESSION_KEY, $cart);
     }
 
+    return $cart;
+}
+
+/**
+ * حذف منتج أو نسخة من السلة نهائياً
+ */
+public function removeItem(string $itemKey): array
+{
+    $cart = $this->getCart();
+    
+    // حذف العنصر باستخدام المفتاح (itemKey)
+    unset($cart['items'][$itemKey]);
+    
+    // حفظ التعديل في الجلسة
+    \Illuminate\Support\Facades\Session::put(self::SESSION_KEY, $cart);
+    
+    return $cart;
+}
     /**
      * Clear the entire cart.
      */

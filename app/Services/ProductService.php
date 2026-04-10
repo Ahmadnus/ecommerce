@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * ProductService
@@ -64,22 +65,43 @@ class ProductService
     /**
      * Check if a product has sufficient stock for the requested quantity.
      */
-    public function checkStock(int $productId, int $quantity): bool
-    {
-        $product = $this->productRepository->findById($productId);
-        return $product && $product->stock_quantity >= $quantity;
+  public function checkStock(int $productId, int $quantity, ?int $variantId = null): bool
+{
+    if ($variantId) {
+        $variant = \App\Models\ProductVariant::find($variantId);
+        if (!$variant || $variant->stock_quantity < $quantity) {
+            throw new \Exception("عذراً، المخزون غير كافٍ لهذه النسخة.");
+        }
+    } else {
+        $product = \App\Models\Product::find($productId);
+        // منطق الفحص للمنتجات التي ليس لها نسخ
     }
+    
+    return true;
+}
 
     /**
      * Decrease stock after a successful order (called by OrderService).
      */
-    public function decreaseStock(int $productId, int $quantity): void
-    {
-        $product = $this->productRepository->findById($productId);
-        if ($product) {
-            $this->productRepository->update($productId, [
-                'stock_quantity' => max(0, $product->stock_quantity - $quantity),
-            ]);
+   public function decreaseStock(int $productId, int $quantity, ?int $variantId = null): void
+{
+    if ($variantId) {
+        // الخصم من مخزون النسخة (المقاس/اللون)
+        $variant = \App\Models\ProductVariant::findOrFail($variantId);
+        
+        if ($variant->stock_quantity < $quantity) {
+            throw new \Exception("المخزون غير كافٍ للنسخة المحددة.");
+        }
+
+        $variant->decrement('stock_quantity', $quantity);
+    } else {
+        // الخصم من مخزون المنتج الرئيسي (إذا كان المنتج لا يحتوي على نسخ)
+        $product = \App\Models\Product::findOrFail($productId);
+        
+        // تأكد أن العمود لا يزال موجوداً في جدول المنتجات لو كنت تستخدم النظام الهجين
+        if (Schema::hasColumn('products', 'stock_quantity')) {
+             $product->decrement('stock_quantity', $quantity);
         }
     }
+}
 }

@@ -58,7 +58,7 @@
                             <img src="{{ $p->getFirstMediaUrl('products') ?: asset('default.png') }}" class="w-8 h-8 rounded-lg object-cover">
                             <span class="font-medium">{{ $p->name }}</span>
                         </td>
-                        <td class="px-6 py-4 text-gray-500">{{ $p->category->name ?? 'بدون تصنيف' }}</td>
+                       <td class="px-6 py-4 text-gray-500">{{ $p->category->first()->name ?? 'بدون تصنيف' }}</td>
                         <td class="px-6 py-4 font-bold">${{ $p->price }}</td>
                     </tr>
                     @endforeach
