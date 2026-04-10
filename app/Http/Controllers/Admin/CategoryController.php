@@ -41,50 +41,42 @@ class CategoryController extends Controller
     }
 
   public function store(Request $request)
-{
-    // 1. التحقق من البيانات الأساسية للمنتج + مصفوفة المتغيرات
-    $validated = $request->validate([
-        'name'          => 'required|string|max:255',
-        'base_price'    => 'required|numeric|min:0',
-        'category_id'   => 'required|exists:categories,id',
-        'description'   => 'nullable|string',
-        // التحقق من مصفوفة المتغيرات القادمة من الداشبورد
-        'variants'      => 'required|array|min:1',
-        'variants.*.sku'   => 'required|string|unique:product_variants,sku',
-        'variants.*.stock' => 'required|integer|min:0',
-        'variants.*.price' => 'nullable|numeric|min:0',
-        'variants.*.attribute_values' => 'required|array', // مصفوفة الـ IDs للسمات (لون، قياس..)
-    ]);
-
-    // 2. إنشاء المنتج الأساسي
-    $product = Product::create([
-        'name'        => $validated['name'],
-        'slug'        => Str::slug($validated['name']),
-        'base_price'  => $validated['base_price'],
-        'description' => $validated['description'],
-        'status'      => 'active',
-    ]);
-
-    // 3. ربط القسم (Category)
-    $product->categories()->attach($validated['category_id'], ['is_primary' => true]);
-
-    // 4. إنشاء المتغيرات (Variants) وربطها بالسمات
-    foreach ($request->variants as $vData) {
-        // إنشاء الخيار (النسخة)
-        $variant = $product->variants()->create([
-            'sku'            => $vData['sku'],
-            'stock_quantity' => $vData['stock'],
-            'price_override' => $vData['price'] ?? null, // إذا كان سعر الخيار يختلف عن السعر الأساسي
-            'is_active'      => true,
+    {
+        // 1. التحقق من البيانات القادمة من فورم التصنيفات
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
+            'slug'        => 'nullable|string|unique:categories,slug',
+            'parent_id'   => 'nullable|exists:categories,id',
+            'description' => 'nullable|string',
+            'sort_order'  => 'nullable|integer|min:0',
+            'is_active'   => 'nullable|boolean',
+            'image'       => 'nullable|image|max:2048',
+        ], [
+            // تخصيص رسائل الخطأ (اختياري)
+            'name.required' => 'اسم التصنيف مطلوب',
         ]);
 
-        // ربط "السمات" (مثل ID اللون الأخضر و ID قياس XXL) بهذا الـ Variant
-        // هذا هو الجزء الذي يجعلها تظهر في صفحة العرض
-        $variant->attributeValues()->attach($vData['attribute_values']);
-    }
+        // 2. توليد الـ Slug تلقائياً إذا تركه المستخدم فارغاً
+        if (empty($data['slug'])) {
+            $data['slug'] = Str::slug($data['name']);
+        }
 
-    return redirect()->route('admin.products.index')->with('success', 'تم إضافة المنتج والخيارات بنجاح');
-}
+        // 3. التأكد من قيمة التفعيل
+        $data['is_active'] = $request->boolean('is_active', true);
+
+        // 4. إنشاء التصنيف
+        $category = Category::create($data);
+
+        // 5. حفظ الصورة إذا تم رفعها (بافتراض أنك تستخدم مكتبة Spatie Media Library)
+        if ($request->hasFile('image')) {
+            $category->addMediaFromRequest('image')->toMediaCollection('categories');
+        }
+
+        // 6. إعادة التوجيه مع رسالة نجاح
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'تم إضافة التصنيف "' . $category->name . '" بنجاح');
+    }
 
     public function edit(Category $category)
     {
