@@ -25,7 +25,7 @@ class AuthController extends Controller
     {
         // 1. Validate input
         $credentials = $request->validate([
-            'phone'    => ['required', 'string', 'regex:/^05\d{8}$/'],
+            'phone'    => ['required', 'string'],
             'password' => ['required', 'string', 'min:6'],
         ], [
             'phone.required' => 'رقم الهاتف مطلوب.',
