@@ -6,7 +6,6 @@
 
 @push('head')
 <style>
-    /* Shimmer animation for skeleton cards */
     @keyframes shimmer {
         0%   { background-position: -400px 0; }
         100% { background-position:  400px 0; }
@@ -16,11 +15,7 @@
         background-size: 800px 100%;
         animation: shimmer 1.4s ease-in-out infinite;
     }
-
-    /* Hide children with CSS (JS toggles 'hidden') */
     .category-children.hidden { display: none; }
-
-    /* RTL arrow: points left in RTL context, rotates down when open */
     [dir="rtl"] .rtl-arrow { transform: rotate(180deg); }
     [dir="rtl"] .rtl-arrow.rotate-90 { transform: rotate(270deg); }
 </style>
@@ -57,7 +52,6 @@
                     التصنيفات
                 </h3>
 
-                {{-- "All products" link --}}
                 <div class="mb-1">
                     <a href="{{ route('products.index') }}"
                        class="flex items-center gap-2 py-1.5 px-2 rounded-lg text-sm transition-colors
@@ -70,7 +64,6 @@
                     </a>
                 </div>
 
-                {{-- Recursive category tree --}}
                 <div class="space-y-0.5">
                     <x-category-tree
                         :categories="$categoryTree"
@@ -139,12 +132,12 @@
                 </div>
             </div>
 
-            {{-- ── Loading skeleton (shown via JS while fetching) ── --}}
+            {{-- Skeleton --}}
             <div id="skeleton-grid" class="hidden grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                 <x-product-skeleton :count="8" />
             </div>
 
-            {{-- ── Product Grid ─────────────────────────────────────────── --}}
+            {{-- Product Grid --}}
             @if($products->isEmpty())
             <div class="flex flex-col items-center justify-center py-20 text-center">
                 <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,131 +150,103 @@
                 </a>
             </div>
             @else
-            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                @foreach($products as $product)
+  <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+    @foreach($products as $product)
+        @php
+            $cardImage = $product->image_url ?? 'https://picsum.photos/seed/' . $product->id . '/400/400';
+            $isWishlisted = in_array($product->id, $wishlistedIds ?? []);
+        @endphp
 
-                @php
-                    // Pick effective price: lowest active variant price or product price
-                    $displayPrice = $product->effective_price;
-                    $hasDiscount  = $product->is_on_sale || (
-                        $product->variants->where('is_active', true)->where('stock_quantity', '>', 0)->count() > 0
-                        && $product->discount_price === null
-                        && $product->variants->where('is_active', true)->min('price_override') !== null
-                    );
-
-                    // Variant image (first active variant with image, else product image)
-                    $cardImage = $product->image_url
-                        ?? 'https://picsum.photos/seed/' . $product->id . '/400/400';
-                @endphp
-
-                <a href="{{ route('products.show', $product->slug) }}"
-                   class="product-card bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col group"
-                   aria-label="{{ $product->name }}">
-
-                    {{-- Image --}}
-                    <div class="aspect-square overflow-hidden bg-gray-50 relative">
-                        <img
-                            src="{{ $cardImage }}"
-                            alt="{{ $product->name }}"
-                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                        >
-
-                        {{-- Badges --}}
-                        <div class="absolute top-2 start-2 flex flex-col gap-1">
-                            @if($product->is_on_sale)
-                            <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full leading-snug">
-                                {{ $product->discount_percentage }}% خصم
-                            </span>
-                            @endif
-                            @if($product->is_featured)
-                            <span class="bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full leading-snug">
-                                مميز
-                            </span>
-                            @endif
-                        </div>
-
-                        {{-- Out of stock overlay --}}
-                        @if(!$product->in_stock)
-                        <div class="absolute inset-0 bg-white/60 flex items-center justify-center">
-                            <span class="bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm">
-                                نفد المخزون
-                            </span>
-                        </div>
-                        @endif
-                    </div>
-
-                    {{-- Body --}}
-                    <div class="p-3 flex flex-col flex-1">
-
-                        {{-- Category name --}}
-                        @if($product->categories->first())
-                        <p class="text-[11px] font-medium text-brand-600 mb-1 uppercase tracking-wide">
-                            {{ $product->categories->first()->name }}
-                        </p>
-                        @endif
-
-                        <p class="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug mb-1">
-                            {{ $product->name }}
-                        </p>
-
-                        @if($product->short_description)
-                        <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed flex-1 mb-2">
-                            {{ $product->short_description }}
-                        </p>
-                        @else
-                        <div class="flex-1"></div>
-                        @endif
-
-                        {{-- Price + CTA --}}
-                        <div class="flex items-center justify-between mt-auto pt-2 gap-2">
-    <div class="flex flex-col"> {{-- تغيير لترتيب الأسعار فوق بعضها بشكل أفضل --}}
-        @if($product->is_on_sale)
-            {{-- السعر بعد الخصم (هو السعر الأساسي الآن) --}}
-            <span class="text-base font-bold text-red-600">
-                ${{ number_format($product->discount_price, 2) }}
-            </span>
-            {{-- السعر القديم مشطوب --}}
-            <span class="text-xs text-gray-400 line-through">
-                ${{ number_format($product->base_price, 2) }}
-            </span>
-        @else
-            {{-- في حال عدم وجود خصم يظهر السعر العادي فقط --}}
-            <span class="text-base font-bold text-gray-900">
-                ${{ number_format($product->base_price, 2) }}
-            </span>
-        @endif
-    </div>
-
-    @if($product->in_stock)
-    <button
-        type="button"
-        onclick="event.preventDefault(); Cart.add({{ $product->id }}, 1, this)"
-        class="flex items-center gap-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors flex-shrink-0"
-    >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-        </svg>
-        أضف
-    </button>
-    @endif
-</div>
-                         
-
-                        {{-- Variant count hint --}}
-                        @if($product->variants->where('is_active', true)->count() > 1)
-                        <p class="text-[10px] text-gray-400 mt-1">
-                            {{ $product->variants->where('is_active', true)->count() }} خيارات متاحة
-                        </p>
-                        @endif
-
-                    </div>
+        {{-- الكرت الآن div وليس a لتجنب مشاكل الضغط --}}
+        <div class="product-card bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col group relative transition-all duration-300 hover:shadow-lg">
+            
+            {{-- 1. منطقة الصورة والعناصر العلوية --}}
+            <div class="aspect-square overflow-hidden bg-gray-50 relative">
+                {{-- رابط الصورة فقط يفتح صفحة المنتج --}}
+                <a href="{{ route('products.show', $product->slug) }}" class="block w-full h-full">
+                    <img src="{{ $cardImage }}" 
+                         alt="{{ $product->name }}" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                         loading="lazy">
                 </a>
 
-                @endforeach
+                {{-- ❤️ زر المفضلة - جهة اليسار (في تصميم RTL) --}}
+                <div class="absolute top-2 end-2 z-30">
+                    {{-- استخدمنا div لمنع تداخل الضغط --}}
+                    <div onclick="event.preventDefault(); event.stopPropagation();">
+                        <x-wishlist-btn :product="$product" :wishlisted="$isWishlisted" />
+                    </div>
+                </div>
+
+                {{-- 🏷️ البانر (خصم / مميز) - جهة اليمين (في تصميم RTL) --}}
+                <div class="absolute top-2 start-2 flex flex-col gap-1 z-20 pointer-events-none">
+                    @if($product->is_on_sale)
+                        <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                            {{ $product->discount_percentage }}% خصم
+                        </span>
+                    @endif
+                    
+                    @if($product->is_featured)
+                        <span class="bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                            مميز
+                        </span>
+                    @endif
+                </div>
+
+                {{-- غطاء نفد المخزون --}}
+                @if(!$product->in_stock)
+                    <div class="absolute inset-0 bg-white/60 flex items-center justify-center z-10 pointer-events-none">
+                        <span class="bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-full">
+                            نفد المخزون
+                        </span>
+                    </div>
+                @endif
             </div>
 
-            {{-- Pagination --}}
+            {{-- 2. تفاصيل المنتج --}}
+            <div class="p-3 flex flex-col flex-1">
+                @if($product->categories->first())
+                    <p class="text-[10px] font-bold text-brand-600 mb-1 uppercase">
+                        {{ $product->categories->first()->name }}
+                    </p>
+                @endif
+
+                <a href="{{ route('products.show', $product->slug) }}" class="text-sm font-semibold text-gray-900 line-clamp-2 hover:text-brand-600 transition-colors mb-1">
+                    {{ $product->name }}
+                </a>
+
+                {{-- السعر وزر السلة --}}
+                <div class="mt-auto pt-2 flex items-center justify-between gap-2 border-t border-gray-50">
+                    <div class="flex flex-col">
+                        @if($product->is_on_sale)
+                            <span class="text-sm font-bold text-red-600">
+                                ${{ number_format($product->discount_price, 2) }}
+                            </span>
+                            <span class="text-[10px] text-gray-400 line-through leading-none">
+                                ${{ number_format($product->base_price, 2) }}
+                            </span>
+                        @else
+                            <span class="text-sm font-bold text-gray-900">
+                                ${{ number_format($product->base_price, 2) }}
+                            </span>
+                        @endif
+                    </div>
+
+                    @if($product->in_stock)
+                        <button type="button" 
+                                onclick="event.preventDefault(); event.stopPropagation(); Cart.add({{ $product->id }}, 1, this)"
+                                class="bg-brand-600 hover:bg-brand-700 text-white p-2 rounded-lg transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </button>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
             @if($products->hasPages())
             <div class="mt-8 flex justify-center">
                 {{ $products->links() }}
@@ -296,26 +261,16 @@
 
 @push('scripts')
 <script>
-// ── Sidebar accordion toggle ─────────────────────────────────────────────
 function toggleCategory(btn) {
     const node     = btn.closest('.category-node');
     const children = node.querySelector('.category-children');
     const arrow    = btn.querySelector('.rtl-arrow');
-
     if (!children) return;
-
     const isHidden = children.classList.toggle('hidden');
     arrow.classList.toggle('rotate-90', !isHidden);
     btn.setAttribute('aria-label', isHidden ? 'توسيع' : 'طي');
 }
-
-// ── Mobile: slide-in sidebar ─────────────────────────────────────────────
-// Triggered from navbar hamburger (if you wire it up)
-window.openSidebar = function () {
-    document.getElementById('mobile-sidebar')?.classList.remove('-translate-x-full');
-};
-window.closeSidebar = function () {
-    document.getElementById('mobile-sidebar')?.classList.add('-translate-x-full');
-};
+window.openSidebar  = () => document.getElementById('mobile-sidebar')?.classList.remove('-translate-x-full');
+window.closeSidebar = () => document.getElementById('mobile-sidebar')?.classList.add('-translate-x-full');
 </script>
 @endpush

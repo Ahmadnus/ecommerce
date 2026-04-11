@@ -6,7 +6,10 @@ use App\Repositories\Eloquent\OrderRepository;
 use App\Repositories\Eloquent\ProductRepository;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
 use App\Repositories\Interfaces\ProductRepositoryInterface;
+
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * AppServiceProvider
@@ -23,8 +26,21 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
     }
 
-    public function boot(): void
-    {
-        //
+  public function boot(): void
+    {  
+       
+        // تمرير مصفوفة المفضلة لكل الصفحات التي تحتوي على منتجات
+        View::composer('*', function ($view) {
+            $wishlistedIds = [];
+            
+            if (Auth::check()) {
+                // جلب الـ IDs للمنتجات المفضلة للمستخدم المسجل دخوله
+                $wishlistedIds = Auth::user()->wishlistedProducts()
+                    ->pluck('product_id')
+                    ->toArray();
+            }
+
+            $view->with('wishlistedIds', $wishlistedIds);
+        });
     }
 }

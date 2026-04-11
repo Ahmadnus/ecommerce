@@ -225,4 +225,14 @@ public function attributeValues(): BelongsToMany
 {
     return $this->belongsToMany(AttributeValue::class, 'product_attribute_value');
 }
+public function wishlistedByUsers(): BelongsToMany
+{
+    return $this->belongsToMany(
+        \App\Models\User::class,
+        'wishlists',
+        'product_id',
+        'user_id'
+    )->withTimestamps();
+}
+ 
 }

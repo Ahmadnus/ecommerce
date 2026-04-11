@@ -2,69 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\CheckoutRequest;
-use App\Services\CartService;
-use App\Services\OrderService;
-use Illuminate\Http\Request;
+use App\Models\Order;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
-/**
- * OrderController
- *
- * Handles the checkout flow: display form → validate → create order → confirm.
- */
 class OrderController extends Controller
 {
-    public function __construct(
-        private OrderService $orderService,
-        private CartService $cartService,
-    ) {}
-
     /**
-     * Show the checkout page.
-     * GET /checkout
+     * Order success / confirmation page.
+     * Accessible by the order owner only.
      */
-    public function checkout()
+    public function success(string $orderNumber): View|RedirectResponse
     {
-        $summary = $this->cartService->getSummary();
+        $order = Order::where('order_number', $orderNumber)
+                      ->where('user_id', Auth::id())
+                      ->with('items')
+                      ->firstOrFail();
 
-        if (empty($summary['items'])) {
-            return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
-        }
-
-        return view('checkout.index', compact('summary'));
+        return view('orders.success', compact('order'));
     }
 
     /**
-     * Process the order submission.
-     * POST /checkout
+     * User's order history.
      */
-    public function placeOrder(CheckoutRequest $request)
+    public function index(): View
     {
-        try {
-            $order = $this->orderService->createOrder(
-                $request->validated(),
-                auth()->id() // null for guests
-            );
+        $orders = Order::where('user_id', Auth::id())
+                       ->with('items')
+                       ->latest()
+                       ->paginate(10);
 
-            return redirect()->route('orders.confirmation', $order->order_number)
-                ->with('success', 'Order placed successfully!');
-        } catch (\Exception $e) {
-            return back()->withInput()->with('error', $e->getMessage());
-        }
-    }
-
-    /**
-     * Show the order confirmation page.
-     * GET /orders/{orderNumber}/confirmation
-     */
-    public function confirmation(string $orderNumber)
-    {
-        $order = $this->orderService->getOrderByNumber($orderNumber);
-
-        if (!$order) {
-            abort(404);
-        }
-
-        return view('checkout.confirmation', compact('order'));
+        return view('orders.index', compact('orders'));
     }
 }

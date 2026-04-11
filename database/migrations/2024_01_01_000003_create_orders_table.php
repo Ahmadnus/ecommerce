@@ -12,41 +12,44 @@ return new class extends Migration
 {
     public function up(): void
     {
+   
+        // ── Orders ────────────────────────────────────────────────────────────
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null'); // Guest checkout supported
-            $table->string('order_number')->unique();           // Human-readable order ref
-            $table->enum('status', [
-                'pending',
-                'processing',
-                'shipped',
-                'delivered',
-                'cancelled',
-                'refunded'
-            ])->default('pending');
-
-            // Pricing breakdown
-            $table->decimal('subtotal', 10, 2);
-            $table->decimal('tax_amount', 10, 2)->default(0);
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('order_number')->unique()
+                  ->comment('Human-readable: ORD-YYYYMMDD-XXXXX');
+ 
+            // Status — uses the constants defined in the Order model
+            $table->string('status')->default('pending')
+                  ->comment('pending|processing|shipped|delivered|cancelled');
+ 
+            // Payment
+            $table->string('payment_method')->default('cod')
+                  ->comment('cod = Cash on Delivery');
+            $table->string('payment_status')->default('pending')
+                  ->comment('pending|paid|refunded');
+ 
+            // Snapshot totals
+            $table->decimal('subtotal',        10, 2)->default(0);
+            $table->decimal('tax_amount',      10, 2)->default(0);
             $table->decimal('shipping_amount', 10, 2)->default(0);
-            $table->decimal('discount_amount', 10, 2)->default(0);
-            $table->decimal('total_amount', 10, 2);
-
-            // Shipping address (stored directly for order history integrity)
+            $table->decimal('total_amount',    10, 2)->default(0);
+ 
+            // Shipping info (snapshot from form)
             $table->string('shipping_name');
-            $table->string('shipping_email');
-            $table->string('shipping_phone')->nullable();
+            $table->string('shipping_phone');
             $table->string('shipping_address');
             $table->string('shipping_city');
-            $table->string('shipping_state')->nullable();
-            $table->string('shipping_zip');
-            $table->string('shipping_country')->default('US');
-
-            $table->text('notes')->nullable();                  // Customer order notes
-            $table->string('payment_method')->nullable();
-            $table->string('payment_status')->default('unpaid');
+            $table->string('shipping_zip')->nullable();
+ 
+            $table->text('notes')->nullable();
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+ 
+            $table->index(['user_id', 'status']);
+            $table->index('order_number');
         });
     }
 

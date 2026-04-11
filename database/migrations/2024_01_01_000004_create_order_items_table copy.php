@@ -12,19 +12,26 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('order_items', function (Blueprint $table) {
+       Schema::create('order_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('restrict'); // Prevent deleting ordered products
-            $table->string('product_name');             // Snapshot product name at order time
+            $table->foreignId('order_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('product_variant_id')->nullable()
+                  ->constrained('product_variants')->nullOnDelete();
+ 
+            // Snapshots — preserve values even if product changes later
+            $table->string('product_name');
             $table->string('product_sku')->nullable();
-            $table->integer('quantity');
-            $table->decimal('unit_price', 10, 2);       // Price at time of purchase (not current price)
-            $table->decimal('total_price', 10, 2);      // quantity * unit_price
-            $table->json('options')->nullable();         // e.g., size, color variants
+            $table->string('variant_name')->nullable()
+                  ->comment('e.g. "أزرق / 42"');
+ 
+            $table->unsignedInteger('quantity');
+            $table->decimal('unit_price',  10, 2);
+            $table->decimal('total_price', 10, 2);
             $table->timestamps();
         });
     }
+ 
 
     public function down(): void
     {

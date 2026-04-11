@@ -187,6 +187,74 @@
             }
         },
     };
+   
+
+    async function toggleWishlist(btn) {
+        // منع أي تضارب
+        if (!btn) return;
+
+        const productId = btn.dataset.productId;
+        const isWishlisted = btn.dataset.wishlisted === 'true';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+        if (!csrfToken) {
+            console.error('CSRF token not found. Add <meta name="csrf-token" content="{{ csrf_token() }}"> to your head.');
+            return;
+        }
+
+        // تحديث واجهة المستخدم فوراً (Optimistic Update)
+        setHeartState(btn, !isWishlisted);
+
+        try {
+            const res = await fetch(`/wishlist/toggle/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (res.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const data = await res.json();
+            
+            // التأكيد من حالة السيرفر وتحديث العداد
+            setHeartState(btn, data.wishlisted);
+            updateWishlistBadge(data.count);
+
+            if (typeof Cart !== 'undefined' && Cart.toast) {
+                Cart.toast(data.message, 'success');
+            }
+        } catch (err) {
+            console.error('Wishlist Error:', err);
+            setHeartState(btn, isWishlisted); // التراجع في حال الفشل
+        }
+    }
+
+    function setHeartState(btn, wishlisted) {
+        const outline = btn.querySelector('[data-heart="outline"]');
+        const filled = btn.querySelector('[data-heart="filled"]');
+
+        if (outline) outline.classList.toggle('hidden', wishlisted);
+        if (filled) filled.classList.toggle('hidden', !wishlisted);
+
+        btn.dataset.wishlisted = wishlisted ? 'true' : 'false';
+        
+        btn.classList.add('scale-125');
+        setTimeout(() => btn.classList.remove('scale-125'), 150);
+    }
+
+    function updateWishlistBadge(count) {
+        document.querySelectorAll('.wishlist-count').forEach(el => {
+            el.textContent = count;
+            el.style.display = count > 0 ? 'flex' : 'none';
+        });
+    }
+
     </script>
 
     @stack('scripts')

@@ -51,9 +51,19 @@
                     التصنيفات
                 </x-admin-nav-link>
 
-       
-              
-            
+                {{-- الطلبات (تم وضعه هنا للمحاذاة) --}}
+                <x-admin-nav-link href="{{ route('admin.orders.index') }}" icon="shopping-cart" :active="request()->routeIs('admin.orders.*')">
+                    الطلبات
+                    @php
+                        $pendingCount = \App\Models\Order::where('status', 'pending')->count();
+                    @endphp
+                    @if($pendingCount > 0)
+                        <span x-show="sidebarOpen" class="mr-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">
+                            {{ $pendingCount }}
+                        </span>
+                    @endif
+                </x-admin-nav-link>
+
                 <hr class="border-gray-800 my-4 mx-2">
 
                 {{-- الإعدادات --}}
@@ -97,7 +107,6 @@
                     </div>
                 @endif
 
-                {{-- الصفحة التي يتم استدعاؤها --}}
                 @yield('admin-content')
             </main>
         </div>
