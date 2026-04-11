@@ -82,7 +82,7 @@ class AuthController extends Controller
         // 1. Validate
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
-            'phone'    => ['required', 'string', 'regex:/^05\d{8}$/', 'unique:users,phone'],
+            'phone'    => ['required', 'string', 'unique:users,phone'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
             'name.required'         => 'الاسم الكامل مطلوب.',
