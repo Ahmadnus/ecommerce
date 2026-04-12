@@ -50,6 +50,7 @@
             </svg>
             تصفح المنتجات
         </a>
+        
     </div>
 
     @else
@@ -171,6 +172,7 @@
     @endif
 
     @endif
-
+    @yield('content')
+@include('partials.bottombar')
 </div>
 @endsection

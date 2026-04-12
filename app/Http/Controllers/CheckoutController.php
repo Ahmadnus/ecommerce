@@ -48,7 +48,7 @@ class CheckoutController extends Controller
     // 2. التحقق من صحة بيانات فورم الشحن
     $validated = $request->validate([
         'shipping_name'    => 'required|string|max:255',
-        'shipping_phone'   => ['required', 'string', 'regex:/^05\d{8}$/'],
+        'shipping_phone'   => ['required', 'string'],
         'shipping_address' => 'required|string|max:500',
         'shipping_city'    => 'required|string|max:100',
         'shipping_zip'     => 'nullable|string|max:20',

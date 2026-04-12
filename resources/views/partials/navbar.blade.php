@@ -153,61 +153,81 @@
                     </div>
                     @endguest
 
-                    @auth
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open"
-                                class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100">
-                            <div class="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-white flex-shrink-0"
-                                 style="background:var(--brand-color)">
-                                {{ mb_substr(auth()->user()->name, 0, 1) }}
-                            </div>
-                            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform" :class="open ? 'rotate-180' : ''"
-                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
+                  @auth
+<div class="relative" x-data="{ open: false }" @mouseleave="open = false">
+    {{-- الزر الرئيسي: ينقل لصفحة البروفايل --}}
+    <div class="flex items-center">
+        <a href="{{ route('myprofile.show') }}"
+           class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl transition-all border border-transparent {{ request()->routeIs('myprofile.*') ? 'bg-gray-100 border-gray-200' : 'hover:bg-gray-50 hover:border-gray-100' }}">
+            
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-white flex-shrink-0"
+                 style="background:var(--brand-color)">
+                {{ mb_substr(auth()->user()->name, 0, 1) }}
+            </div>
+            
+            <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
+        </a>
 
-                        <div x-show="open" @click.outside="open = false"
-                             x-transition:enter="transition ease-out duration-150"
-                             x-transition:enter-start="opacity-0 -translate-y-1"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             class="absolute left-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50"
-                             style="display:none">
-                            <div class="px-4 py-2 border-b border-gray-50 mb-1">
-                                <p class="text-xs font-bold text-gray-900 truncate">{{ auth()->user()->name }}</p>
-                                <p class="text-[11px] text-gray-400 truncate">{{ auth()->user()->phone ?? '' }}</p>
-                            </div>
-                            <a href="{{ route('orders.index') }}"
-                               class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                                </svg>
-                                طلباتي
-                            </a>
-                            <a href="{{ route('wishlist.index') }}"
-                               class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium">
-                                <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                </svg>
-                                المفضلة
-                            </a>
-                            <form action="{{ route('logout') }}" method="POST">
-                                @csrf
-                                <button type="submit"
-                                        class="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                    </svg>
-                                    تسجيل الخروج
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    @endauth
+        {{-- سهم صغير لفتح القائمة المنسدلة --}}
+        <button @click="open = !open" class="p-1 hover:bg-gray-100 rounded-full transition-colors">
+            <svg class="w-3.5 h-3.5 text-gray-400 transition-transform" :class="open ? 'rotate-180' : ''"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+    </div>
 
+    {{-- القائمة المنسدلة --}}
+    <div x-show="open" 
+         @click.outside="open = false"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 -translate-y-1"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         class="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50"
+         style="display:none">
+        
+        {{-- عرض البيانات (اسم ورقم) --}}
+        <div class="px-4 py-3 border-b border-gray-50 mb-1">
+            <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">بيانات الحساب</p>
+            <p class="text-xs font-bold text-gray-900 truncate">{{ auth()->user()->name }}</p>
+            <p class="text-[11px] text-gray-400 truncate">{{ auth()->user()->phone ?? 'لا يوجد رقم' }}</p>
+        </div>
+
+        {{-- زر المفضلة --}}
+        <a href="{{ route('wishlist.index') }}"
+           class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+            المفضلة
+        </a>
+
+        {{-- زر طلباتي --}}
+        <a href="{{ route('orders.index') }}"
+           class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+            طلباتي
+        </a>
+
+        {{-- تسجيل الخروج --}}
+        <form action="{{ route('logout') }}" method="POST" class="mt-1 border-t border-gray-50">
+            @csrf
+            <button type="submit"
+                    class="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium text-right">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                تسجيل الخروج
+            </button>
+        </form>
+    </div>
+</div>
+@endauth
                 </div>
 
                 {{-- Mobile menu button (for other pages, not product index) --}}

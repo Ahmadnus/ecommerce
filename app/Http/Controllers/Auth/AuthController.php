@@ -66,7 +66,7 @@ class AuthController extends Controller
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home'))
+        return redirect()->intended(route('products.index'))
                          ->with('success', 'مرحباً بعودتك، ' . Auth::user()->name . '!');
     }
 

@@ -152,7 +152,8 @@
                     <span class="text-sm text-red-600 font-medium">نفد المخزون</span>
                 @endif
             </div>
-
+@yield('content')
+@include('partials.bottombar')
             <p class="text-gray-600 leading-relaxed mb-6 text-sm border-b border-gray-100 pb-6">
                 {{ $product->description }}
             </p>

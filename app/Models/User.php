@@ -68,6 +68,10 @@ class User extends Authenticatable
  * Check if the user has wishlisted a specific product.
  * Use when the wishlist is already eager-loaded to avoid N+1.
  */
+public function orders()
+{
+    return $this->hasMany(\App\Models\Order::class);
+}
 public function hasWishlisted(int $productId): bool
 {
     // Works both with eager-loaded collection and a fresh query

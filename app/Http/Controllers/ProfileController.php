@@ -2,59 +2,66 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * عرض صفحة البروفايل (بدلاً من edit)
      */
-    public function edit(Request $request): View
+    public function show(Request $request): View
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
+        $user = $request->user();
+        
+        // جلب آخر 5 طلبات للمستخدم
+        // تأكد أن علاقة orders موجودة في مودل User
+        $orders = $user->orders()->latest()->take(5)->get() ?? collect();
+
+        return view('myprofile.show', [
+            'user' => $user,
+            'orders' => $orders
         ]);
     }
 
     /**
-     * Update the user's profile information.
+     * تحديث بيانات المستخدم
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|unique:users,phone,' . $user->id,
+            'password' => 'nullable|min:8|confirmed',
+        ]);
+
+        $user->name = $data['name'];
+        $user->phone = $data['phone'];
+
+        if (!empty($data['password'])) {
+            $user->password = $data['password']; // Laravel 11+ سيقوم بعمل Hash تلقائياً بناءً على المودل
         }
 
-        $request->user()->save();
+        $user->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return back()->with('success', 'تم تحديث بياناتك بنجاح');
     }
 
     /**
-     * Delete the user's account.
+     * حذف الحساب (اختياري)
      */
     public function destroy(Request $request): RedirectResponse
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
-
+        $request->validate(['password' => ['required', 'current_password']]);
         $user = $request->user();
-
         Auth::logout();
-
         $user->delete();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        return Redirect::to('/');
+        return redirect('/');
     }
 }

@@ -32,7 +32,7 @@
                             500: 'var(--brand-color)', 
                             600: 'var(--brand-color-dark)',
                             700: 'var(--brand-color-darker)',
-                            900: '#0c4a6e',
+                            900: '#950000',
                         },
                         accent: '#f59e0b',
                     },

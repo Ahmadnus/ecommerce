@@ -12,10 +12,18 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\ProfileController;
 
 // ─── Public Routes ──────────────────────────────────────────────────────────
-Route::get('/', fn() => redirect()->route('products.index'))->name('home');
+//Route::get('/', fn() => redirect()->route('products.index'))->name('home');
+Route::get('/', function () {
+    return view('splash.splash');
+});
 
+Route::middleware('auth')->group(function () {
+    Route::get('/myprofile', [ProfileController::class, 'show'])->name('myprofile.show');
+    Route::put('/myprofile', [ProfileController::class, 'update'])->name('myprofile.update');
+});
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
