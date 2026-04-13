@@ -559,12 +559,11 @@
                 {{-- Image --}}
                 <div class="relative overflow-hidden bg-gray-100" style="padding-top: 126%">
                     <div class="shimmer absolute inset-0 z-0" id="fsk-{{ $fp->id }}"></div>
-                    <img src="{{ $fpImage }}"
-                         alt="{{ $fp->name }}"
-                         class="fc-img absolute inset-0 w-full h-full object-cover z-10"
-                         loading="lazy"
-                         onload="document.getElementById('fsk-{{ $fp->id }}').style.display='none'">
-
+                    <img src="{{ $fp->getFirstMediaUrl('products') ?: asset('images/default-product.jpg') }}"
+             alt="{{ $fp->name }}"
+             class="fc-img absolute inset-0 w-full h-full object-cover z-10 transition-opacity duration-300"
+             loading="lazy"
+             onload="document.getElementById('fsk-{{ $fp->id }}').style.opacity='0'; setTimeout(() => document.getElementById('fsk-{{ $fp->id }}').style.display='none', 300)">
                     {{-- Sale ribbon --}}
                     @if($fp->is_on_sale)
                     <div class="fc-ribbon">{{ $fp->discount_percentage }}% OFF</div>
@@ -667,11 +666,11 @@
                 <div class="shimmer absolute inset-0 z-0" id="sk-{{ $product->id }}"></div>
 
                 {{-- Spatie image --}}
-                <img src="{{ $cardImage }}"
-                     alt="{{ $product->name }}"
-                     class="pcard-img absolute inset-0 w-full h-full object-cover z-10"
-                     loading="lazy"
-                     onload="document.getElementById('sk-{{ $product->id }}').style.display='none'">
+              <img src="{{ $product->getFirstMediaUrl('products') ?: asset('images/placeholder.jpg') }}"
+     alt="{{ $product->name }}"
+     class="pcard-img absolute inset-0 w-full h-full object-cover z-10"
+     loading="lazy"
+     onload="document.getElementById('sk-{{ $product->id }}').style.display='none'">
 
                 {{-- Sale ribbon --}}
                 @if($product->is_on_sale)

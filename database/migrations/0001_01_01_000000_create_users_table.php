@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('phone')->unique()
                   ->comment('Primary identifier — used for login');
             $table->timestamp('phone_verified_at')->nullable();
-
+$table->string('email')->unique()->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

@@ -1,12 +1,13 @@
 <?php
 
 namespace App\Models;
-
+use Filament\Panel;
+use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser // أضف implements FilamentUser
 {
     use HasFactory, Notifiable;
 
@@ -15,6 +16,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'phone',
+        'email',
         'password',
     ];
 
@@ -81,4 +83,17 @@ public function hasWishlisted(int $productId): bool
  
     return $this->wishlistedProducts()->where('product_id', $productId)->exists();
 }
+public function getAuthIdentifierName()
+{
+    return 'phone';
+}
+public function canAccessPanel(Panel $panel): bool
+    {
+        // هنا تسمح بالدخول، مثلاً للجميع في بيئة التطوير
+        // أو لمستخدمين محددين فقط
+        return str_ends_with($this->email, 'admin@gmail.com') && $this->hasVerifiedEmail();
+        
+        // للتجربة السريعة فقط، اجعلها true:
+        // return true;
+    }
 }

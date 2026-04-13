@@ -5,6 +5,9 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\Admin\PageController as AdminPageController;
+
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -73,7 +76,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
-
+Route::resource('pages', AdminPageController::class);
+ 
     Route::get('settings', [SettingController::class, 'index'])->name('settings');
     Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
 });
+Route::get('/p/{slug}', [PageController::class, 'show'])->name('pages.show');
+ 
+ 
+// ─── Admin pages routes (inside your existing auth middleware group) ──────────
+// Add these lines inside: Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(...)
