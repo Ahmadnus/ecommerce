@@ -88,7 +88,7 @@ Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::resource('categories', CategoryController::class);
 
     // 2. مسارات محصورة "فقط" بالسوبر أدمن (Super Admin Only)
-    Route::middleware(['role:super-admin'])->group(function () {
+    Route::middleware(['role:admin'])->group(function () {
         
         // الطلبات
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
