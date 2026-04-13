@@ -5,96 +5,100 @@
 
 @push('head')
 <style>
-    /* ── Skeleton shimmer ─────────────────────────────────────────── */
+    /* 1. تأثير التحميل (Skeleton) - جعلته يتناسب مع لون الكروت */
     @keyframes shimmer {
         0%   { background-position: -600px 0; }
         100% { background-position:  600px 0; }
     }
     .sk {
-        background: linear-gradient(90deg, #f1f0ee 25%, #e8e7e4 50%, #f1f0ee 75%);
+        background: linear-gradient(90deg, rgba(0,0,0,0.03) 25%, rgba(0,0,0,0.07) 50%, rgba(0,0,0,0.03) 75%);
         background-size: 1200px 100%;
         animation: shimmer 1.6s ease-in-out infinite;
         border-radius: 6px;
     }
 
-    /* ── Input field ──────────────────────────────────────────────── */
+    /* 2. حقول الإدخال (Input Fields) */
     .field {
         width: 100%;
         padding: 14px 16px;
-        border: 1.5px solid #e5e3df;
+        border: 1.5px solid rgba(0,0,0,0.08); /* حدود ناعمة */
         border-radius: 14px;
-        background: #faf9f7;
+        background: rgba(0,0,0,0.02); /* خلفية باهتة جداً لتبرز عند الفوكس */
         font-size: 13.5px;
         color: #1a1917;
         font-family: inherit;
         outline: none;
-        transition: border-color .18s, box-shadow .18s, background .18s;
+        transition: all .2s ease;
         -webkit-appearance: none;
     }
     .field::placeholder { color: #b5b2ab; }
     .field:focus {
-        background: #fff;
+        background: var(--card-bg, #ffffff);
         border-color: var(--brand-color, #0ea5e9);
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color, #0ea5e9) 12%, transparent);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-color, #0ea5e9) 10%, transparent);
     }
     .field.has-error {
         border-color: #ef4444;
         background: #fef9f9;
-        box-shadow: 0 0 0 3px rgba(239,68,68,.1);
+        box-shadow: 0 0 0 4px rgba(239,68,68,.1);
     }
 
-    /* ── Step badge ───────────────────────────────────────────────── */
+    /* 3. أيقونة الخطوات (Step badge) - مرتبطة بلون البراند */
     .step-n {
         width: 26px; height: 26px;
         border-radius: 50%;
-        background: #1a1917;
+        background: var(--brand-color, #1a1917);
         color: #fff;
         font-size: 11px;
         font-weight: 700;
         display: flex; align-items: center; justify-content: center;
         flex-shrink: 0;
-        letter-spacing: -.5px;
     }
 
-    /* ── Cart row hover ───────────────────────────────────────────── */
+    /* 4. الصفوف والكروت */
     .cart-row {
         transition: background .15s;
     }
-    .cart-row:hover { background: #faf9f7; }
+    .cart-row:hover { background: rgba(0,0,0,0.02); }
 
-    /* ── Qty button ───────────────────────────────────────────────── */
+    /* ربط خلفية الحاوية الرئيسية باللون الديناميكي */
+    .min-h-screen {
+        background-color: var(--bg-color, #f7f6f3) !important;
+    }
+    
+    /* ربط الكروت باللون الديناميكي */
+    .bg-white, .rounded-2xl {
+        background-color: var(--card-bg, #ffffff) !important;
+        border-color: rgba(0,0,0,0.05) !important;
+    }
+
+    /* 5. أزرار الكمية */
     .qty-btn {
         width: 30px; height: 30px;
         display: flex; align-items: center; justify-content: center;
-        border: 1.5px solid #e5e3df;
+        border: 1.5px solid rgba(0,0,0,0.1);
         border-radius: 8px;
-        background: #fff;
+        background: var(--card-bg, #ffffff);
         cursor: pointer;
         font-size: 16px;
         color: #6b6966;
-        transition: border-color .15s, color .15s, background .15s;
-        flex-shrink: 0;
-        line-height: 1;
+        transition: all .15s;
     }
-    .qty-btn:hover { border-color: #1a1917; color: #1a1917; background: #f5f4f2; }
-
-    /* ── Secure badge ─────────────────────────────────────────────── */
-    .secure-row {
-        display: flex; align-items: center; justify-content: center;
-        gap: 6px;
-        color: #9a9793;
-        font-size: 11px;
+    .qty-btn:hover { 
+        border-color: var(--brand-color, #1a1917); 
+        color: var(--brand-color, #1a1917); 
     }
 
-    /* ── Place order button pulse ─────────────────────────────────── */
-    @keyframes btnPop {
-        0%   { transform: scale(1); }
-        50%  { transform: scale(.97); }
-        100% { transform: scale(1); }
+    /* 6. زر إتمام الطلب الرئيسي */
+    #place-btn, .bg-\[\#1a1917\] {
+        background-color: var(--brand-color, #1a1917) !important;
+        transition: transform .2s, filter .2s;
     }
-    #place-btn:active { animation: btnPop .2s ease; }
+    #place-btn:hover {
+        filter: brightness(1.1);
+    }
 
-    /* ── Page-load stagger ────────────────────────────────────────── */
+    /* 7. تأثيرات الظهور */
     @keyframes up {
         from { opacity: 0; transform: translateY(14px); }
         to   { opacity: 1; transform: translateY(0); }
@@ -105,10 +109,8 @@
     .u4 { animation: up .38s ease .26s both; }
     .u5 { animation: up .38s ease .33s both; }
 
-    /* RTL tweaks */
+    /* RTL */
     [dir="rtl"] .field { text-align: right; }
-    [dir="rtl"] .field[type="tel"],
-    [dir="rtl"] .field[type="number"] { text-align: left; direction: ltr; }
 </style>
 @endpush
 

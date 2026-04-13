@@ -5,7 +5,7 @@
 @push('head')
 <style>
     .profile-card {
-        background: #fff;
+        background: #000000;
         border-radius: var(--radius-card);
         border: 1px solid var(--border);
         box-shadow: var(--shadow-card);

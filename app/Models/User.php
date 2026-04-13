@@ -2,14 +2,15 @@
 
 namespace App\Models;
 use Filament\Panel;
+use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-class User extends Authenticatable implements FilamentUser // أضف implements FilamentUser
+class User extends Authenticatable  // أضف implements FilamentUser
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     // ─── Mass-assignable fields ───────────────────────────────────────────────
 
@@ -87,13 +88,5 @@ public function getAuthIdentifierName()
 {
     return 'phone';
 }
-public function canAccessPanel(Panel $panel): bool
-    {
-        // هنا تسمح بالدخول، مثلاً للجميع في بيئة التطوير
-        // أو لمستخدمين محددين فقط
-        return str_ends_with($this->email, 'admin@gmail.com') && $this->hasVerifiedEmail();
-        
-        // للتجربة السريعة فقط، اجعلها true:
-        // return true;
-    }
+
 }

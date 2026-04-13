@@ -7,7 +7,10 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
-
+use App\Http\Controllers\Admin\CountryController;
+use App\Http\Controllers\Admin\ZoneController;
+use App\Http\Controllers\Admin\CurrencyController;
+use App\Http\Controllers\ShippingApiController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -67,22 +70,39 @@ Route::middleware('auth')->group(function () {
 });
 
 // ─── Admin Routes ─────────────────────────────────────────────────────────────
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    
-    Route::resource('products', AdminProductController::class);
-    Route::resource('categories', CategoryController::class);
-    
-    Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
-    Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
-Route::resource('pages', AdminPageController::class);
- 
-    Route::get('settings', [SettingController::class, 'index'])->name('settings');
-    Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
-});
+
 Route::get('/p/{slug}', [PageController::class, 'show'])->name('pages.show');
  
- 
+ Route::prefix('api/shipping')->name('api.shipping.')->group(function () {
+    Route::get('countries',       [ShippingApiController::class, 'countries'])->name('countries');
+    Route::get('zones/{country}', [ShippingApiController::class, 'zones'])->name('zones');
+});
 // ─── Admin pages routes (inside your existing auth middleware group) ──────────
 // Add these lines inside: Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(...)
+// المجموعة الأب: تسمح للـ Super Admin والـ Admin بالدخول (عشان الداشبورد والمنتجات)
+Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // 1. مسارات مشتركة (متاحة للطرفين)
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('products', AdminProductController::class);
+    Route::resource('categories', CategoryController::class);
+
+    // 2. مسارات محصورة "فقط" بالسوبر أدمن (Super Admin Only)
+    Route::middleware(['role:super-admin'])->group(function () {
+        
+        // الطلبات
+        Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+        Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        
+        // الصفحات والدول والعملات والمناطق
+        Route::resource('pages', AdminPageController::class);
+        Route::resource('countries', CountryController::class);
+        Route::resource('currencies', CurrencyController::class);
+        Route::resource('countries.zones', ZoneController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        // الإعدادات العامة
+        Route::get('settings', [SettingController::class, 'index'])->name('settings');
+        Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+    });
+});

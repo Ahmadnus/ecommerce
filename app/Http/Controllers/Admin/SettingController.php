@@ -9,22 +9,35 @@ use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
-    public function index() {
-        return view('admin.settings'); // سننشئ هذه الصفحة
+  public function index() {
+    // جلب جميع الإعدادات وتحويلها لمصفوفة مفتاح وقيمة لسهولة الاستخدام
+    $siteSettings = Setting::pluck('value', 'key'); 
+    return view('admin.settings', compact('siteSettings'));
+}
+
+
+public function update(Request $request) {
+    // أضفنا footer_bg_color هنا
+    $keys = [
+        'primary_color', 
+        'bg_color', 
+        'nav_bg_color', 
+        'card_bg_color', 
+        'footer_bg_color', 
+        'site_name'
+    ];
+
+    foreach ($keys as $key) {
+        if ($request->has($key)) {
+            \App\Models\Setting::updateOrCreate(['key' => $key], ['value' => $request->$key]);
+        }
     }
 
-    public function update(Request $request) {
-        // تحديث اللون
-        if ($request->has('primary_color')) {
-            Setting::updateOrCreate(['key' => 'primary_color'], ['value' => $request->primary_color]);
-        }
-
-        // تحديث الشعار
-        if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('site', 'public');
-            Setting::updateOrCreate(['key' => 'site_logo'], ['value' => $path]);
-        }
-
-        return back()->with('success', 'تم تحديث الإعدادات بنجاح!');
+    if ($request->hasFile('logo')) {
+        $path = $request->file('logo')->store('site', 'public');
+        \App\Models\Setting::updateOrCreate(['key' => 'site_logo'], ['value' => $path]);
     }
+
+    return back()->with('success', 'تم تحديث الإعدادات بنجاح!');
+}
 }

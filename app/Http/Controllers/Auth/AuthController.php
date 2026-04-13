@@ -107,7 +107,7 @@ class AuthController extends Controller
         Auth::login($user, remember: false);
         $request->session()->regenerate();
 
-        return redirect()->route('home')
+        return redirect()->route('products.index')
                          ->with('success', 'تم إنشاء حسابك بنجاح، مرحباً ' . $user->name . '!');
     }
 

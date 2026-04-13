@@ -12,7 +12,6 @@ return new class extends Migration
 {
 public function up(): void
 {
-    // تعطيل فحص القيود مؤقتاً لتجنب خطأ الترتيب
     Schema::disableForeignKeyConstraints();
 
     Schema::create('order_items', function (Blueprint $table) {
@@ -20,8 +19,11 @@ public function up(): void
         $table->foreignId('order_id')->constrained()->cascadeOnDelete();
         $table->foreignId('product_id')->nullable()->constrained()->nullOnDelete();
         
-        // استخدام unsignedBigInteger يدوي لضمان تطابق النوع 100% مع جدول الـ variants
-        $table->unsignedBigInteger('product_variant_id')->nullable();
+        // هذا السطر المختصر يُغنيك عن تعريف العمود والربط يدوياً
+        $table->foreignId('product_variant_id')
+              ->nullable()
+              ->constrained('product_variants')
+              ->nullOnDelete();
 
         $table->string('product_name');
         $table->string('product_sku')->nullable();
@@ -30,15 +32,8 @@ public function up(): void
         $table->decimal('unit_price', 10, 2);
         $table->decimal('total_price', 10, 2);
         $table->timestamps();
-
-        // إضافة الربط يدوياً داخل نفس دالة الإنشاء
-        $table->foreign('product_variant_id')
-              ->references('id')
-              ->on('product_variants')
-              ->onDelete('set null');
     });
 
-    // إعادة تفعيل الفحص
     Schema::enableForeignKeyConstraints();
 }
 

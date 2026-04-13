@@ -27,20 +27,23 @@ class AppServiceProvider extends ServiceProvider
     }
 
   public function boot(): void
-    {  
-       
-        // تمرير مصفوفة المفضلة لكل الصفحات التي تحتوي على منتجات
-        View::composer('*', function ($view) {
-            $wishlistedIds = [];
-            
-            if (Auth::check()) {
-                // جلب الـ IDs للمنتجات المفضلة للمستخدم المسجل دخوله
-                $wishlistedIds = Auth::user()->wishlistedProducts()
-                    ->pluck('product_id')
-                    ->toArray();
-            }
+{   
+    View::composer('*', function ($view) {
+        // إذا كان الطلب قادم من لوحة تحكم فيلامينت، لا تنفذ الكود
+        if (request()->is('manager*') || request()->is('livewire*')) {
+            return;
+        }
 
-            $view->with('wishlistedIds', $wishlistedIds);
-        });
-    }
+        $wishlistedIds = [];
+        
+        if (Auth::check()) {
+            // جلب الـ IDs للمنتجات المفضلة للمستخدم المسجل دخوله
+            $wishlistedIds = Auth::user()->wishlistedProducts()
+                ->pluck('product_id')
+                ->toArray();
+        }
+
+        $view->with('wishlistedIds', $wishlistedIds);
+    });
+}
 }

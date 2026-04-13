@@ -235,4 +235,16 @@ public function wishlistedByUsers(): BelongsToMany
     )->withTimestamps();
 }
  
+
+// app/Models/Product.php
+
+public function getPriceInCurrency($type = 'base_price')
+{
+    // جلب العملة من السيشن أو الافتراضية
+    $currency = session('currency') ?? \App\Models\Currency::where('is_base', true)->first();
+    $rate = $currency ? $currency->exchange_rate : 1;
+    
+    // استخدام السعر المطلوب (الأساسي أو التخفيض) ضرب سعر الصرف
+    return (float) $this->$type * $rate;
+}
 }

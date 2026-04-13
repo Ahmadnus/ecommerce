@@ -16,7 +16,7 @@ return new class extends Migration
         // ── Orders ────────────────────────────────────────────────────────────
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+           $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->string('order_number')->unique()
                   ->comment('Human-readable: ORD-YYYYMMDD-XXXXX');
  

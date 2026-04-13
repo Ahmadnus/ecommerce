@@ -50,9 +50,39 @@
                     </div>
                 </div>
             </div>
+{{-- أضف هذه الحقول داخل الفورم في صفحة admin/settings.blade.php --}}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {{-- اللون الأساسي --}}
+    <div class="space-y-2">
+        <label class="block text-sm font-bold text-gray-700">اللون الأساسي (أزرار وعناصر)</label>
+        <input type="color" name="primary_color" 
+               value="{{ \App\Models\Setting::get('primary_color', '#0ea5e9') }}"
+               class="h-12 w-full rounded-lg cursor-pointer">
+    </div>
 
-            <hr class="border-gray-100">
+    {{-- لون الخلفية --}}
+    <div class="space-y-2">
+        <label class="block text-sm font-bold text-gray-700">لون خلفية الموقع</label>
+        <input type="color" name="bg_color" 
+               value="{{ \App\Models\Setting::get('bg_color', '#f9fafb') }}"
+               class="h-12 w-full rounded-lg cursor-pointer">
+    </div>
 
+    {{-- لون شريط التنقل --}}
+    <div class="space-y-2">
+        <label class="block text-sm font-bold text-gray-700">لون الهيدر (Navbar)</label>
+        <input type="color" name="nav_bg_color" 
+               value="{{ \App\Models\Setting::get('nav_bg_color', '#ffffff') }}"
+               class="h-12 w-full rounded-lg cursor-pointer">
+    </div>
+</div>
+<div class="form-group">
+        <label>لون خلفية الكروت (Products Cards):</label>
+        <input type="color" name="card_bg_color" value="{{ $siteSettings['card_bg_color'] ?? '#ffffff' }}">
+    </div>
+
+    <label>لون الفوتر:</label>
+<input type="color" name="footer_bg_color" value="{{ $siteSettings['footer_bg_color'] ?? '#111827' }}">
             {{-- خيارات إضافية (مثال) --}}
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-2">اسم المتجر</label>

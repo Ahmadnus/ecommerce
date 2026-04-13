@@ -36,52 +36,72 @@
             </div>
             
             <nav class="mt-4 px-2 space-y-1">
-                {{-- الرئيسية --}}
-                <x-admin-nav-link href="{{ route('admin.dashboard') }}" icon="home" :active="request()->routeIs('admin.dashboard')">
-                    الرئيسية
-                </x-admin-nav-link>
+                {{-- الرئيسية (متاحة للكل لأن لديهم manage-catalog) --}}
+                @can('manage-catalog')
+                    <x-admin-nav-link href="{{ route('admin.dashboard') }}" icon="home" :active="request()->routeIs('admin.dashboard')">
+                        الرئيسية
+                    </x-admin-nav-link>
 
-                {{-- المنتجات --}}
-                <x-admin-nav-link href="{{ route('admin.products.index') }}" icon="shopping-bag" :active="request()->routeIs('admin.products.*')">
-                    المنتجات
-                </x-admin-nav-link>
+                    {{-- المنتجات --}}
+                    <x-admin-nav-link href="{{ route('admin.products.index') }}" icon="shopping-bag" :active="request()->routeIs('admin.products.*')">
+                        المنتجات
+                    </x-admin-nav-link>
 
-                {{-- التصنيفات --}}
-                <x-admin-nav-link href="{{ route('admin.categories.index') }}" icon="folder" :active="request()->routeIs('admin.categories.*')">
-                    التصنيفات
-                </x-admin-nav-link>
+                    {{-- التصنيفات --}}
+                    <x-admin-nav-link href="{{ route('admin.categories.index') }}" icon="folder" :active="request()->routeIs('admin.categories.*')">
+                        التصنيفات
+                    </x-admin-nav-link>
+                @endcan
 
-                {{-- الطلبات (تم وضعه هنا للمحاذاة) --}}
-                <x-admin-nav-link href="{{ route('admin.orders.index') }}" icon="shopping-cart" :active="request()->routeIs('admin.orders.*')">
-                    الطلبات
-                    @php
-                        $pendingCount = \App\Models\Order::where('status', 'pending')->count();
-                    @endphp
-                    @if($pendingCount > 0)
-                        <span x-show="sidebarOpen" class="mr-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">
-                            {{ $pendingCount }}
-                        </span>
-                    @endif
-                </x-admin-nav-link>
+                {{-- القسم المخصص للسوبر أدمن فقط (الطلبات، الإعدادات، الصفحات) --}}
+                @can('manage-all')
+                    {{-- الطلبات --}}
+                    <x-admin-nav-link href="{{ route('admin.orders.index') }}" icon="shopping-cart" :active="request()->routeIs('admin.orders.*')">
+                        الطلبات
+                        @php
+                            $pendingCount = \App\Models\Order::where('status', 'pending')->count();
+                        @endphp
+                        @if($pendingCount > 0)
+                            <span x-show="sidebarOpen" class="mr-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">
+                                {{ $pendingCount }}
+                            </span>
+                        @endif
+                    </x-admin-nav-link>
 
-                <hr class="border-gray-800 my-4 mx-2">
+                    {{-- قسم الإعدادات الجغرافية والمالية --}}
+                    <div x-show="sidebarOpen" class="px-3 mt-6 mb-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                        الإعدادات المتقدمة
+                    </div>
 
-                {{-- الإعدادات --}}
-                <x-admin-nav-link href="{{ route('admin.settings') }}" icon="settings" :active="request()->routeIs('admin.settings')">
-                    الإعدادات
-                </x-admin-nav-link>
-                <a href="{{ route('admin.pages.index') }}"
-   class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-semibold
-          {{ request()->routeIs('admin.pages.*')
-             ? 'bg-white/10 text-white'
-             : 'text-gray-400 hover:bg-white/5 hover:text-white' }}"
-   :class="sidebarOpen ? '' : 'justify-center'">
-    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-    </svg>
-    <span x-show="sidebarOpen" class="truncate">الصفحات</span>
-</a>
+                    {{-- الدول --}}
+                    <x-admin-nav-link href="{{ route('admin.countries.index') }}" icon="globe" :active="request()->routeIs('admin.countries.*')">
+                        الدول
+                    </x-admin-nav-link>
+
+                    {{-- العملات --}}
+                    <x-admin-nav-link href="{{ route('admin.currencies.index') }}" icon="currency-dollar" :active="request()->routeIs('admin.currencies.*')">
+                        العملات
+                    </x-admin-nav-link>
+
+                    <hr class="border-gray-800 my-4 mx-2">
+
+                    {{-- الإعدادات العامة --}}
+                    <x-admin-nav-link href="{{ route('admin.settings') }}" icon="settings" :active="request()->routeIs('admin.settings')">
+                        الإعدادات العامة
+                    </x-admin-nav-link>
+
+                    {{-- الصفحات --}}
+                    <a href="{{ route('admin.pages.index') }}"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-semibold
+                              {{ request()->routeIs('admin.pages.*') ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}"
+                       :class="sidebarOpen ? '' : 'justify-center'">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span x-show="sidebarOpen" class="truncate">الصفحات</span>
+                    </a>
+                @endcan
             </nav>
         </aside>
 
@@ -98,7 +118,7 @@
                         عرض المتجر
                     </a>
                     <div class="h-8 w-8 rounded-full bg-brand flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-brand/30">
-                        AD
+                        {{ substr(auth()->user()->name ?? 'AD', 0, 2) }}
                     </div>
                 </div>
             </header>

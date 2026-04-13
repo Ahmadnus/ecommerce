@@ -8,17 +8,17 @@
 
     {{-- 1. جلب الإعدادات من قاعدة البيانات --}}
 @php
-    // 1. جلب كل الإعدادات مرة واحدة وتخزينها في مصفوفة (أفضل للأداء)
-    $siteSettings = \App\Models\Setting::pluck('value', 'key');
+        $siteSettings = \App\Models\Setting::pluck('value', 'key');
 
-    // 2. استخراج القيم من المصفوفة مع وضع قيم افتراضية في حال كانت القاعدة فارغة
-    $primaryColor = $siteSettings['primary_color'] ?? '#0ea5e9';
-    
-    // 3. جلب الشعار
-    $logoPath = $siteSettings['site_logo'] ?? null;
-    $logoUrl = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
-@endphp
-
+        $primaryColor = $siteSettings['primary_color'] ?? '#0ea5e9';
+        $bgColor      = $siteSettings['bg_color'] ?? '#f9fafb';
+        $navColor     = $siteSettings['nav_bg_color'] ?? '#ffffff';
+        $cardColor    = $siteSettings['card_bg_color'] ?? '#ffffff';
+        $footerColor  = $siteSettings['footer_bg_color'] ?? '#111827'; // المتغير الجديد للفوتر
+        
+        $logoPath = $siteSettings['site_logo'] ?? null;
+        $logoUrl = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
+    @endphp
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -27,12 +27,14 @@
                     colors: {
                         brand: {
                        
+                       
+                       
                             50:  '#f0f9ff',
                             100: '#e0f2fe',
                             500: 'var(--brand-color)', 
                             600: 'var(--brand-color-dark)',
                             700: 'var(--brand-color-darker)',
-                            900: '#950000',
+                            900: '#ff0b0b',
                         },
                         accent: '#f59e0b',
                     },
@@ -49,33 +51,97 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 
-    <style>
-    
-      :root {
-            --brand-color: {{ $primaryColor }};
+   <style>
+  :root {
+        --brand-color: {{ $primaryColor }};
+        --nav-bg-color: {{ $navColor }};
+        --bg-color: {{ $bgColor }};
+        --card-bg: {{ $cardColor }};
+        --hero-grad-start: color-mix(in srgb, var(--brand-color) 40%, #000);
+        --hero-grad-mid: color-mix(in srgb, var(--brand-color) 20%, #111);
+    }
+
+    /* 1. تطبيق لون الخلفية العام */
+    body, main { 
+        background-color: var(--bg-color) !important; 
+    }
+
+    /* 2. تخصيص النافبار */
+    nav, .navbar-custom { 
+        background-color: var(--nav-bg-color) !important; 
+    }
+main {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+ footer, [class*="footer"] { 
+        background-color: {{ $footerColor }} !important; 
+        margin-top: 0 !important;
+    }
+
+    /* لضمان عدم وجود خلفية رمادية افتراضية من تيلويند تظهر كفراغ */
+    body {
+        background-color: var(--bg-color) !important;
+    }
+    /* 3. إجبار الكروت على أخذ اللون المختار حتى لو فيها كلاسات تيلويند */
+    .pcard, .featured-card, .product-card {
+        background-color: var(--card-bg) !important;
+    }
+
+    /* 4. الشفافية (عدلناها لتصبح فقط للمساحات الكبيرة وليس الكروت) */
+    .bg-gray-50, 
+    main > .bg-white:not(.pcard) {
+        background-color: transparent !important;
+    }
+
+    /* 5. الهيرو بانر */
+    .hero-banner {
+        background: linear-gradient(135deg, 
+            var(--hero-grad-start) 0%, 
+            var(--hero-grad-mid) 55%, 
+            var(--bg-color) 100%
+        ) !important;
+    }
+
+        .hero-banner::before {
+            background: transparent !important;
         }
-        
-        {{-- هنا نربط كلاسات Tailwind باللون الديناميكي --}}
-        .bg-brand-600 { background-color: var(--brand-color) !important; }
-        .text-brand-600 { color: var(--brand-color) !important; }
-        .border-brand-600 { border-color: var(--brand-color) !important; }
-        .bg-brand-50 { background-color: {{ $primaryColor }}15 !important; }
-        
-        /* باقي الستايلات التي كانت عندك... */
 
-        body { font-family: 'DM Sans', sans-serif; }
-        .font-display { font-family: 'Playfair Display', serif; }
+        /* ربط أزرار البراند باللون الأساسي */
+        .bg-brand, .btn-primary {
+            background-color: var(--brand-color) !important;
+        }
+    /* ربط كلاسات البراند (الأزرار وغيرها) باللون الأساسي */
+    .bg-brand,
+    .bg-brand-500,
+    .bg-brand-600 { 
+        background-color: var(--brand-color) !important; 
+    }
 
-        /* الأنميشن والستايلات الأخرى التي كانت لديك تبقى كما هي */
-        .cart-badge { animation: pop 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
-        @keyframes pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4); } }
-        .product-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
-        .product-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        #toast { transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        #toast.hidden { transform: translateY(-80px); opacity: 0; }
-        .spinner { animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
+    .text-brand,
+    .text-brand-600 { 
+        color: var(--brand-color) !important; 
+    }
+
+    .border-brand {
+        border-color: var(--brand-color) !important;
+    }
+
+    /* ستايلات الخطوط والأنيميشن (بدون تغيير) */
+    body { 
+        font-family: 'DM Sans', sans-serif;
+    }
+    .font-display { font-family: 'Playfair Display', serif; }
+    .cart-badge { animation: pop 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+    @keyframes pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4); } }
+    .product-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    #toast { transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    #toast.hidden { transform: translateY(-80px); opacity: 0; }
+    .spinner { animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 
     @stack('head')
 </head>

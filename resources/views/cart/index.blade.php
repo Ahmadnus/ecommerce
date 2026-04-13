@@ -5,17 +5,19 @@
 
 @push('head')
 <style>
+    /* 1. تأثير الشيمر (التحميل) */
     @keyframes shimmer {
         0%   { background-position: -600px 0; }
         100% { background-position:  600px 0; }
     }
     .sk {
-        background: linear-gradient(90deg, #f1f0ee 25%, #e8e7e4 50%, #f1f0ee 75%);
+        background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.05) 75%);
         background-size: 1200px 100%;
         animation: shimmer 1.6s ease-in-out infinite;
         border-radius: 6px;
     }
 
+    /* 2. حركات الظهور */
     @keyframes up {
         from { opacity: 0; transform: translateY(14px); }
         to   { opacity: 1; transform: translateY(0); }
@@ -24,43 +26,71 @@
     .u2 { animation: up .35s ease .12s both; }
     .u3 { animation: up .35s ease .19s both; }
 
-    /* Cart row */
-    .cart-item-row {
-        transition: background .15s;
+    /* 3. خلفية الصفحة الرئيسية (إجبار اللون من الإعدادات) */
+    .min-h-screen[dir="rtl"] {
+        background-color: var(--bg-color, #f7f6f3) !important;
     }
-    .cart-item-row:hover { background: #faf9f7; }
 
-    /* Qty controls */
+    /* 4. تعديل ألوان الصفوف (Cart row) */
+    .cart-item-row {
+        transition: all .2s;
+        background-color: transparent;
+    }
+    .cart-item-row:hover { 
+        background-color: rgba(0,0,0,0.02); /* تعتيم خفيف جداً عند المرور */
+    }
+
+    /* 5. تعديل ألوان كروت السلة والملخص */
+    .bg-white {
+        background-color: var(--card-bg, #ffffff) !important;
+        border-color: rgba(0,0,0,0.08) !important;
+    }
+
+    /* 6. التحكم بالكمية (Qty controls) */
     .qty-ctrl { display: flex; align-items: center; gap: 6px; }
     .qty-b {
         width: 28px; height: 28px;
-        border: 1.5px solid #e5e3df;
+        border: 1.5px solid rgba(0,0,0,0.1); /* حدود شفافة تتناسب مع أي خلفية */
         border-radius: 8px;
-        background: #fff;
+        background: var(--card-bg, #ffffff);
         display: flex; align-items: center; justify-content: center;
         cursor: pointer;
         font-size: 15px;
         color: #6b6966;
-        transition: all .15s;
+        transition: all .2s;
         flex-shrink: 0;
-        line-height: 1;
     }
-    .qty-b:hover { border-color: #1a1917; color: #1a1917; background: #f5f4f2; }
+    .qty-b:hover { 
+        border-color: var(--brand-color, #1a1917); 
+        color: var(--brand-color, #1a1917);
+        background: rgba(0,0,0,0.03);
+    }
 
-    /* Remove btn */
+    /* 7. زر الحذف (Remove btn) */
     .rm-btn {
         width: 30px; height: 30px;
         border-radius: 8px;
         display: flex; align-items: center; justify-content: center;
         color: #c5c2bc;
-        transition: all .15s;
+        transition: all .2s;
         cursor: pointer;
-        flex-shrink: 0;
     }
-    .rm-btn:hover { background: #fee2e2; color: #ef4444; }
-    .rm-btn svg { width: 14px; height: 14px; }
+    .rm-btn:hover { 
+        background: #fee2e2; 
+        color: #ef4444; 
+    }
 
-    /* Remove animation */
+    /* 8. زر إتمام الطلب (Buttons) */
+    .bg-\[\#1a1917\] {
+        background-color: var(--brand-color, #1a1917) !important;
+    }
+    
+    /* 9. ألوان النصوص الثانوية */
+    .text-\[\#9a9793\], .text-\[\#6b6966\] {
+        color: rgba(0,0,0,0.5) !important;
+    }
+
+    /* أنيميشن الحذف */
     .cart-item-row.removing {
         transition: opacity .2s, transform .2s;
         opacity: 0;
@@ -70,6 +100,13 @@
 @endpush
 
 @section('content')
+@php
+    $currentCurrency = session('currency') ?? \App\Models\Currency::where('is_base', true)->first();
+    // هنعرف الاسمين عشان لو استخدمت أي واحد فيهم ما يضربش معك كود
+    $symbol = $currentCurrency->symbol ?? '$';
+    $currencySymbol = $symbol; 
+    $exchangeRate = $currentCurrency->exchange_rate ?? 1;
+@endphp
 <div class="min-h-screen bg-[#f7f6f3]" dir="rtl">
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
 
@@ -163,10 +200,7 @@
                                     {{ $item['variant_name'] }}
                                 </p>
                                 @endif
-                                <p class="text-xs text-[#b5b2ab] mt-0.5 unit-price-label tabular-nums"
-                                   data-unit-price="{{ $item['price'] }}">
-                                    ${{ number_format($item['price'], 2) }} / قطعة
-                                </p>
+
                             </div>
                         </div>
 
@@ -185,9 +219,9 @@
 
                         {{-- Total --}}
                         <div>
-                            <p class="item-subtotal text-sm font-bold text-[#1a1917] tabular-nums">
-                                ${{ number_format($item['subtotal'], 2) }}
-                            </p>
+                           <p class="item-subtotal text-sm font-bold text-[#1a1917] tabular-nums">
+    {{ $symbol }} {{ number_format($item['subtotal'] * $currentCurrency->exchange_rate, 2) }}
+</p>
                         </div>
 
                         {{-- Remove --}}
@@ -339,10 +373,17 @@
 @push('scripts')
 <script>
 const CartPage = {
+    // تعريف الثوابت القادمة من السيرفر
+    symbol: "{{ $currencySymbol }}",
+    rate: {{ $exchangeRate }},
+
+    // دالة التنسيق: تضرب السعر الخام (بالدولار) في سعر الصرف وتضيف الرمز
     f(n) {
+        const converted = (n || 0) * this.rate;
         return new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2, maximumFractionDigits: 2
-        }).format(n || 0);
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2
+        }).format(converted);
     },
 
     getRows(itemKey) {
@@ -359,6 +400,7 @@ const CartPage = {
 
         const qtyEls    = anyRow.querySelectorAll('.qty-display');
         const unitEl    = anyRow.querySelector('.unit-price-label');
+        // السعر هنا دائماً هو السعر الأساسي (بالدولار) المخزن في الـ data-unit-price
         const unitPrice = parseFloat(unitEl?.dataset?.unitPrice ?? 0);
         const newQty    = parseInt(qtyEls[0]?.textContent ?? 1) + delta;
 
@@ -380,7 +422,8 @@ const CartPage = {
                 rows.forEach(row => {
                     row.querySelectorAll('.qty-display').forEach(el => el.textContent = newQty);
                     row.querySelectorAll('.item-subtotal').forEach(el => {
-                        el.textContent = '$' + this.f(unitPrice * newQty);
+                        // استخدام الدالة المحسنة التي تضرب في السعر وتضيف الرمز
+                        el.textContent = this.symbol + ' ' + this.f(unitPrice * newQty);
                     });
                 });
                 this.updateSummary(data);
@@ -429,12 +472,15 @@ const CartPage = {
         const sh = document.getElementById('summary-shipping');
         const tot = document.getElementById('summary-total');
 
-        if (s)   s.textContent   = '$' + this.f(data.subtotal);
-        if (t)   t.textContent   = '$' + this.f(data.tax);
-        if (tot) tot.textContent = '$' + this.f(data.total);
+        // تحديث الملخص باستخدام الرمز والدالة التي تضرب في سعر الصرف
+        if (s)   s.textContent   = this.symbol + ' ' + this.f(data.subtotal);
+        if (t)   t.textContent   = this.symbol + ' ' + this.f(data.tax);
+        if (tot) tot.textContent = this.symbol + ' ' + this.f(data.total);
+        
         if (sh) {
-            const isFree = parseFloat(data.shipping) === 0;
-            sh.textContent = isFree ? 'مجاني' : '$' + this.f(data.shipping);
+            const shippingVal = parseFloat(data.shipping);
+            const isFree = shippingVal === 0;
+            sh.textContent = isFree ? 'مجاني' : this.symbol + ' ' + this.f(shippingVal);
             sh.className   = 'font-semibold tabular-nums ' + (isFree ? 'text-emerald-600' : 'text-[#1a1917]');
         }
     }

@@ -1,98 +1,44 @@
-{{-- resources/views/partials/footer.blade.php --}}
-{{--
-    Updated footer — "Help" column now pulls from the `pages` table.
-    Static links (FAQ, Contact Us, etc.) remain as fallback.
---}}
-
-<footer class="bg-gray-900 text-gray-400 mt-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+<footer class="text-gray-400 py-14 border-t border-white border-opacity-5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
-
-            {{-- ── Brand ────────────────────────────────────────────── --}}
-            <div class="md:col-span-1">
+            {{-- Brand --}}
+            <div>
                 <div class="flex items-center gap-2 mb-4">
-                    <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                        </svg>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: var(--brand-color)">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                     </div>
                     <span class="font-display font-bold text-lg text-white">ShopCraft</span>
                 </div>
-                <p class="text-sm leading-relaxed">
-                    Quality products, curated for modern living.
-                    Free shipping on orders over $50.
-                </p>
+                <p class="text-sm">Quality products, curated for modern living.</p>
             </div>
 
-            {{-- ── Shop ─────────────────────────────────────────────── --}}
+            {{-- Shop & Help (Dynamic) --}}
             <div>
-                <h4 class="text-white font-semibold text-sm mb-4 uppercase tracking-wide">Shop</h4>
+                <h4 class="text-white font-semibold text-sm mb-4 uppercase">Shop</h4>
                 <ul class="space-y-2 text-sm">
-                    <li>
-                        <a href="{{ route('products.index') }}"
-                           class="hover:text-white transition-colors">All Products</a>
-                    </li>
                     @foreach(\App\Models\Category::where('is_active', true)->take(4)->get() as $cat)
-                    <li>
-                        <a href="{{ route('products.index', ['category' => $cat->id]) }}"
-                           class="hover:text-white transition-colors">{{ $cat->name }}</a>
-                    </li>
+                        <li><a href="{{ route('products.index', ['category' => $cat->id]) }}" class="hover:text-white">{{ $cat->name }}</a></li>
                     @endforeach
                 </ul>
             </div>
 
-            {{-- ── Help / Dynamic Pages ─────────────────────────────── --}}
             <div>
-                <h4 class="text-white font-semibold text-sm mb-4 uppercase tracking-wide">Help</h4>
+                <h4 class="text-white font-semibold text-sm mb-4 uppercase">Help</h4>
                 <ul class="space-y-2 text-sm">
-
-                    {{-- Static links that don't need a DB page --}}
-                    <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
-                    <li><a href="#" class="hover:text-white transition-colors">Contact Us</a></li>
-
-                    {{-- ── Dynamic pages from DB ─────────────────────── --}}
-                    @php
-                        $footerPages = \App\Models\Page::active()->ordered()->get();
-                    @endphp
-                    @foreach($footerPages as $fp)
-                    <li>
-                        <a href="{{ route('pages.show', $fp->slug) }}"
-                           class="hover:text-white transition-colors">
-                            {{ $fp->name }}
-                        </a>
-                    </li>
+                    @foreach(\App\Models\Page::active()->ordered()->get() as $fp)
+                        <li><a href="{{ route('pages.show', $fp->slug) }}" class="hover:text-white">{{ $fp->name }}</a></li>
                     @endforeach
-
                 </ul>
             </div>
 
-            {{-- ── Newsletter ───────────────────────────────────────── --}}
+            {{-- Newsletter --}}
             <div>
-                <h4 class="text-white font-semibold text-sm mb-4 uppercase tracking-wide">
-                    Stay in the Loop
-                </h4>
-                <p class="text-sm mb-3">Get new arrivals and exclusive deals.</p>
-                <form class="flex gap-2" onsubmit="return false">
-                    <input type="email" placeholder="your@email.com"
-                           class="flex-1 bg-gray-800 border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-brand-500 placeholder-gray-500">
-                    <button class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-                        Join
-                    </button>
+                <h4 class="text-white font-semibold text-sm mb-4 uppercase">Newsletter</h4>
+                <form class="flex gap-2">
+                    <input type="email" placeholder="Email" class="flex-1 bg-white bg-opacity-5 border border-white border-opacity-10 rounded-lg px-3 py-2 text-white text-sm">
+                    <button class="px-4 py-2 rounded-lg text-white text-sm" style="background-color: var(--brand-color)">Join</button>
                 </form>
             </div>
-
         </div>
-
-        {{-- ── Bottom bar ───────────────────────────────────────────── --}}
-        <div class="border-t border-gray-800 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <p>© {{ date('Y') }} ShopCraft. All rights reserved.</p>
-            <div class="flex items-center gap-4">
-                <span class="bg-gray-800 px-2 py-1 rounded text-gray-400">Visa</span>
-                <span class="bg-gray-800 px-2 py-1 rounded text-gray-400">Mastercard</span>
-                <span class="bg-gray-800 px-2 py-1 rounded text-gray-400">PayPal</span>
-            </div>
-        </div>
-
     </div>
 </footer>

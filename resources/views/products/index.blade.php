@@ -22,23 +22,22 @@
    0. CSS DESIGN TOKENS  — change everything from here
 ════════════════════════════════════════════════════════════════ */
 :root {
-    --brand:          var(--brand-color, #0ea5e9);
+    /* سحب اللون الأساسي من الإعدادات أو استخدام افتراضي */
+    --brand:          var(--brand-color, #0ea5e9); 
     --brand-dark:     color-mix(in srgb, var(--brand) 75%, #000);
     --brand-light:    color-mix(in srgb, var(--brand) 12%, #fff);
+    
+    /* سحب لون الخلفية العام الذي حدده الأدمن */
+    --surface:        var(--nav-bg-color, #ffffff); /* خلفية الكروت (غالباً مثل لون النافبار) */
+    --surface-2:      var(--bg-color, #f8f8f8);    /* خلفية الصفحة العامة */
+    
+    /* باقي المتغيرات تبقى كما هي */
     --sale-red:       #ff3366;
-    --gold:           #f59e0b;
-    --surface:        #ffffff;
-    --surface-2:      #f8f8f8;
     --border:         #efefef;
     --text-1:         #111827;
     --text-2:         #6b7280;
-    --text-3:         #9ca3af;
     --radius-card:    16px;
-    --radius-btn:     10px;
     --shadow-card:    0 4px 24px rgba(0,0,0,.07);
-    --shadow-hover:   0 12px 36px rgba(0,0,0,.13);
-    --transition-fast: .18s ease;
-    --transition-med:  .28s ease;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -99,10 +98,21 @@
    2. HERO BANNER
 ════════════════════════════════════════════════════════════════ */
 .hero-banner {
-    background: linear-gradient(135deg, #0a0a14 0%, #14142b 55%, #0a2050 100%);
+    /* التدرج سيبدأ بلون البراند الغامق وينتهي بلون خلفية الموقع المختار */
+    background: linear-gradient(135deg, 
+        color-mix(in srgb, var(--brand-color) 40%, #000) 0%, 
+        color-mix(in srgb, var(--brand-color) 20%, #111) 55%, 
+        var(--bg-color) 100%
+    ) !important;
+    
     border-radius: 20px;
     overflow: hidden;
     position: relative;
+}
+
+/* لضمان عدم وجود طبقات بيضاء تغطي التدرج */
+.hero-banner::before {
+    background: transparent !important;
 }
 .hero-banner::after {
     content: '';
@@ -165,7 +175,7 @@
     max-width: 148px;
     flex-shrink: 0;
     scroll-snap-align: start;
-    background: var(--surface);
+  background: var(--card-bg) !important;
     border-radius: var(--radius-card);
     overflow: hidden;
     cursor: pointer;
@@ -197,11 +207,14 @@
 ════════════════════════════════════════════════════════════════ */
 .pcard {
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-    background: var(--surface);
+    /* ربط الخلفية بالمتغير الديناميكي */
+  background-color: var(--card-bg) !important;
+    
     border-radius: var(--radius-card);
     overflow: hidden;
     cursor: pointer;
     position: relative;
+    border: 1px solid rgba(0,0,0,0.05); /* إطار خفيف جداً */
 }
 .pcard:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
 .pcard:hover .pcard-img { transform: scale(1.06); }
@@ -712,18 +725,7 @@
 
                 {{-- Desktop quick-add (hover reveal) --}}
                 @if($product->in_stock)
-                <div class="absolute bottom-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block"
-                     onclick="event.stopPropagation()">
-                    <button type="button"
-                            onclick="Cart.add({{ $product->id }}, 1, this)"
-                            title="أضف للسلة"
-                            style="width:30px;height:30px;background:var(--brand);border-radius:8px"
-                            class="heart-btn">
-                        <svg class="w-4 h-4" fill="none" stroke="white" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                        </svg>
-                    </button>
-                </div>
+                
                 @endif
 
                 {{-- Out of stock overlay --}}
