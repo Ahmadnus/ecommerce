@@ -11,12 +11,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-       $middleware->alias([
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            
-        ]);
+ 
+    // 1. تسجيل الـ Aliases (للاستخدام داخل الـ Routes)
+    $middleware->alias([
+        'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+        'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+        'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+    ]);
+
+    // 2. تسجيل الـ ResolveCurrency ليعمل على "كل" طلبات المتجر تلقائياً
+    $middleware->web(append: [
+        \App\Http\Middleware\ResolveCurrency::class,
+    ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

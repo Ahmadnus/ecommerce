@@ -238,13 +238,24 @@ public function wishlistedByUsers(): BelongsToMany
 
 // app/Models/Product.php
 
-public function getPriceInCurrency($type = 'base_price')
-{
-    // جلب العملة من السيشن أو الافتراضية
-    $currency = session('currency') ?? \App\Models\Currency::where('is_base', true)->first();
-    $rate = $currency ? $currency->exchange_rate : 1;
-    
-    // استخدام السعر المطلوب (الأساسي أو التخفيض) ضرب سعر الصرف
-    return (float) $this->$type * $rate;
-}
+
+
+ public function getPriceInCurrency(string $field = 'base_price'): float
+    {
+        $svc  = app(\App\Services\CurrencyService::class);
+        $base = (float) ($this->$field ?? 0);
+        return $svc->convert($base);
+    }
+ 
+    public function getEffectivePriceConvertedAttribute(): float
+    {
+        $field = $this->is_on_sale ? 'discount_price' : 'base_price';
+        return $this->getPriceInCurrency($field);
+    }
+ 
+    public function getFormattedPriceAttribute(): string
+    {
+        $svc = app(\App\Services\CurrencyService::class);
+        return $svc->format($this->is_on_sale ? $this->discount_price : $this->base_price);
+    }
 }

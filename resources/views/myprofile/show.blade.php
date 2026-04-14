@@ -1,140 +1,176 @@
 @extends('layouts.app')
 
-@section('title', 'الملف الشخصي')
+@section('title', 'حسابي')
 
 @push('head')
 <style>
-    .profile-card {
-        background: #000000;
-        border-radius: var(--radius-card);
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow-card);
+    :root {
+        --subtle-bg: #f8fafc;
     }
-    .input-field {
-        width: 100%;
-        padding: 12px 16px;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        background: #f9fafb;
-        transition: all 0.2s;
+
+    /* كرت البروفايل العلوي في الهاتف */
+    .mobile-profile-header {
+        background: linear-gradient(to bottom, var(--brand-color) 50%, transparent 50%);
     }
-    .input-field:focus {
-        border-color: var(--brand);
-        background: #fff;
-        box-shadow: 0 0 0 4px var(--brand-light);
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    /* تحسين شكل الإدخال ليكون "App Style" */
+    .app-input {
+        @apply w-full px-4 py-3.5 bg-gray-50 border-transparent rounded-2xl transition-all duration-200 text-sm;
+        border: 1.5px solid transparent;
+    }
+    .app-input:focus {
+        @apply bg-white shadow-sm;
+        border-color: var(--brand-color);
         outline: none;
     }
-    .order-item {
-        border-bottom: 1px solid #f3f4f6;
-        padding: 16px 0;
+
+    /* أيقونات القائمة الجانبية */
+    .menu-item {
+        @apply flex items-center justify-between p-4 rounded-2xl transition-all active:scale-[0.98];
+        background: white;
+        border: 1px solid #f1f5f9;
     }
-    .order-item:last-child { border: none; }
+    .menu-item:hover {
+        border-color: var(--brand-color);
+        background: color-mix(in srgb, var(--brand-color) 5%, transparent);
+    }
+
+    /* إخفاء التمرير العرضي */
+    body { overflow-x: hidden; }
 </style>
 @endpush
 
 @section('content')
 
-<div class="max-w-6xl mx-auto px-4 py-10" dir="rtl">
+<div class="min-h-screen pb-12" dir="rtl">
     
-    <div class="flex flex-col md:flex-row gap-8">
-        
-        {{-- ─── القائمة الجانبية (Sidebar) ────────────────────────────────── --}}
-        <div class="w-full md:w-1/3 space-y-6">
-            <div class="profile-card p-6 text-center">
-                <div class="w-24 h-24 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">
-                    {{ substr($user->name, 0, 1) }}
+    {{-- هيدر الموبايل (يظهر بشكل جميل جداً في الأعلى) --}}
+    <div class="lg:hidden h-32 w-full" style="background-color: var(--brand-color);"></div>
+
+    <div class="max-w-6xl mx-auto px-4 -mt-16 lg:mt-12">
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            {{-- الجانب الأيمن (البروفايل والروابط) --}}
+            <div class="w-full lg:w-1/3">
+                <div class="glass-card rounded-[2.5rem] p-6 text-center">
+                    {{-- الصورة الشخصية --}}
+                    <div class="relative -mt-16 lg:mt-0 mb-4 inline-block">
+                        <div class="w-24 h-24 lg:w-28 lg:h-28 rounded-3xl rotate-3 bg-white shadow-xl flex items-center justify-center text-3xl font-bold mx-auto border-4 border-white overflow-hidden">
+                           <span class="-rotate-3 text-white w-full h-full flex items-center justify-center" style="background-color: var(--brand-color);">
+                                {{ mb_substr($user->name, 0, 1) }}
+                           </span>
+                        </div>
+                        <div class="absolute -bottom-2 -right-2 bg-emerald-500 w-6 h-6 rounded-full border-4 border-white"></div>
+                    </div>
+
+                    <h2 class="text-xl font-bold text-gray-900">{{ $user->name }}</h2>
+                    <p class="text-gray-400 text-sm mb-8">{{ $user->phone }}</p>
+
+                    {{-- أزرار سريعة للهاتف --}}
+                    <div class="grid grid-cols-1 gap-3">
+                        <a href="{{ route('orders.index') }}" class="menu-item group">
+                            <div class="flex items-center gap-3">
+                                <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">📦</span>
+                                <span class="font-bold text-gray-700">طلباتي</span>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </a>
+
+                        <a href="{{ route('wishlist.index') }}" class="menu-item group">
+                            <div class="flex items-center gap-3">
+                                <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-pink-50 text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-all">❤️</span>
+                                <span class="font-bold text-gray-700">المفضلة</span>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </a>
+
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button class="menu-item w-full group border-red-50 hover:border-red-200">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all">🚪</span>
+                                    <span class="font-bold text-gray-700">خروج</span>
+                                </div>
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <h2 class="font-display text-xl font-bold text-gray-900">{{ $user->name }}</h2>
-                <p class="text-gray-500 text-sm mb-6">{{ $user->phone }}</p>
+            </div>
+
+            {{-- الجانب الأيسر (البيانات والطلبات) --}}
+            <div class="w-full lg:w-2/3 space-y-6">
                 
-                <div class="space-y-2">
-                    <a href="{{ route('orders.index') }}" class="flex items-center gap-3 w-full p-3 rounded-xl bg-gray-50 text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
-                        <span class="text-xl">📦</span>
-                        طلباتي
-                    </a>
-                    <a href="{{ route('wishlist.index') }}" class="flex items-center gap-3 w-full p-3 rounded-xl bg-gray-50 text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-colors font-medium">
-                        <span class="text-xl">❤️</span>
-                        المفضلة
-                    </a>
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button class="flex items-center gap-3 w-full p-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors font-medium mt-4">
-                            <span class="text-xl">🚪</span>
-                            تسجيل الخروج
+                {{-- فورم البيانات --}}
+                <div class="bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-2 h-6 rounded-full" style="background-color: var(--brand-color);"></div>
+                        <h3 class="text-lg font-bold text-gray-900">المعلومات الشخصية</h3>
+                    </div>
+
+                    <form action="{{ route('myprofile.update') }}" method="POST" class="space-y-4">
+                        @csrf @method('PUT')
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-gray-400 mr-2 mb-1 block">الاسم</label>
+                                <input type="text" name="name" value="{{ $user->name }}" class="app-input">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-400 mr-2 mb-1 block">الهاتف</label>
+                                <input type="text" name="phone" value="{{ $user->phone }}" class="app-input" dir="ltr">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full lg:w-auto px-10 py-3.5 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all" style="background-color: var(--brand-color);">
+                            حفظ التعديلات
                         </button>
                     </form>
                 </div>
-            </div>
-        </div>
 
-        {{-- ─── المحتوى الرئيسي ────────────────────────────────────────── --}}
-        <div class="w-full md:w-2/3 space-y-8">
-            
-            {{-- معلوماتي --}}
-            <div class="profile-card p-8">
-                <h3 class="font-display text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                    معلوماتي الشخصية
-                    <span class="h-1 w-12 bg-brand rounded-full"></span>
-                </h3>
-                
-                <form action="{{ route('myprofile.update') }}" method="POST" class="space-y-5">
-                    @csrf
-                    @method('PUT')
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div class="space-y-2">
-                            <label class="text-sm font-bold text-gray-700">الاسم الكامل</label>
-                            <input type="text" name="name" value="{{ old('name', $user->name) }}" class="input-field">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-sm font-bold text-gray-700">رقم الهاتف</label>
-                            <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="input-field" dir="ltr">
+                {{-- قائمة الطلبات --}}
+                <div class="bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-6 rounded-full" style="background-color: var(--brand-color);"></div>
+                            <h3 class="text-lg font-bold text-gray-900">آخر الطلبات</h3>
                         </div>
                     </div>
 
-                   
-
-                    <button type="submit" class="w-full md:w-auto px-10 py-3 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 active:scale-95 transition-all shadow-lg shadow-brand-light">
-                        حفظ التغييرات
-                    </button>
-                </form>
-            </div>
-
-            {{-- آخر الطلبات --}}
-            <div class="profile-card p-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="font-display text-2xl font-bold text-gray-900">آخر الطلبات</h3>
-                    <a href="{{ route('orders.index') }}" class="text-brand-600 font-bold text-sm hover:underline">مشاهدة الكل</a>
+                    @forelse($orders as $order)
+                    <div class="flex items-center justify-between p-4 mb-3 rounded-2xl bg-gray-50/50 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                <span class="text-xs font-bold text-gray-400">#{{ $order->id }}</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-900">طلب رقم {{ $order->id }}</p>
+                                <p class="text-[10px] text-gray-400 font-medium">{{ $order->created_at->format('Y/m/d') }}</p>
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-sm font-black mb-1" style="color: var(--brand-color);">
+                                <x-price :amount="$order->total_amount" />
+                            </div>
+                            <span class="text-[9px] px-2 py-0.5 rounded-md font-bold uppercase {{ $order->status == 'completed' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600' }}">
+                                {{ $order->status_label }}
+                            </span>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="text-center py-8">
+                        <p class="text-gray-400 text-sm">لا توجد طلبات سابقة</p>
+                    </div>
+                    @endforelse
                 </div>
 
-                @if($orders->isEmpty())
-                    <div class="text-center py-10">
-                        <div class="text-5xl mb-4">🛍️</div>
-                        <p class="text-gray-500">لم تقم بأي طلبات بعد</p>
-                        <a href="/" class="text-brand-600 font-bold inline-block mt-2">ابدأ التسوق الآن</a>
-                    </div>
-                @else
-                    <div class="space-y-1">
-                        @foreach($orders as $order)
-                        <div class="order-item flex items-center justify-between">
-                            <div>
-                                <p class="font-bold text-gray-900 text-lg">طلب #{{ $order->id }}</p>
-                                <p class="text-sm text-gray-500">{{ $order->created_at->format('Y/m/d') }}</p>
-                            </div>
-                            <div class="text-left">
-                                <p class="font-bold text-brand-600">${{ number_format($order->total_amount, 2) }}</p>
-                                <span class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider 
-                                    {{ $order->status == 'completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700' }}">
-                                    {{ $order->status_label }}
-                                </span>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                @endif
             </div>
         </div>
     </div>
-
 </div>
+
 @endsection

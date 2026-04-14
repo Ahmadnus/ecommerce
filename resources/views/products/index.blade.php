@@ -751,25 +751,27 @@
                     {{ $product->name }}
                 </p>
 
-                <div class="flex items-center justify-between mt-0.5 gap-1">
-                    <div class="flex items-baseline gap-1.5 flex-wrap">
-                        @if($product->is_on_sale)
-                        <span class="text-sm font-black leading-none tabular-nums" style="color:var(--sale-red)">
-                            ${{ number_format($product->discount_price, 2) }}
-                        </span>
-                        <span class="text-[10px] text-gray-400 line-through leading-none tabular-nums">
-                            ${{ number_format($product->base_price, 2) }}
-                        </span>
-                        @else
-                        <span class="text-sm font-black text-gray-900 leading-none tabular-nums">
-                            ${{ number_format($product->base_price, 2) }}
-                        </span>
-                        @endif
-                    </div>
-
-                    {{-- Mobile add button --}}
-                  
-                </div>
+               <td class="px-6 py-4">
+    <div class="flex flex-col">
+        @if($product->discount_price && $product->discount_price < $product->base_price)
+            {{-- ملصق التخفيض --}}
+            <span class="text-xs text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded w-fit mb-1 u1">تخفيض</span>
+            
+            <div class="flex items-center gap-2 u2">
+                {{-- السعر بعد الخصم (يتحول تلقائياً حسب العملة النشطة) --}}
+                <x-price :amount="$product->discount_price" class="font-bold text-gray-900" />
+                
+                {{-- السعر الأصلي مشطوب --}}
+                <x-price :amount="$product->base_price" class="text-xs text-gray-400 line-through" />
+            </div>
+        @else
+            {{-- السعر الأساسي في حال عدم وجود خصم --}}
+            <div class="u2">
+                <x-price :amount="$product->base_price" class="font-bold text-gray-900" />
+            </div>
+        @endif
+    </div>
+</td>
 
                 @if($product->variants->where('is_active', true)->count() > 1)
                 <p class="text-[10px] text-gray-400 leading-none">

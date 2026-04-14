@@ -64,7 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
 
     // Orders
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+   
     Route::get('/orders/show/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::get('/orders/success/{orderNumber}', [OrderController::class, 'success'])->name('orders.success');
 });
@@ -106,3 +106,4 @@ Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
     });
 });
+Route::get('/orders', [OrderController::class, 'index'])->name('orders.index')->middleware('auth');

@@ -60,19 +60,25 @@
                 </td>
 
                 {{-- Price: base_price / discount_price --}}
-                <td class="px-6 py-4">
-                    <div class="flex flex-col">
-                        @if($product->discount_price && $product->discount_price < $product->base_price)
-                        <span class="text-xs text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded w-fit mb-1">تخفيض</span>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-gray-900">${{ number_format($product->discount_price, 2) }}</span>
-                            <span class="text-xs text-gray-400 line-through">${{ number_format($product->base_price, 2) }}</span>
-                        </div>
-                        @else
-                        <span class="font-bold text-gray-900">${{ number_format($product->base_price, 2) }}</span>
-                        @endif
-                    </div>
-                </td>
+          <td class="px-6 py-4">
+    <div class="flex flex-col">
+        @if($product->discount_price && $product->discount_price < $product->base_price)
+            {{-- ملصق التخفيض --}}
+            <span class="text-xs text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded w-fit mb-1">تخفيض</span>
+            
+            <div class="flex items-center gap-2">
+                {{-- السعر بعد الخصم --}}
+                <x-price :amount="$product->discount_price" class="font-bold text-gray-900" />
+                
+                {{-- السعر الأصلي مشطوب --}}
+                <x-price :amount="$product->base_price" class="text-xs text-gray-400 line-through" />
+            </div>
+        @else
+            {{-- السعر الأساسي في حال عدم وجود خصم --}}
+            <x-price :amount="$product->base_price" class="font-bold text-gray-900" />
+        @endif
+    </div>
+</td>
 
                 {{-- Variants count --}}
                 <td class="px-6 py-4">

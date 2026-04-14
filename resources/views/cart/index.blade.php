@@ -1,23 +1,26 @@
-{{-- resources/views/cart/index.blade.php --}}
-
+{{--
+    resources/views/cart/index.blade.php
+    ─────────────────────────────────────────────────────────────────────────────
+    All $summary values are in JOD.
+    $activeCurrency is shared by ResolveCurrency middleware.
+    Prices are displayed via the <x-price> component which converts on the fly.
+    ─────────────────────────────────────────────────────────────────────────────
+--}}
 @extends('layouts.app')
 @section('title', 'سلة التسوق')
 
 @push('head')
 <style>
-    /* 1. تأثير الشيمر (التحميل) */
     @keyframes shimmer {
         0%   { background-position: -600px 0; }
         100% { background-position:  600px 0; }
     }
     .sk {
-        background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.05) 75%);
+        background: linear-gradient(90deg, #f1f0ee 25%, #e8e7e4 50%, #f1f0ee 75%);
         background-size: 1200px 100%;
         animation: shimmer 1.6s ease-in-out infinite;
         border-radius: 6px;
     }
-
-    /* 2. حركات الظهور */
     @keyframes up {
         from { opacity: 0; transform: translateY(14px); }
         to   { opacity: 1; transform: translateY(0); }
@@ -25,100 +28,49 @@
     .u1 { animation: up .35s ease .05s both; }
     .u2 { animation: up .35s ease .12s both; }
     .u3 { animation: up .35s ease .19s both; }
-
-    /* 3. خلفية الصفحة الرئيسية (إجبار اللون من الإعدادات) */
-    .min-h-screen[dir="rtl"] {
-        background-color: var(--bg-color, #f7f6f3) !important;
-    }
-
-    /* 4. تعديل ألوان الصفوف (Cart row) */
-    .cart-item-row {
-        transition: all .2s;
-        background-color: transparent;
-    }
-    .cart-item-row:hover { 
-        background-color: rgba(0,0,0,0.02); /* تعتيم خفيف جداً عند المرور */
-    }
-
-    /* 5. تعديل ألوان كروت السلة والملخص */
-    .bg-white {
-        background-color: var(--card-bg, #ffffff) !important;
-        border-color: rgba(0,0,0,0.08) !important;
-    }
-
-    /* 6. التحكم بالكمية (Qty controls) */
-    .qty-ctrl { display: flex; align-items: center; gap: 6px; }
+    .cart-item-row { transition: background .15s; }
+    .cart-item-row:hover { background: #faf9f7; }
     .qty-b {
         width: 28px; height: 28px;
-        border: 1.5px solid rgba(0,0,0,0.1); /* حدود شفافة تتناسب مع أي خلفية */
-        border-radius: 8px;
-        background: var(--card-bg, #ffffff);
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer;
-        font-size: 15px;
-        color: #6b6966;
-        transition: all .2s;
-        flex-shrink: 0;
+        border: 1.5px solid #e5e3df; border-radius: 8px;
+        background: #fff; display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 15px; color: #6b6966;
+        transition: all .15s; flex-shrink: 0; line-height: 1;
     }
-    .qty-b:hover { 
-        border-color: var(--brand-color, #1a1917); 
-        color: var(--brand-color, #1a1917);
-        background: rgba(0,0,0,0.03);
-    }
-
-    /* 7. زر الحذف (Remove btn) */
+    .qty-b:hover { border-color: #1a1917; color: #1a1917; background: #f5f4f2; }
     .rm-btn {
-        width: 30px; height: 30px;
-        border-radius: 8px;
+        width: 30px; height: 30px; border-radius: 8px;
         display: flex; align-items: center; justify-content: center;
-        color: #c5c2bc;
-        transition: all .2s;
-        cursor: pointer;
+        color: #c5c2bc; transition: all .15s; cursor: pointer; flex-shrink: 0;
     }
-    .rm-btn:hover { 
-        background: #fee2e2; 
-        color: #ef4444; 
-    }
-
-    /* 8. زر إتمام الطلب (Buttons) */
-    .bg-\[\#1a1917\] {
-        background-color: var(--brand-color, #1a1917) !important;
-    }
-    
-    /* 9. ألوان النصوص الثانوية */
-    .text-\[\#9a9793\], .text-\[\#6b6966\] {
-        color: rgba(0,0,0,0.5) !important;
-    }
-
-    /* أنيميشن الحذف */
-    .cart-item-row.removing {
-        transition: opacity .2s, transform .2s;
-        opacity: 0;
-        transform: translateX(16px);
-    }
+    .rm-btn:hover { background: #fee2e2; color: #ef4444; }
+    .cart-item-row.removing { transition: opacity .2s, transform .2s; opacity: 0; transform: translateX(16px); }
 </style>
 @endpush
 
 @section('content')
+
 @php
-    $currentCurrency = session('currency') ?? \App\Models\Currency::where('is_base', true)->first();
-    // هنعرف الاسمين عشان لو استخدمت أي واحد فيهم ما يضربش معك كود
-    $symbol = $currentCurrency->symbol ?? '$';
-    $currencySymbol = $symbol; 
-    $exchangeRate = $currentCurrency->exchange_rate ?? 1;
+    // Active currency (set by ResolveCurrency middleware, defaults to JOD)
+    $cur  = $activeCurrency;
+    $rate = (float) $cur->exchange_rate;
+    $sym  = $cur->symbol;
+
+    // Helper: convert JOD → display currency
+    $cv = fn(float $jod): string => number_format(round($jod * $rate, 2), 2);
 @endphp
+
 <div class="min-h-screen bg-[#f7f6f3]" dir="rtl">
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
 
-    {{-- ── Header ──────────────────────────────────────────────────────────── --}}
+    {{-- Header --}}
     <div class="u1 flex items-baseline justify-between mb-8 gap-4 flex-wrap">
         <div>
-            <h1 class="font-display text-2xl lg:text-3xl font-bold text-[#1a1917] tracking-tight">
-                سلة التسوق
-            </h1>
+            <h1 class="font-display text-2xl lg:text-3xl font-bold text-[#1a1917] tracking-tight">سلة التسوق</h1>
             @if(!empty($summary['items']))
             <p class="text-sm text-[#9a9793] mt-1">
                 {{ array_sum(array_column($summary['items'], 'quantity')) }} قطعة
+                — بالدينار الأردني ({{ $sym }})
             </p>
             @endif
         </div>
@@ -131,10 +83,8 @@
         </a>
     </div>
 
-    {{-- ═══════════════════════════════════════════════
-         EMPTY STATE
-    ═══════════════════════════════════════════════ --}}
     @if(empty($summary['items']))
+    {{-- Empty state --}}
     <div class="u2 text-center py-24">
         <div class="w-20 h-20 bg-white border border-[#ece9e4] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
             <svg class="w-9 h-9 text-[#c5c2bc]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,46 +93,33 @@
             </svg>
         </div>
         <h2 class="font-display text-xl font-bold text-[#1a1917] mb-2">السلة فارغة</h2>
-        <p class="text-[#9a9793] text-sm mb-8 max-w-xs mx-auto leading-relaxed">
-            لم تضف أي منتجات بعد. استعرض متجرنا واختر ما يعجبك.
-        </p>
+        <p class="text-[#9a9793] text-sm mb-8 max-w-xs mx-auto leading-relaxed">لم تضف أي منتجات بعد.</p>
         <a href="{{ route('products.index') }}"
-           class="inline-flex items-center gap-2 bg-[#1a1917] hover:bg-[#2d2c2a] text-white
-                  font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm shadow-lg shadow-black/15">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-            </svg>
+           class="inline-flex items-center gap-2 bg-[#1a1917] hover:bg-[#2d2c2a] text-white font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm shadow-lg shadow-black/15">
             تصفح المنتجات
         </a>
     </div>
 
     @else
-
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-start">
 
-        {{-- ═══════════════════════════════════════════════
-             CART ITEMS
-        ═══════════════════════════════════════════════ --}}
+        {{-- Cart items --}}
         <div class="lg:col-span-3 u2">
 
-            {{-- Desktop table (hidden on mobile) --}}
+            {{-- Desktop table --}}
             <div class="hidden sm:block bg-white rounded-2xl border border-[#ece9e4] overflow-hidden">
-
-                {{-- Table head --}}
-                <div class="grid grid-cols-[2fr_1fr_1fr_36px] gap-4 px-5 py-3 border-b border-[#f0ede8] text-[10px] font-bold text-[#9a9793] uppercase tracking-widest">
+                <div class="grid grid-cols-[2fr_1fr_1fr_36px] gap-4 px-5 py-3 border-b border-[#f0ede8]
+                             text-[10px] font-bold text-[#9a9793] uppercase tracking-widest">
                     <span>المنتج</span>
                     <span class="text-center">الكمية</span>
-                    <span class="text-left">الإجمالي</span>
+                    <span>الإجمالي</span>
                     <span></span>
                 </div>
-
                 <div id="cart-items-desktop" class="divide-y divide-[#f7f6f3]">
                     @foreach($summary['items'] as $itemKey => $item)
                     <div class="cart-item-row grid grid-cols-[2fr_1fr_1fr_36px] gap-4 items-center px-5 py-4"
                          id="item-{{ $itemKey }}">
 
-                        {{-- Product --}}
                         <div class="flex items-center gap-3 min-w-0">
                             <div class="relative w-14 h-14 rounded-xl overflow-hidden bg-[#f7f6f3] border border-[#f0ede8] flex-shrink-0">
                                 <div class="sk absolute inset-0" id="sk-{{ $loop->index }}"></div>
@@ -192,94 +129,73 @@
                                      onload="document.getElementById('sk-{{ $loop->index }}').style.display='none'">
                             </div>
                             <div class="min-w-0">
-                                <p class="text-sm font-semibold text-[#1a1917] line-clamp-1 leading-snug">
-                                    {{ $item['name'] }}
-                                </p>
+                                <p class="text-sm font-semibold text-[#1a1917] line-clamp-1">{{ $item['name'] }}</p>
                                 @if(!empty($item['variant_name']))
-                                <p class="text-xs font-medium mt-0.5" style="color: var(--brand-color, #0ea5e9)">
-                                    {{ $item['variant_name'] }}
-                                </p>
+                                <p class="text-xs font-medium mt-0.5" style="color:var(--brand-color)">{{ $item['variant_name'] }}</p>
                                 @endif
-
+                                {{-- Unit price in active currency --}}
+                                <p class="text-xs text-[#b5b2ab] mt-0.5 unit-price-label tabular-nums"
+                                   data-unit-price-jod="{{ $item['price'] }}">
+                                    {{ $cv($item['price']) }} {{ $sym }} / قطعة
+                                </p>
                             </div>
                         </div>
 
-                        {{-- Qty --}}
                         <div class="flex justify-center">
-                            <div class="qty-ctrl">
-                                <button type="button" class="qty-b"
-                                        onclick="CartPage.updateQty('{{ $itemKey }}', -1)">−</button>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" class="qty-b" onclick="CartPage.updateQty('{{ $itemKey }}', -1)">−</button>
                                 <span class="qty-display w-8 text-center text-sm font-bold text-[#1a1917] tabular-nums">
                                     {{ $item['quantity'] }}
                                 </span>
-                                <button type="button" class="qty-b"
-                                        onclick="CartPage.updateQty('{{ $itemKey }}', 1)">+</button>
+                                <button type="button" class="qty-b" onclick="CartPage.updateQty('{{ $itemKey }}', 1)">+</button>
                             </div>
                         </div>
 
-                        {{-- Total --}}
-                        <div>
-                           <p class="item-subtotal text-sm font-bold text-[#1a1917] tabular-nums">
-    {{ $symbol }} {{ number_format($item['subtotal'] * $currentCurrency->exchange_rate, 2) }}
-</p>
-                        </div>
+                        <p class="item-subtotal text-sm font-bold text-[#1a1917] tabular-nums">
+                            {{ $cv($item['subtotal']) }} {{ $sym }}
+                        </p>
 
-                        {{-- Remove --}}
-                        <button type="button" class="rm-btn"
-                                onclick="CartPage.remove('{{ $itemKey }}')"
-                                title="إزالة">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button type="button" class="rm-btn" onclick="CartPage.remove('{{ $itemKey }}')">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
                         </button>
-
                     </div>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Mobile cards (hidden on sm+) --}}
-            <div class="sm:hidden space-y-3" id="cart-items-mobile">
+            {{-- Mobile cards --}}
+            <div class="sm:hidden space-y-3">
                 @foreach($summary['items'] as $itemKey => $item)
                 <div class="cart-item-row bg-white rounded-2xl border border-[#ece9e4] p-4"
                      id="item-mob-{{ $itemKey }}">
                     <div class="flex gap-3">
-                        <div class="relative w-18 h-18 w-[72px] h-[72px] rounded-xl overflow-hidden bg-[#f7f6f3] border border-[#f0ede8] flex-shrink-0">
+                        <div class="w-[72px] h-[72px] rounded-xl overflow-hidden bg-[#f7f6f3] border border-[#f0ede8] flex-shrink-0">
                             <img src="{{ $item['image'] ?? 'https://picsum.photos/seed/'.$loop->index.'/120/120' }}"
-                                 alt="{{ $item['name'] }}"
-                                 class="w-full h-full object-cover">
+                                 class="w-full h-full object-cover" alt="{{ $item['name'] }}">
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between gap-2">
-                                <p class="text-sm font-semibold text-[#1a1917] line-clamp-2 leading-snug flex-1">
-                                    {{ $item['name'] }}
-                                </p>
-                                <button type="button" class="rm-btn flex-shrink-0"
-                                        onclick="CartPage.removeAll('{{ $itemKey }}')">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M6 18L18 6M6 6l12 12"/>
+                                <p class="text-sm font-semibold text-[#1a1917] line-clamp-2 flex-1">{{ $item['name'] }}</p>
+                                <button type="button" class="rm-btn flex-shrink-0" onclick="CartPage.removeAll('{{ $itemKey }}')">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
                                 </button>
                             </div>
                             @if(!empty($item['variant_name']))
-                            <p class="text-xs font-medium mt-0.5" style="color: var(--brand-color, #0ea5e9)">
-                                {{ $item['variant_name'] }}
-                            </p>
+                            <p class="text-xs font-medium mt-0.5" style="color:var(--brand-color)">{{ $item['variant_name'] }}</p>
                             @endif
                             <div class="flex items-center justify-between mt-3">
-                                <div class="qty-ctrl">
-                                    <button type="button" class="qty-b"
-                                            onclick="CartPage.updateQty('{{ $itemKey }}', -1)">−</button>
-                                    <span class="qty-display w-7 text-center text-sm font-bold text-[#1a1917] tabular-nums">
-                                        {{ $item['quantity'] }}
-                                    </span>
-                                    <button type="button" class="qty-b"
-                                            onclick="CartPage.updateQty('{{ $itemKey }}', 1)">+</button>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" class="qty-b" onclick="CartPage.updateQty('{{ $itemKey }}', -1)">−</button>
+                                    <span class="qty-display w-7 text-center text-sm font-bold text-[#1a1917] tabular-nums">{{ $item['quantity'] }}</span>
+                                    <button type="button" class="qty-b" onclick="CartPage.updateQty('{{ $itemKey }}', 1)">+</button>
                                 </div>
                                 <p class="item-subtotal text-sm font-bold text-[#1a1917] tabular-nums">
-                                    ${{ number_format($item['subtotal'], 2) }}
+                                    {{ $cv($item['subtotal']) }} {{ $sym }}
                                 </p>
                             </div>
                         </div>
@@ -287,49 +203,45 @@
                 </div>
                 @endforeach
             </div>
-
         </div>
 
-        {{-- ═══════════════════════════════════════════════
-             ORDER SUMMARY
-        ═══════════════════════════════════════════════ --}}
+        {{-- Order summary --}}
         <div class="lg:col-span-2 u3">
             <div class="bg-white rounded-2xl border border-[#ece9e4] overflow-hidden sticky top-20">
-
                 <div class="px-5 py-4 border-b border-[#f0ede8]">
                     <h2 class="font-semibold text-[#1a1917] text-sm">ملخص الطلب</h2>
+                    <p class="text-[10px] text-[#b5b2ab] mt-0.5">
+                        الأسعار بـ {{ $cur->name }} ({{ $sym }})
+                    </p>
                 </div>
-
                 <div class="p-5 space-y-2.5 text-sm border-b border-[#f0ede8]">
                     <div class="flex justify-between text-[#6b6966]">
                         <span>المجموع الفرعي</span>
                         <span id="summary-subtotal" class="font-semibold text-[#1a1917] tabular-nums">
-                            ${{ number_format($summary['subtotal'], 2) }}
+                            {{ $cv($summary['subtotal']) }} {{ $sym }}
                         </span>
                     </div>
                     <div class="flex justify-between text-[#6b6966]">
                         <span>الضريبة (10%)</span>
                         <span id="summary-tax" class="font-semibold text-[#1a1917] tabular-nums">
-                            ${{ number_format($summary['tax'], 2) }}
+                            {{ $cv($summary['tax']) }} {{ $sym }}
                         </span>
                     </div>
                     <div class="flex justify-between text-[#6b6966]">
                         <span>الشحن</span>
                         <span id="summary-shipping"
                               class="font-semibold tabular-nums {{ $summary['shipping'] == 0 ? 'text-emerald-600' : 'text-[#1a1917]' }}">
-                            {{ $summary['shipping'] == 0 ? 'مجاني' : '$' . number_format($summary['shipping'], 2) }}
+                            {{ $summary['shipping'] == 0 ? 'مجاني' : $cv($summary['shipping']) . ' ' . $sym }}
                         </span>
                     </div>
                 </div>
-
                 <div class="px-5 py-4">
                     <div class="flex justify-between items-center mb-5">
                         <span class="font-bold text-[#1a1917]">الإجمالي</span>
                         <span id="summary-total" class="font-bold text-xl text-[#1a1917] tabular-nums">
-                            ${{ number_format($summary['total'], 2) }}
+                            {{ $cv($summary['total']) }} {{ $sym }}
                         </span>
                     </div>
-
                     <a href="{{ route('checkout.index') }}"
                        class="flex items-center justify-center gap-2 w-full bg-[#1a1917] hover:bg-[#2d2c2a]
                               text-white font-bold text-sm py-4 rounded-xl transition-colors
@@ -340,26 +252,10 @@
                         </svg>
                         إتمام الطلب بأمان
                     </a>
-
-                    {{-- Secure badge --}}
-                    <div class="mt-3 flex items-center justify-center gap-1.5 text-[10px] text-[#b5b2ab]">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                        معاملات آمنة ومشفرة بالكامل
-                    </div>
-
-                    {{-- Payment icons --}}
-                    <div class="flex items-center justify-center gap-2 mt-3">
-                        @foreach(['Visa', 'Mastercard', 'COD'] as $pm)
-                        <span class="text-[10px] font-semibold text-[#9a9793] bg-[#f7f6f3] border border-[#ece9e4] px-2 py-1 rounded-lg">
-                            {{ $pm }}
-                        </span>
-                        @endforeach
-                    </div>
+                    <p class="text-center text-[10px] text-[#b5b2ab] mt-3">
+                        الأسعار بالدينار الأردني — {{ $sym }}
+                    </p>
                 </div>
-
             </div>
         </div>
 
@@ -372,36 +268,28 @@
 
 @push('scripts')
 <script>
-const CartPage = {
-    // تعريف الثوابت القادمة من السيرفر
-    symbol: "{{ $currencySymbol }}",
-    rate: {{ $exchangeRate }},
+// Exchange rate from server — used to re-convert after AJAX updates
+const CURRENCY_RATE   = {{ (float) $cur->exchange_rate }};
+const CURRENCY_SYMBOL = '{{ $sym }}';
 
-    // دالة التنسيق: تضرب السعر الخام (بالدولار) في سعر الصرف وتضيف الرمز
-    f(n) {
-        const converted = (n || 0) * this.rate;
-        return new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2
-        }).format(converted);
+const CartPage = {
+    f(jod) {
+        const converted = Math.round(jod * CURRENCY_RATE * 100) / 100;
+        return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(converted);
     },
 
-    getRows(itemKey) {
-        return [
-            document.getElementById('item-' + itemKey),
-            document.getElementById('item-mob-' + itemKey),
-        ].filter(Boolean);
+    getRows(k) {
+        return [document.getElementById('item-' + k), document.getElementById('item-mob-' + k)].filter(Boolean);
     },
 
     async updateQty(itemKey, delta) {
-        const rows    = this.getRows(itemKey);
-        const anyRow  = rows[0];
-        if (!anyRow) return;
+        const rows  = this.getRows(itemKey);
+        if (!rows.length) return;
 
-        const qtyEls    = anyRow.querySelectorAll('.qty-display');
-        const unitEl    = anyRow.querySelector('.unit-price-label');
-        // السعر هنا دائماً هو السعر الأساسي (بالدولار) المخزن في الـ data-unit-price
-        const unitPrice = parseFloat(unitEl?.dataset?.unitPrice ?? 0);
+        const qtyEls    = rows[0].querySelectorAll('.qty-display');
+        const unitEl    = rows[0].querySelector('.unit-price-label');
+        // unit price stored in JOD
+        const unitJod   = parseFloat(unitEl?.dataset?.unitPriceJod ?? 0);
         const newQty    = parseInt(qtyEls[0]?.textContent ?? 1) + delta;
 
         if (newQty <= 0) return this.remove(itemKey);
@@ -409,78 +297,60 @@ const CartPage = {
         try {
             const res  = await fetch('/cart/update', {
                 method:  'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept':       'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                },
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
+                           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
                 body: JSON.stringify({ item_key: itemKey, quantity: newQty }),
             });
             const data = await res.json();
-
             if (data.success) {
                 rows.forEach(row => {
                     row.querySelectorAll('.qty-display').forEach(el => el.textContent = newQty);
                     row.querySelectorAll('.item-subtotal').forEach(el => {
-                        // استخدام الدالة المحسنة التي تضرب في السعر وتضيف الرمز
-                        el.textContent = this.symbol + ' ' + this.f(unitPrice * newQty);
+                        el.textContent = this.f(unitJod * newQty) + ' ' + CURRENCY_SYMBOL;
                     });
                 });
                 this.updateSummary(data);
             }
         } catch (e) {
-            if (typeof Cart !== 'undefined') Cart.toast('حدث خطأ في التحديث', 'error');
+            if (typeof Cart !== 'undefined') Cart.toast('حدث خطأ', 'error');
         }
     },
 
     async remove(itemKey) {
-        if (!confirm('إزالة هذا المنتج من السلة؟')) return;
-
+        if (!confirm('إزالة هذا المنتج؟')) return;
         const rows = this.getRows(itemKey);
         rows.forEach(r => r.classList.add('removing'));
-
         try {
             const res  = await fetch('/cart/remove/' + itemKey, {
                 method:  'DELETE',
-                headers: {
-                    'Accept':       'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                },
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
             });
             const data = await res.json();
-
             if (data.success) {
                 setTimeout(() => {
                     rows.forEach(r => r.remove());
                     this.updateSummary(data);
                     if (data.empty) location.reload();
                 }, 220);
-            } else {
-                rows.forEach(r => r.classList.remove('removing'));
-            }
+            } else rows.forEach(r => r.classList.remove('removing'));
         } catch (e) {
             rows.forEach(r => r.classList.remove('removing'));
-            if (typeof Cart !== 'undefined') Cart.toast('تعذر الحذف', 'error');
         }
     },
 
-    removeAll(itemKey) { this.remove(itemKey); },
+    removeAll(k) { this.remove(k); },
 
+    // data.subtotal etc. come from server in JOD
     updateSummary(data) {
-        const s = document.getElementById('summary-subtotal');
-        const t = document.getElementById('summary-tax');
-        const sh = document.getElementById('summary-shipping');
-        const tot = document.getElementById('summary-total');
-
-        // تحديث الملخص باستخدام الرمز والدالة التي تضرب في سعر الصرف
-        if (s)   s.textContent   = this.symbol + ' ' + this.f(data.subtotal);
-        if (t)   t.textContent   = this.symbol + ' ' + this.f(data.tax);
-        if (tot) tot.textContent = this.symbol + ' ' + this.f(data.total);
-        
+        const f = v => this.f(v) + ' ' + CURRENCY_SYMBOL;
+        const s = id => document.getElementById(id);
+        if (s('summary-subtotal')) s('summary-subtotal').textContent = f(data.subtotal);
+        if (s('summary-tax'))      s('summary-tax').textContent      = f(data.tax);
+        if (s('summary-total'))    s('summary-total').textContent    = f(data.total);
+        const sh = s('summary-shipping');
         if (sh) {
-            const shippingVal = parseFloat(data.shipping);
-            const isFree = shippingVal === 0;
-            sh.textContent = isFree ? 'مجاني' : this.symbol + ' ' + this.f(shippingVal);
+            const isFree = parseFloat(data.shipping) === 0;
+            sh.textContent = isFree ? 'مجاني' : f(data.shipping);
             sh.className   = 'font-semibold tabular-nums ' + (isFree ? 'text-emerald-600' : 'text-[#1a1917]');
         }
     }

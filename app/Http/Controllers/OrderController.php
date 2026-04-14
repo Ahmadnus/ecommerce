@@ -6,6 +6,7 @@ use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
@@ -26,13 +27,15 @@ class OrderController extends Controller
     /**
      * User's order history.
      */
-    public function index(): View
-    {
-        $orders = Order::where('user_id', Auth::id())
-                       ->with('items')
-                       ->latest()
-                       ->paginate(10);
+public function index(Request $request): View
+{
+    $user = $request->user();
+    
+    // استخدمنا العلاقة مباشرة كما فعلت في البروفايل
+    $orders = $user->orders()->latest()->paginate(10);
 
-        return view('orders.index', compact('orders'));
-    }
+    return view('orders.index', [
+        'orders' => $orders
+    ]);
+}
 }
