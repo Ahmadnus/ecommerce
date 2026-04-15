@@ -36,25 +36,12 @@ class Order extends Model
  
     // ─── Fillable ─────────────────────────────────────────────────────────────
  
-    protected $fillable = [
-        'user_id',
-        'order_number',
-        'status',
-        'payment_method',
-        'payment_status',
-        'subtotal',
-        'tax_amount',
-        'shipping_amount',
-        'total_amount',
-        'shipping_name',
-        'shipping_phone',
-        'shipping_address',
-        'shipping_city',
-        'shipping_zip',
-        'notes',
-        'paid_at',
-    ];
- 
+ protected $fillable = [
+    'user_id', 'order_number', 'status', 'payment_method', 'payment_status',
+    'subtotal', 'delivery_fee', 'shipping_amount', 'total_amount',
+    'shipping_name', 'shipping_email', 'shipping_phone', 'shipping_address', 
+    'shipping_city', 'shipping_zip', 'shipping_country', 'notes'
+];
     protected $casts = [
         'subtotal'        => 'decimal:2',
         'tax_amount'      => 'decimal:2',

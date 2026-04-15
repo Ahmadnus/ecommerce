@@ -53,12 +53,11 @@ class CartController extends Controller
         $summary = $this->cart->getSummary();
 
         return response()->json([
-            'success'  => true,
-            'empty'    => $this->cart->isEmpty(),
-            'subtotal' => $summary['subtotal'],
-            'tax'      => $summary['tax'],
-            'shipping' => $summary['shipping'],
-            'total'    => $summary['total'],
+            'success'      => true,
+            'empty'        => $this->cart->isEmpty(),
+            'subtotal'     => $summary['subtotal'],
+            'delivery_fee' => $summary['delivery_fee'],  // ← was 'tax'
+            'total'        => $summary['total'],
         ]);
     }
 
@@ -68,12 +67,11 @@ class CartController extends Controller
         $summary = $this->cart->getSummary();
 
         return response()->json([
-            'success'  => true,
-            'empty'    => $this->cart->isEmpty(),
-            'subtotal' => $summary['subtotal'],
-            'tax'      => $summary['tax'],
-            'shipping' => $summary['shipping'],
-            'total'    => $summary['total'],
+            'success'      => true,
+            'empty'        => $this->cart->isEmpty(),
+            'subtotal'     => $summary['subtotal'],
+            'delivery_fee' => $summary['delivery_fee'],  // ← was 'tax'
+            'total'        => $summary['total'],
         ]);
     }
 }

@@ -9,6 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
+             Schema::disableForeignKeyConstraints();
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
@@ -33,6 +34,7 @@ return new class extends Migration
 
         // Many-to-many: product can appear in multiple categories
         Schema::create('category_product', function (Blueprint $table) {
+             Schema::disableForeignKeyConstraints();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->boolean('is_primary')->default(false);
@@ -42,7 +44,7 @@ return new class extends Migration
     }
 
    public function down(): void
-{
+{ Schema::disableForeignKeyConstraints();
     // تعطيل الرقابة على المفاتيح الأجنبية مؤقتاً
     Schema::disableForeignKeyConstraints();
     

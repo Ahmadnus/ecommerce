@@ -35,25 +35,28 @@ class OrderService
         return DB::transaction(function () use ($checkoutData, $cartSummary, $userId) {
 
             // 2. إنشاء سجل الطلب الأساسي
-            $order = $this->orderRepository->create([
-                'user_id'         => $userId,
-                'order_number'    => $this->generateOrderNumber(),
-                'status'          => 'pending',
-                'subtotal'        => $cartSummary['subtotal'],
-                'tax_amount'      => $cartSummary['tax'],
-                'shipping_amount' => $cartSummary['shipping'],
-                'total_amount'    => $cartSummary['total'],
-                'shipping_name'   => $checkoutData['name'],
-                'shipping_email'  => $checkoutData['email'],
-                'shipping_phone'  => $checkoutData['phone'] ?? null,
-                'shipping_address'=> $checkoutData['address'],
-                'shipping_city'   => $checkoutData['city'],
-                'shipping_zip'    => $checkoutData['zip'],
-                'shipping_country'=> $checkoutData['country'] ?? 'EG',
-                'payment_method'  => $checkoutData['payment_method'] ?? 'cod',
-                'payment_status'  => 'unpaid',
-            ]);
-
+         $order = $this->orderRepository->create([
+    'user_id'         => $userId,
+    'order_number'    => $this->generateOrderNumber(),
+    'status'          => 'pending',
+    'subtotal'        => $cartSummary['subtotal'],
+    
+    // التعديل هنا: استبدال tax_amount بـ delivery_fee
+    // واستخدام القيمة المناسبة من مصفوفة الملخص (غالباً ستكون 'delivery_fee' أو 'tax')
+    'delivery_fee'    => $cartSummary['delivery_fee'] ?? $cartSummary['tax'] ?? 0,
+    
+    'shipping_amount' => $cartSummary['shipping'] ?? 0,
+    'total_amount'    => $cartSummary['total'],
+    'shipping_name'   => $checkoutData['name'],
+    'shipping_email'  => $checkoutData['email'],
+    'shipping_phone'  => $checkoutData['phone'] ?? null,
+    'shipping_address'=> $checkoutData['address'],
+    'shipping_city'   => $checkoutData['city'],
+    'shipping_zip'    => $checkoutData['zip'],
+    'shipping_country'=> $checkoutData['country'] ?? 'EG',
+    'payment_method'  => $checkoutData['payment_method'] ?? 'cod',
+    'payment_status'  => 'unpaid',
+]);
             // 3. إنشاء تفاصيل الطلب وخصم المخزون
             foreach ($cartSummary['items'] as $itemKey => $item) {
                 OrderItem::create([

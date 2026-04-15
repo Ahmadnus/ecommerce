@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SocialLinkController;
 
 // ─── Public Routes ──────────────────────────────────────────────────────────
 //Route::get('/', fn() => redirect()->route('products.index'))->name('home');
@@ -80,14 +81,16 @@ Route::get('/p/{slug}', [PageController::class, 'show'])->name('pages.show');
 // ─── Admin pages routes (inside your existing auth middleware group) ──────────
 // Add these lines inside: Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(...)
 // المجموعة الأب: تسمح للـ Super Admin والـ Admin بالدخول (عشان الداشبورد والمنتجات)
-Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+// المجموعة العامة للأدمن (Admin + Super Admin)
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     
-    // 1. مسارات مشتركة (متاحة للطرفين)
+    // 1. مسارات مشتركة
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('products', AdminProductController::class);
     Route::resource('categories', CategoryController::class);
 
     // 2. مسارات محصورة "فقط" بالسوبر أدمن (Super Admin Only)
+    // لاحظ تغيير 'admin' إلى 'super-admin'
     Route::middleware(['role:admin'])->group(function () {
         
         // الطلبات
@@ -95,15 +98,17 @@ Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
         
-        // الصفحات والدول والعملات والمناطق
+        // الإعدادات العامة
+        Route::get('settings', [SettingController::class, 'index'])->name('settings');
+        Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
+Route::resource('social-links', SocialLinkController::class);
+        // المصادر الأخرى
         Route::resource('pages', AdminPageController::class);
         Route::resource('countries', CountryController::class);
         Route::resource('currencies', CurrencyController::class);
         Route::resource('countries.zones', ZoneController::class)->only(['index', 'store', 'update', 'destroy']);
-
-        // الإعدادات العامة
-        Route::get('settings', [SettingController::class, 'index'])->name('settings');
-        Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
     });
 });
 Route::get('/orders', [OrderController::class, 'index'])->name('orders.index')->middleware('auth');
+
+Route::middleware(['role:admin'])->get('/adlogin', [AuthController::class, 'showAdminLogin'])->name('admin.login');

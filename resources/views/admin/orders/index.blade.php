@@ -1,4 +1,4 @@
-@extends('layouts.admin') {{-- تأكد من اسم ملف الليوت عندك --}}
+@extends('layouts.admin') 
 @section('title', 'إدارة الطلبات')
 
 @section('admin-content')
@@ -12,7 +12,7 @@
             <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
                 <tr>
                     <th class="px-6 py-4">رقم الطلب</th>
-                    <th class="px-6 py-4">العميل</th>
+                    <th class="px-6 py-4">العميل والمنتجات</th> {{-- تعديل العنوان ليشمل المنتجات --}}
                     <th class="px-6 py-4">الإجمالي</th>
                     <th class="px-6 py-4">الحالة</th>
                     <th class="px-6 py-4">التاريخ</th>
@@ -25,7 +25,33 @@
                     <td class="px-6 py-4 font-bold text-brand">#{{ $order->order_number }}</td>
                     <td class="px-6 py-4">
                         <div class="text-sm font-medium text-gray-900">{{ $order->shipping_name }}</div>
-                        <div class="text-xs text-gray-400">{{ $order->shipping_phone }}</div>
+                        <div class="text-xs text-gray-400 mb-2">{{ $order->shipping_phone }}</div>
+                        
+                        {{-- بداية قسم التفاصيل المضافة --}}
+                        <div class="space-y-1 border-t border-gray-50 pt-2">
+                            @foreach($order->items as $item)
+                            <div class="flex items-center gap-2 text-[11px] bg-gray-50/50 p-1.5 rounded-lg border border-gray-100/50">
+                                <span class="font-bold text-gray-700">{{ $item->product->name ?? 'منتج' }}:</span>
+                                
+                                @if($item->color)
+                                <span class="flex items-center gap-1 text-gray-500">
+                                    اللون: <span class="font-medium text-gray-900">{{ $item->color }}</span>
+                                </span>
+                                @endif
+
+                                @if($item->size)
+                                <span class="text-gray-500 mr-1">
+                                    المقاس: <span class="font-medium text-gray-900">{{ $item->size }}</span>
+                                </span>
+                                @endif
+
+                                <span class="bg-brand/10 text-brand px-1.5 py-0.5 rounded font-bold">
+                                    x{{ $item->quantity }}
+                                </span>
+                            </div>
+                            @endforeach
+                        </div>
+                        {{-- نهاية قسم التفاصيل المضافة --}}
                     </td>
                     <td class="px-6 py-4 font-bold">{{ number_format($order->total_amount, 2) }} ر.س</td>
                     <td class="px-6 py-4">

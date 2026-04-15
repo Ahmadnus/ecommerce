@@ -354,7 +354,17 @@
 {{-- ══════════════════════════════════════════════════════════════════
      MOBILE BOTTOM BAR
 ══════════════════════════════════════════════════════════════════ --}}
+@php
+    // جلب الرابط المفعل والمحدد كزر عائم من قاعدة البيانات
+    $floatingLink = \App\Models\SocialLink::where('is_active', true)
+                    ->where('is_floating', true)
+                    ->first();
+@endphp
 
+{{-- إذا وجدنا رابط عائم، نقوم بإظهار الكومبونانت --}}
+@if($floatingLink)
+    <x-floating-button :number="$floatingLink->whatsapp_number" />
+@endif
 
 {{-- ══════════════════════════════════════════════════════════════════
      SORT DRAWER (mobile bottom sheet)
@@ -443,63 +453,35 @@
 </div>
         </div>
     </div>
-    @endif
 
-    {{-- ── Category Pills ────────────────────────────────────────────── --}}
-    @php
+    @endif
+<div style="margin: 20px;"></div>
+   
+     @php
         $topCategories = \App\Models\Category::active()->roots()
             ->with('children')->orderBy('sort_order')->take(12)->get();
     @endphp
     @if($topCategories->isNotEmpty())
-    <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide -mx-3 px-3">
-        <a href="{{ route('products.index') }}"
-           class="cat-pill {{ !request('category') ? 'active' : '' }}">الكل</a>
-        @foreach($topCategories as $cat)
-        <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
-           class="cat-pill {{ request('category') == $cat->slug ? 'active' : '' }}">
-            {{ $cat->name }}
-        </a>
-        @endforeach
-    </div>
+ 
     @endif
+ 
 
-    {{-- ── Toolbar: title + search + sort ────────────────────────────── --}}
-    <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
-        <div>
-            @if($currentCategory)
-            <h1 class="font-display text-lg md:text-2xl font-bold text-gray-900">
-                {{ $currentCategory->name }}
-            </h1>
-            @endif
-            <p class="text-xs text-gray-400 {{ $currentCategory ? 'mt-0.5' : '' }}">
-                {{ $products->total() }} منتج
-                @if(request('search'))
-                    لـ "<span class="text-gray-700 font-semibold">{{ request('search') }}</span>"
-                @endif
-            </p>
-        </div>
 
-        <div class="flex items-center gap-2">
-            {{-- Desktop search --}}
-            <form method="GET" action="{{ route('products.index') }}" class="hidden sm:flex">
-                @if(request('category'))
-                <input type="hidden" name="category" value="{{ request('category') }}">
-                @endif
-                <div class="relative">
-                    <input type="text" name="search"
-                           value="{{ request('search') }}"
-                           placeholder="بحث في المتجر..."
-                           class="pe-9 ps-4 py-2 text-xs border border-gray-200 rounded-xl w-40
-                                  focus:ring-2 focus:border-brand-500 outline-none bg-white
-                                  transition-all focus:w-52"
-                           style="--tw-ring-color: var(--brand)">
-                    <button type="submit" class="absolute inset-y-0 end-0 flex items-center pe-2.5 text-gray-400 hover:text-gray-600">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </button>
-                </div>
-            </form>
+ 
+@php
+    $topCategories = \App\Models\Category::active()
+        ->roots()
+        ->with(['allActiveChildren', 'media'])   // eager-load media = no N+1
+        ->orderBy('sort_order')
+        ->take(20)
+        ->get();
+@endphp
+ 
+<x-category-grid
+    :categories="$topCategories"
+    :current="$currentCategory ?? null"
+    :show-all="true"
+/>
 
             {{-- Desktop sort --}}
             <div class="hidden sm:block">

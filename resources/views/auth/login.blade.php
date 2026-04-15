@@ -66,10 +66,9 @@
         <div class="text-center mb-8">
             <a href="{{ url('/') }}" class="inline-flex flex-col items-center gap-2 group">
                 <div class="w-14 h-14 bg-brand-600 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-600/25 group-hover:scale-105 transition-transform">
-                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                    </svg>
+                    <div class="w-20 h-20 flex items-center justify-center mb-4">
+    <img src="{{ $logoUrl }}" alt="Logo" class="max-h-full w-auto object-contain">
+</div>
                 </div>
                 <span class="font-display text-2xl font-bold text-gray-900">ShopCraft</span>
             </a>

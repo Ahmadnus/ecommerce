@@ -91,13 +91,20 @@
 
         <div class="relative z-10 flex flex-col items-center p-6 text-center">
             
-            <div class="animate-logo-entry mb-12 flex flex-col items-center">
-                <div :class="{ 'animate-float': startFloating }" class="transition-all duration-1000">
-                    <img src="{{ asset('storage/logo.png') }}" 
-                         alt="Logo" 
-                         class="w-56 md:w-80 h-auto object-contain drop-shadow-[0_40px_40px_rgba(0,0,0,0.1)]">
-                </div>
-            </div>
+       <div class="animate-logo-entry mb-12 flex flex-col items-center">
+        @php
+    // جلب الإعدادات واللوغو محلياً داخل الصفحة
+    $siteSettings = \App\Models\Setting::pluck('value', 'key');
+    $logoPath = $siteSettings['site_logo'] ?? null;
+    $logoUrl = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
+@endphp
+    <div :class="{ 'animate-float': startFloating }" class="transition-all duration-1000">
+        {{-- التعديل هنا ليقرأ اللوغو المرفوع من لوحة التحكم --}}
+        <img src="{{ $logoUrl }}" 
+             alt="{{ $siteSettings['site_name'] ?? 'Logo' }}" 
+             class="w-56 md:w-80 h-auto object-contain drop-shadow-[0_40px_40px_rgba(0,0,0,0.1)]">
+    </div>
+</div>
 
             <div class="overflow-hidden flex flex-col items-center">
                 <h1 class="font-logo text-4xl md:text-6xl font-black text-black leading-none tracking-[0.3em] uppercase mb-5">

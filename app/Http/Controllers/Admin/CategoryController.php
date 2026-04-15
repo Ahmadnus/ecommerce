@@ -4,21 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
-    /**
-     * Show the nested category tree.
-     * Loads only ROOT categories; allChildren is eager-loaded recursively.
-     */
     public function index()
     {
         $categories = Category::withCount('products')
-            ->with('allChildren.products')   // recursive + product counts for children
-            ->roots()                        // whereNull('parent_id')
+            ->with(['allChildren.products', 'media'])   // eager-load media — no N+1
+            ->roots()
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
@@ -28,21 +23,20 @@ class CategoryController extends Controller
 
     public function create(Request $request)
     {
-        $parentOptions = Category::active()
+        $parentOptions       = Category::active()
+            ->with('media')                             // thumbnails in the parent selector
             ->orderBy('depth')
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
 
-        // Pre-select parent if coming from "add sub-category" button
         $preselectedParentId = $request->query('parent_id');
 
         return view('admin.categories.create', compact('parentOptions', 'preselectedParentId'));
     }
 
-  public function store(Request $request)
+    public function store(Request $request)
     {
-        // 1. التحقق من البيانات القادمة من فورم التصنيفات
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'slug'        => 'nullable|string|unique:categories,slug',
@@ -50,29 +44,30 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'sort_order'  => 'nullable|integer|min:0',
             'is_active'   => 'nullable|boolean',
-            'image'       => 'nullable|image|max:2048',
+            'image'       => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
         ], [
-            // تخصيص رسائل الخطأ (اختياري)
             'name.required' => 'اسم التصنيف مطلوب',
+            'image.max'     => 'حجم الصورة يجب أن لا يتجاوز 4 ميجابايت',
         ]);
 
-        // 2. توليد الـ Slug تلقائياً إذا تركه المستخدم فارغاً
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }
 
-        // 3. التأكد من قيمة التفعيل
-        $data['is_active'] = $request->boolean('is_active', true);
+        $data['is_active']  = $request->boolean('is_active', true);
+        $data['sort_order'] = $data['sort_order'] ?? 0;
 
-        // 4. إنشاء التصنيف
         $category = Category::create($data);
 
-        // 5. حفظ الصورة إذا تم رفعها (بافتراض أنك تستخدم مكتبة Spatie Media Library)
+        // ── Spatie: upload to 'category_images' collection ───────────────────
         if ($request->hasFile('image')) {
-            $category->addMediaFromRequest('image')->toMediaCollection('categories');
+            $category
+                ->addMediaFromRequest('image')
+                ->usingName($category->name)
+                ->usingFileName(Str::slug($category->name) . '.' . $request->file('image')->extension())
+                ->toMediaCollection('category_images');
         }
 
-        // 6. إعادة التوجيه مع رسالة نجاح
         return redirect()
             ->route('admin.categories.index')
             ->with('success', 'تم إضافة التصنيف "' . $category->name . '" بنجاح');
@@ -80,10 +75,10 @@ class CategoryController extends Controller
 
     public function edit(Category $category)
     {
-        // Exclude self + descendants to prevent circular references
         $descendantIds = $category->getAllDescendants()->pluck('id')->push($category->id);
 
         $parentOptions = Category::active()
+            ->with('media')
             ->whereNotIn('id', $descendantIds)
             ->orderBy('depth')
             ->orderBy('sort_order')
@@ -96,34 +91,47 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $data = $request->validate([
-            'name'        => 'required|max:255',
-            'slug'        => 'nullable|unique:categories,slug,' . $category->id,
-            'description' => 'nullable|string',
-            'parent_id'   => 'nullable|exists:categories,id',
-            'sort_order'  => 'nullable|integer|min:0',
-            'is_active'   => 'nullable|boolean',
-            'image'       => 'nullable|image|max:2048',
+            'name'         => 'required|max:255',
+            'slug'         => 'nullable|unique:categories,slug,' . $category->id,
+            'description'  => 'nullable|string',
+            'parent_id'    => 'nullable|exists:categories,id',
+            'sort_order'   => 'nullable|integer|min:0',
+            'is_active'    => 'nullable|boolean',
+            'image'        => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'remove_image' => 'nullable|boolean',
         ]);
 
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }
+        $data['is_active']  = $request->boolean('is_active', true);
+        $data['sort_order'] = $data['sort_order'] ?? 0;
 
-        $data['is_active'] = $request->boolean('is_active', true);
-
-        // Guard: prevent assigning own descendant as parent
+        // Prevent circular parent assignment
         if (!empty($data['parent_id'])) {
-            $descendantIds = $category->getAllDescendants()->pluck('id');
-            if ($descendantIds->contains($data['parent_id']) || $data['parent_id'] == $category->id) {
+            $descendants = $category->getAllDescendants()->pluck('id');
+            if ($descendants->contains($data['parent_id']) || $data['parent_id'] == $category->id) {
                 return back()->withErrors(['parent_id' => 'لا يمكن تعيين تصنيف فرعي كأب.']);
             }
         }
 
         $category->update($data);
 
+        // ── Handle image removal ─────────────────────────────────────────────
+        if ($request->boolean('remove_image')) {
+            $category->clearMediaCollection('category_images');
+            $category->clearMediaCollection('categories');   // legacy
+        }
+
+        // ── Replace/add image ────────────────────────────────────────────────
         if ($request->hasFile('image')) {
-            $category->clearMediaCollection('categories');
-            $category->addMediaFromRequest('image')->toMediaCollection('categories');
+            // clearMediaCollection ensures singleFile — only one image per category
+            $category->clearMediaCollection('category_images');
+            $category
+                ->addMediaFromRequest('image')
+                ->usingName($category->name)
+                ->usingFileName(Str::slug($category->name) . '.' . $request->file('image')->extension())
+                ->toMediaCollection('category_images');
         }
 
         return redirect()
@@ -133,6 +141,7 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        // Spatie automatically deletes media files when the model is deleted
         $category->delete();
         return redirect()
             ->route('admin.categories.index')

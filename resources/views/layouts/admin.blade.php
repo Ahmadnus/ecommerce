@@ -51,6 +51,9 @@
                     <x-admin-nav-link href="{{ route('admin.categories.index') }}" icon="folder" :active="request()->routeIs('admin.categories.*')">
                         التصنيفات
                     </x-admin-nav-link>
+                    <x-admin-nav-link href="{{ route('admin.social-links.index') }}" icon="share" :active="request()->routeIs('admin.social-links.*')">
+    روابط التواصل
+</x-admin-nav-link>
                 @endcan
 
                 {{-- القسم المخصص للسوبر أدمن فقط (الطلبات، الإعدادات، الصفحات) --}}

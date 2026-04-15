@@ -28,22 +28,32 @@ class AppServiceProvider extends ServiceProvider
 
   public function boot(): void
 {   
-    View::composer('*', function ($view) {
-        // إذا كان الطلب قادم من لوحة تحكم فيلامينت، لا تنفذ الكود
-        if (request()->is('manager*') || request()->is('livewire*')) {
+    \Illuminate\Support\Facades\View::composer('*', function ($view) {
+        // 1. استثناء لوحة التحكم والـ Livewire لتجنب المشاكل
+        if (request()->is('manager*') || request()->is('livewire*') || request()->is('admin*')) {
             return;
         }
 
+        // 2. جلب اللوغو والإعدادات (حل مشكلة Undefined variable $logoUrl)
+        $siteSettings = \App\Models\Setting::pluck('value', 'key');
+        $logoPath = $siteSettings['site_logo'] ?? null;
+        $logoUrl = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
+
+        // 3. منطق المفضلة (Wishlist)
         $wishlistedIds = [];
-        
-        if (Auth::check()) {
-            // جلب الـ IDs للمنتجات المفضلة للمستخدم المسجل دخوله
-            $wishlistedIds = Auth::user()->wishlistedProducts()
+        if (auth()->check()) {
+            $wishlistedIds = auth()->user()->wishlistedProducts()
                 ->pluck('product_id')
                 ->toArray();
         }
 
-        $view->with('wishlistedIds', $wishlistedIds);
+        // 4. تمرير كل المتغيرات لجميع الصفحات
+        $view->with([
+            'logoUrl' => $logoUrl,
+            'siteSettings' => $siteSettings,
+            'wishlistedIds' => $wishlistedIds
+        ]);
     });
+
 }
 }

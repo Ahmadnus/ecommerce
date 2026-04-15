@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-    {
+    { Schema::disableForeignKeyConstraints();
         // ── Attribute types (Color, Size, Material …) ────────────────────────
         Schema::create('attributes', function (Blueprint $table) {
             $table->id();
@@ -21,6 +21,7 @@ return new class extends Migration
 
         // ── Possible values per attribute (Red, XL, 42 …) ───────────────────
         Schema::create('attribute_values', function (Blueprint $table) {
+             Schema::disableForeignKeyConstraints();
             $table->id();
             $table->foreignId('attribute_id')->constrained()->cascadeOnDelete();
             $table->string('value');
@@ -35,6 +36,7 @@ return new class extends Migration
 
         // ── Product Variants ─────────────────────────────────────────────────
         Schema::create('product_variants', function (Blueprint $table) {
+             Schema::disableForeignKeyConstraints();
             $table->id();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('sku')->unique();
@@ -52,6 +54,7 @@ return new class extends Migration
 
         // ── Pivot: which attribute-values compose each variant ───────────────
         Schema::create('product_variant_attribute_values', function (Blueprint $table) {
+             Schema::disableForeignKeyConstraints();
             $table->foreignId('product_variant_id')
                   ->constrained('product_variants')
                   ->cascadeOnDelete();
@@ -67,6 +70,7 @@ return new class extends Migration
 
     public function down(): void
     {
+         Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('product_variant_attribute_values');
         Schema::dropIfExists('product_variants');
         Schema::dropIfExists('attribute_values');

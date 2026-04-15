@@ -21,57 +21,57 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function login(Request $request): RedirectResponse
-    {
-        // 1. Validate input
-        $credentials = $request->validate([
-            'phone'    => ['required', 'string'],
-            'password' => ['required', 'string', 'min:6'],
-        ], [
-            'phone.required' => 'رقم الهاتف مطلوب.',
-            'phone.regex'    => 'رقم الهاتف يجب أن يبدأ بـ 05 ويتكون من 10 أرقام.',
-            'password.required' => 'كلمة المرور مطلوبة.',
-            'password.min'   => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.',
-        ]);
+  // داخل الكلاس AuthController
 
-        // 2. Rate-limit: max 5 attempts per phone per minute
-        $throttleKey = 'login|' . $request->input('phone') . '|' . $request->ip();
+public function showAdminLogin(): View
+{
+    return view('auth.admin-login'); // تأكد أن اسم الملف هو admin-login.blade.php
+}
 
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
-            return back()
-                ->withInput($request->only('phone'))
-                ->withErrors([
-                    'phone' => "تم تجاوز عدد المحاولات. حاول مجدداً بعد {$seconds} ثانية.",
-                ]);
-        }
+public function login(Request $request): RedirectResponse
+{
+    // 1. Validate input
+    $credentials = $request->validate([
+        'phone'    => ['required', 'string'],
+        'password' => ['required', 'string', 'min:6'],
+    ]);
 
-        // 3. Attempt authentication
-        $attempted = Auth::attempt(
-            ['phone' => $credentials['phone'], 'password' => $credentials['password']],
-            $request->boolean('remember')
-        );
+    $throttleKey = 'login|' . $request->input('phone') . '|' . $request->ip();
 
-        if (! $attempted) {
-            RateLimiter::hit($throttleKey, 60);
-
-            return back()
-                ->withInput($request->only('phone'))
-                ->withErrors([
-                    'phone' => 'رقم الهاتف أو كلمة المرور غير صحيحة.',
-                ]);
-        }
-
-        // 4. Success — regenerate session to prevent fixation
-        RateLimiter::clear($throttleKey);
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('products.index'))
-                         ->with('success', 'مرحباً بعودتك، ' . Auth::user()->name . '!');
+    if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+        $seconds = RateLimiter::availableIn($throttleKey);
+        return back()->withErrors(['phone' => "محاولات كثيرة. انتظر {$seconds} ثانية."]);
     }
 
-    // ─── Register ─────────────────────────────────────────────────────────────
+    // 2. Attempt authentication
+    if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+        RateLimiter::hit($throttleKey, 60);
+        return back()->withErrors(['phone' => 'بيانات الدخول غير صحيحة.']);
+    }
 
+    // 3. النجاح وتحديد التوجيه
+    RateLimiter::clear($throttleKey);
+    $request->session()->regenerate();
+
+    $user = Auth::user();
+
+    // إذا كان الطلب قادم من صفحة تسجيل دخول الإدارة (adlogin)
+    if ($request->has('is_admin_login')) {
+        if ($user->hasRole('admin')) {
+            return redirect()->to('/admin'); // توجيه مباشر ومؤكد للوحة التحكم
+        } else {
+            Auth::logout();
+            return back()->withErrors(['phone' => 'هذه البوابة مخصصة للمسؤولين فقط.']);
+        }
+    }
+
+    // التوجيه الطبيعي للمستخدمين العاديين (أو إذا دخل الأدمن من صفحة المتجر العادية)
+    if ($user->hasRole('admin')) {
+        return redirect()->to('/admin');
+    }
+
+    return redirect()->intended('/'); 
+}
     public function showRegister(): View
     {
         return view('auth.register');
