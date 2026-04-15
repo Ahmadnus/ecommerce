@@ -455,7 +455,7 @@
     </div>
 
     @endif
-<div style="margin: 20px; height: 10px;"></div>
+
 <div
 style="height: 10px;">
 <p></p>
