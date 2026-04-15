@@ -49,7 +49,8 @@
                     <button class="px-4 py-2 rounded-lg text-white text-sm font-bold" style="background-color: var(--brand-color)">انضمام</button>
                 </form>
             </div>
-
+<div
+style="height: 30px;"></div>
         </div>
     </div>
 </footer>
