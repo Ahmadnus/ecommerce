@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
 
+
     // Orders
    
     Route::get('/orders/show/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -86,9 +87,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     
     // 1. مسارات مشتركة
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('products', AdminProductController::class);
+   
     Route::resource('categories', CategoryController::class);
 
+    Route::resource('products', AdminProductController::class);
+    Route::patch('products/{product}/stock', [AdminProductController::class, 'updateStock'])
+         ->name('products.stock');
     // 2. مسارات محصورة "فقط" بالسوبر أدمن (Super Admin Only)
     // لاحظ تغيير 'admin' إلى 'super-admin'
     Route::middleware(['role:admin'])->group(function () {
@@ -97,7 +101,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
-        
+          Route::resource('site-features', \App\Http\Controllers\Admin\SiteFeatureController::class);
         // الإعدادات العامة
         Route::get('settings', [SettingController::class, 'index'])->name('settings');
         Route::post('settings', [SettingController::class, 'update'])->name('settings.update');

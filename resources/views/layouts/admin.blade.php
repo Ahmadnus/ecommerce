@@ -70,7 +70,12 @@
                             </span>
                         @endif
                     </x-admin-nav-link>
-
+<x-admin-nav-link 
+    href="{{ route('admin.site-features.index') }}" 
+    icon="star" 
+    :active="request()->routeIs('admin.site-features.*')">
+    ميزات الموقع
+</x-admin-nav-link>
                     {{-- قسم الإعدادات الجغرافية والمالية --}}
                     <div x-show="sidebarOpen" class="px-3 mt-6 mb-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                         الإعدادات المتقدمة

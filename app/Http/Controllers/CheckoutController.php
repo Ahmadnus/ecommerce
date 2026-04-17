@@ -1,20 +1,15 @@
 <?php
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DIFF: what to change in your existing CheckoutController@placeOrder
-//
-// The ONLY change needed is in the Order::create() call.
-// Replace the 'tax_amount' column mapping with 'delivery_fee' (or keep
-// tax_amount but feed it the delivery_fee value, depending on your migration).
-// ─────────────────────────────────────────────────────────────────────────────
-
 namespace App\Http\Controllers;
 
+use App\Models\Country;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
+use App\Models\Zone;
 use App\Services\CartService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +19,8 @@ class CheckoutController extends Controller
 {
     public function __construct(private readonly CartService $cart) {}
 
+    // ─── Show checkout page ───────────────────────────────────────────────────
+
     public function index(): View|RedirectResponse
     {
         if ($this->cart->isEmpty()) {
@@ -32,10 +29,35 @@ class CheckoutController extends Controller
         }
 
         $summary = $this->cart->getSummary();
-        $user    = Auth::user();
 
-        return view('cart.checkout', compact('summary', 'user'));
+        // Load all active countries that have at least one active zone
+        $countries = Country::active()
+            ->ordered()
+            ->whereHas('activeZones')
+            ->with(['activeZones' => fn($q) => $q->orderBy('sort_order')->orderBy('name')])
+            ->get();
+
+        $user = Auth::user();
+
+        return view('cart.checkout', compact('summary', 'user', 'countries'));
     }
+
+    // ─── AJAX: zones for a given country ─────────────────────────────────────
+
+    /**
+     * Returns active zones for a country as JSON.
+     * Called by the JS on the checkout page when the user selects a country.
+     */
+public function zonesForCountry($countryId)
+{
+    $zones = Zone::where('country_id', $countryId)
+        ->where('is_active', 1)
+        ->orderBy('sort_order')
+        ->get(['id', 'name', 'shipping_price', 'delivery_days']);
+
+    return response()->json($zones);
+}
+    // ─── Place the order ──────────────────────────────────────────────────────
 
     public function placeOrder(Request $request): RedirectResponse
     {
@@ -46,17 +68,28 @@ class CheckoutController extends Controller
 
         $validated = $request->validate([
             'shipping_name'    => 'required|string|max:255',
-            'shipping_phone'   => 'required|string',
+            'shipping_phone'   => 'required|string|max:30',
             'shipping_address' => 'required|string|max:500',
             'shipping_city'    => 'required|string|max:100',
             'shipping_zip'     => 'nullable|string|max:20',
             'notes'            => 'nullable|string|max:1000',
+            'country_id'       => 'required|exists:countries,id',
+            'zone_id'          => 'required|exists:zones,id',
+            'payment_method'   => 'required|in:cod',
         ]);
 
-        $summary = $this->cart->getSummary();
+        // Verify the selected zone actually belongs to the selected country
+        $zone = Zone::where('id', $validated['zone_id'])
+            ->where('country_id', $validated['country_id'])
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $summary      = $this->cart->getSummary();
+        $deliveryFee  = (float) $zone->shipping_price;    // JOD — from admin-defined zone
+        $total        = round($summary['subtotal'] + $deliveryFee, 2);
 
         try {
-            $order = DB::transaction(function () use ($validated, $summary) {
+            $order = DB::transaction(function () use ($validated, $summary, $zone, $deliveryFee, $total) {
 
                 $userId = Auth::check() ? Auth::user()->id : null;
 
@@ -67,18 +100,17 @@ class CheckoutController extends Controller
                     'payment_method'   => Order::PAYMENT_COD,
                     'payment_status'   => Order::PAYMENT_PENDING,
 
-                    // ── UPDATED: tax_amount now stores delivery_fee ──────────
-                    // Option A: your orders table already has a delivery_fee column:
-                    //   'delivery_fee' => (float) $summary['delivery_fee'],
-                    //
-                    // Option B: you are keeping the tax_amount column name but
-                    //   feeding it the delivery fee value (simpler, no migration needed):
-                    'tax_amount'       => (float) $summary['delivery_fee'],
-                    // ────────────────────────────────────────────────────────
+                    // ── Zone-based shipping ───────────────────────────────
+                    'zone_id'          => $zone->id,
+                    'shipping_area'    => $zone->name . ' (' . $zone->country->name . ')',
+                    'delivery_days'    => $zone->delivery_days,
+                    'tax_amount'       => $deliveryFee,    // reusing existing column for delivery fee
+                    // ─────────────────────────────────────────────────────
 
                     'subtotal'         => (float) $summary['subtotal'],
-                    'shipping_amount'  => 0.00, // handled by delivery_fee above
-                    'total_amount'     => (float) $summary['total'],
+                    'shipping_amount'  => 0.00,
+                    'total_amount'     => $total,
+
                     'shipping_name'    => $validated['shipping_name'],
                     'shipping_phone'   => $validated['shipping_phone'],
                     'shipping_address' => $validated['shipping_address'],
@@ -98,15 +130,16 @@ class CheckoutController extends Controller
                         'total_price'        => $item['subtotal'],
                     ]);
 
+                    // Decrement stock with lock to prevent race conditions
                     if (!empty($item['variant_id'])) {
                         $variant = ProductVariant::lockForUpdate()->find($item['variant_id']);
                     } else {
                         $variant = ProductVariant::where('product_id', $item['product_id'])
-                                                 ->lockForUpdate()->first();
+                            ->lockForUpdate()->first();
                     }
 
                     if (!$variant || $variant->stock_quantity < $item['quantity']) {
-                        throw new \RuntimeException("المخزون غير كافٍ للمنتج: " . $item['name']);
+                        throw new \RuntimeException('المخزون غير كافٍ للمنتج: ' . $item['name']);
                     }
 
                     $variant->decrement('stock_quantity', $item['quantity']);
@@ -122,7 +155,9 @@ class CheckoutController extends Controller
                 ->with('success', 'تم إرسال طلبك بنجاح!');
 
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
         }
     }
 }

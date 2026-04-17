@@ -1,265 +1,304 @@
 @extends('layouts.admin')
-@section('title', 'تعديل المنتج')
+@section('title', 'تعديل: ' . $product->name)
+
+@push('head')
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Cairo:wght@400;600;700;800&display=swap');
+:root {
+    --cc-bg:#0f1117; --cc-surface:#1a1d27; --cc-border:rgba(255,255,255,.07);
+    --cc-text:#e2e8f0; --cc-muted:#64748b; --cc-amber:#f59e0b;
+    --cc-emerald:#10b981; --cc-rose:#f43f5e; --cc-brand:var(--brand-color,#6366f1);
+    --cc-mono:'JetBrains Mono',monospace; --cc-sans:'Cairo',sans-serif;
+}
+body { font-family:var(--cc-sans); }
+.cc-page { background:var(--cc-bg); min-height:100vh; }
+.cc-card { background:var(--cc-surface); border:1px solid var(--cc-border); border-radius:16px; }
+.cc-label { display:block; font-size:11px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; margin-bottom:6px; color:var(--cc-muted); }
+.cc-input {
+    background:rgba(255,255,255,.05); border:1px solid var(--cc-border);
+    border-radius:10px; color:var(--cc-text); padding:10px 14px; font-size:13px;
+    outline:none; transition:border-color .15s, background .15s; width:100%;
+    font-family:var(--cc-sans);
+}
+.cc-input:focus { border-color:var(--cc-brand); background:rgba(255,255,255,.07); }
+.cc-input::placeholder { color:var(--cc-muted); }
+.cc-input.mono { font-family:var(--cc-mono); }
+.cc-input.has-error { border-color:var(--cc-rose); }
+.cc-btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px;
+    border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none;
+    transition:all .15s; font-family:var(--cc-sans); }
+.cc-btn-primary { background:var(--cc-brand); color:#fff; }
+.cc-btn-primary:hover { filter:brightness(1.1); }
+.cc-btn-ghost { background:rgba(255,255,255,.06); border:1px solid var(--cc-border); color:var(--cc-text); }
+.cc-btn-ghost:hover { background:rgba(255,255,255,.1); }
+.cc-btn-danger { background:rgba(244,63,94,.12); border:1px solid rgba(244,63,94,.3); color:#f43f5e; }
+.cc-btn-sm { padding:6px 12px; font-size:11.5px; border-radius:8px; }
+.section-num {
+    width:26px; height:26px; border-radius:8px;
+    background:rgba(255,255,255,.08); color:var(--cc-text);
+    font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+}
+.variant-card {
+    background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.07);
+    border-radius:12px; padding:16px; transition:border-color .15s;
+}
+.variant-card:hover { border-color:rgba(255,255,255,.14); }
+</style>
+@endpush
 
 @section('admin-content')
-<div class="max-w-5xl mx-auto" x-data="{ imagePreview: null }">
+<div class="cc-page p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto" dir="rtl">
 
-    <div class="mb-6">
-        <a href="{{ route('admin.products.index') }}"
-           class="text-gray-500 hover:text-brand flex items-center gap-2 text-sm transition">
+    {{-- Back --}}
+    <div class="mb-6 flex items-center justify-between">
+        <a href="{{ route('admin.products.show', $product) }}"
+           class="flex items-center gap-2 text-sm transition-colors"
+           style="color:var(--cc-muted)">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
-            العودة للمنتجات
+            {{ $product->name }}
         </a>
+
+        {{-- Delete --}}
+        <form action="{{ route('admin.products.destroy', $product) }}" method="POST"
+              onsubmit="return confirm('حذف هذا المنتج نهائياً؟')">
+            @csrf @method('DELETE')
+            <button type="submit" class="cc-btn cc-btn-danger cc-btn-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                حذف
+            </button>
+        </form>
     </div>
 
+    <h1 class="text-xl font-black text-white mb-8 flex items-center gap-3">
+        <span class="w-8 h-8 rounded-xl text-sm font-black flex items-center justify-center"
+              style="background:rgba(245,158,11,.2); color:var(--cc-amber)">✎</span>
+        تعديل: {{ Str::limit($product->name, 40) }}
+    </h1>
+
     @if($errors->any())
-    <div class="mb-6 p-4 bg-red-50 border-r-4 border-red-500 text-red-700 rounded-xl text-sm">
-        <ul class="list-disc list-inside space-y-1">
-            @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+    <div class="mb-6 cc-card p-4 border-rose-500/30">
+        <p class="text-rose-400 text-sm font-bold mb-2">يوجد أخطاء:</p>
+        <ul class="space-y-1">
+            @foreach($errors->all() as $e)
+            <li class="text-rose-300 text-xs flex items-center gap-2">
+                <span class="w-1 h-1 rounded-full bg-rose-400 flex-shrink-0"></span>{{ $e }}
+            </li>
+            @endforeach
         </ul>
     </div>
     @endif
 
-    <form action="{{ route('admin.products.update', $product->id) }}" method="POST"
-          enctype="multipart/form-data" id="product-form" class="space-y-6">
+    <form action="{{ route('admin.products.update', $product) }}" method="POST"
+          enctype="multipart/form-data" id="product-form" class="space-y-5">
         @csrf
         @method('PUT')
 
-        {{-- ════ SECTION 1 — Basic Info ════ --}}
-        <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-            <h2 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <span class="w-7 h-7 bg-brand/10 text-brand rounded-lg flex items-center justify-center text-sm font-black">١</span>
-                معلومات المنتج الأساسية
+        {{-- ══ SECTION 1: Basic Info ══════════════════════════════════ --}}
+        <div class="cc-card p-6">
+            <h2 class="text-sm font-bold text-white mb-5 flex items-center gap-2">
+                <span class="section-num">١</span>
+                معلومات المنتج
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">اسم المنتج <span class="text-red-500">*</span></label>
-                    <input type="text" name="name" value="{{ old('name', $product->name) }}" required
-                           class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="sm:col-span-2">
+                    <label class="cc-label">اسم المنتج <span class="text-rose-400">*</span></label>
+                    <input type="text" name="name"
+                           value="{{ old('name', $product->name) }}" required
+                           class="cc-input @error('name') has-error @enderror">
                 </div>
-
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">السعر الأساسي ($) <span class="text-red-500">*</span></label>
+                    <label class="cc-label">السعر الأساسي <span class="text-rose-400">*</span></label>
                     <input type="number" step="0.01" min="0" name="base_price"
                            value="{{ old('base_price', $product->base_price) }}" required
-                           class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition">
+                           class="cc-input mono @error('base_price') has-error @enderror">
                 </div>
-
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">سعر الخصم ($)</label>
+                    <label class="cc-label">سعر الخصم</label>
                     <input type="number" step="0.01" min="0" name="discount_price"
                            value="{{ old('discount_price', $product->discount_price) }}"
-                           placeholder="اتركه فارغاً إذا لا يوجد خصم"
-                           class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition">
+                           class="cc-input mono @error('discount_price') has-error @enderror">
                 </div>
-
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">SKU المنتج</label>
-                    <input type="text" name="sku" value="{{ old('sku', $product->sku) }}"
-                           class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 font-mono text-sm transition">
+                    <label class="cc-label">SKU المنتج</label>
+                    <input type="text" name="sku"
+                           value="{{ old('sku', $product->sku) }}"
+                           class="cc-input mono @error('sku') has-error @enderror">
                 </div>
-
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">وصف قصير</label>
+                    <label class="cc-label">وصف قصير</label>
                     <input type="text" name="short_description"
                            value="{{ old('short_description', $product->short_description) }}" maxlength="500"
-                           class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition">
+                           class="cc-input">
                 </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">الوصف التفصيلي</label>
-                    <textarea name="description" rows="4"
-                              class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 text-sm transition resize-none">{{ old('description', $product->description) }}</textarea>
+                <div class="sm:col-span-2">
+                    <label class="cc-label">الوصف التفصيلي</label>
+                    <textarea name="description" rows="3"
+                              class="cc-input">{{ old('description', $product->description) }}</textarea>
                 </div>
-
-                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white transition cursor-pointer">
+                <div class="sm:col-span-2 flex flex-wrap gap-3">
+                    <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"
+                           style="background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07)">
                         <input type="checkbox" name="is_active" value="1"
                                {{ old('is_active', $product->status === 'active') ? 'checked' : '' }}
-                               class="w-5 h-5 text-brand border-gray-300 rounded focus:ring-brand">
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800">تفعيل المنتج</p>
-                            <p class="text-xs text-gray-400">يظهر في المتجر</p>
-                        </div>
+                               class="w-4 h-4 accent-emerald-500">
+                        <span class="text-sm font-semibold text-white">تفعيل المنتج</span>
                     </label>
-                    <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white transition cursor-pointer">
+                    <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"
+                           style="background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07)">
                         <input type="checkbox" name="is_featured" value="1"
                                {{ old('is_featured', $product->is_featured) ? 'checked' : '' }}
-                               class="w-5 h-5 text-yellow-500 border-gray-300 rounded focus:ring-yellow-400">
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800">منتج مميز ⭐</p>
-                            <p class="text-xs text-gray-400">يظهر في التوصيات</p>
-                        </div>
+                               class="w-4 h-4 accent-amber-400">
+                        <span class="text-sm font-semibold text-white">منتج مميز ⭐</span>
                     </label>
                 </div>
             </div>
         </div>
 
-        {{-- ════ SECTION 2 — Categories ════ --}}
-        <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-            <h2 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <span class="w-7 h-7 bg-brand/10 text-brand rounded-lg flex items-center justify-center text-sm font-black">٢</span>
+        {{-- ══ SECTION 2: Categories ══════════════════════════════════ --}}
+        <div class="cc-card p-6">
+            <h2 class="text-sm font-bold text-white mb-5 flex items-center gap-2">
+                <span class="section-num">٢</span>
                 التصنيفات
             </h2>
-            @php
-                $selectedCatIds   = old('category_ids', $product->categories->pluck('id')->toArray());
-                $primaryCatId     = old('primary_category_id',
-                    $product->categories->first(fn($c) => $c->pivot->is_primary)?->id
-                    ?? $product->categories->first()?->id
-                );
-            @endphp
-
-            <div class="space-y-2" id="category-tree">
+            <div class="rounded-xl overflow-hidden border" style="border-color:var(--cc-border)">
+                <div class="grid grid-cols-[1fr_auto] px-4 py-2 text-[10px] font-bold uppercase tracking-widest border-b"
+                     style="color:var(--cc-muted); border-color:var(--cc-border); background:rgba(255,255,255,.02)">
+                    <span>التصنيف</span><span>أساسي</span>
+                </div>
                 @foreach($categories as $root)
-                <div class="border border-gray-200 rounded-xl overflow-hidden">
-                    <div class="flex items-center justify-between px-4 py-3 bg-gray-50/80 border-b border-gray-100">
-                        <label class="flex items-center gap-3 cursor-pointer flex-1">
-                            <input type="checkbox" name="category_ids[]" value="{{ $root->id }}"
-                                   {{ in_array($root->id, $selectedCatIds) ? 'checked' : '' }}
-                                   onchange="syncPrimaryRadio(this)"
-                                   class="cat-checkbox w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand">
-                            <span class="text-sm font-bold text-gray-800">{{ $root->name }}</span>
-                        </label>
-                        @if($root->allActiveChildren->isNotEmpty())
-                        <button type="button" onclick="toggleBranch(this)"
-                                class="text-gray-400 hover:text-brand transition p-1 rounded">
-                            <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        @endif
+                <div class="grid grid-cols-[1fr_auto] items-center border-b"
+                     style="border-color:var(--cc-border)">
+                    <label class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition">
+                        <input type="checkbox" name="category_ids[]" value="{{ $root->id }}"
+                               {{ in_array($root->id, $selectedCatIds) ? 'checked' : '' }}
+                               class="w-4 h-4 accent-indigo-400 rounded">
+                        <span class="font-bold text-sm text-white">{{ $root->name }}</span>
+                        <span class="text-[10px] mono ms-auto" style="color:var(--cc-muted)">{{ $root->slug }}</span>
+                    </label>
+                    <div class="px-4">
+                        <input type="radio" name="primary_category_id" value="{{ $root->id }}"
+                               {{ $primaryCatId == $root->id ? 'checked' : '' }}
+                               class="w-4 h-4 accent-indigo-400">
                     </div>
-
-                    @if($root->allActiveChildren->isNotEmpty())
-                    <div class="cat-branch">
-                        @foreach($root->allActiveChildren as $sub)
-                        <div class="border-b border-gray-100 last:border-0">
-                            <label class="flex items-center gap-3 px-4 py-2.5 ps-8 cursor-pointer hover:bg-gray-50/60 transition">
-                                <input type="checkbox" name="category_ids[]" value="{{ $sub->id }}"
-                                       {{ in_array($sub->id, $selectedCatIds) ? 'checked' : '' }}
-                                       onchange="syncPrimaryRadio(this)"
-                                       class="cat-checkbox w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand">
-                                <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                                <span class="text-sm text-gray-700">{{ $sub->name }}</span>
-                            </label>
-                            @foreach($sub->allActiveChildren as $subsub)
-                            <label class="flex items-center gap-3 px-4 py-2 ps-14 cursor-pointer hover:bg-gray-50/60 transition border-t border-gray-100">
-                                <input type="checkbox" name="category_ids[]" value="{{ $subsub->id }}"
-                                       {{ in_array($subsub->id, $selectedCatIds) ? 'checked' : '' }}
-                                       onchange="syncPrimaryRadio(this)"
-                                       class="cat-checkbox w-4 h-4 text-brand border-gray-300 rounded focus:ring-brand">
-                                <svg class="w-3 h-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                                <span class="text-sm text-gray-600">{{ $subsub->name }}</span>
-                            </label>
-                            @endforeach
-                        </div>
-                        @endforeach
+                </div>
+                @foreach($root->allActiveChildren as $sub)
+                <div class="grid grid-cols-[1fr_auto] items-center border-b ps-5"
+                     style="border-color:var(--cc-border); background:rgba(0,0,0,.1)">
+                    <label class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition">
+                        <input type="checkbox" name="category_ids[]" value="{{ $sub->id }}"
+                               {{ in_array($sub->id, $selectedCatIds) ? 'checked' : '' }}
+                               class="w-4 h-4 accent-indigo-400 rounded">
+                        <svg class="w-3 h-3 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                        <span class="text-sm text-white">{{ $sub->name }}</span>
+                    </label>
+                    <div class="px-4">
+                        <input type="radio" name="primary_category_id" value="{{ $sub->id }}"
+                               {{ $primaryCatId == $sub->id ? 'checked' : '' }}
+                               class="w-4 h-4 accent-indigo-400">
                     </div>
-                    @endif
                 </div>
                 @endforeach
-            </div>
-
-            <div id="primary-cat-section" class="mt-4 {{ count($selectedCatIds) ? '' : 'hidden' }}">
-                <label class="block text-sm font-bold text-gray-700 mb-2">التصنيف الأساسي</label>
-                <div id="primary-cat-radios" class="flex flex-wrap gap-2"></div>
-                <input type="hidden" name="primary_category_id" id="primary-cat-hidden"
-                       value="{{ $primaryCatId }}">
+                @endforeach
             </div>
         </div>
 
-        {{-- ════ SECTION 3 — Image ════ --}}
-        <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-            <h2 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <span class="w-7 h-7 bg-brand/10 text-brand rounded-lg flex items-center justify-center text-sm font-black">٣</span>
+        {{-- ══ SECTION 3: Image ═══════════════════════════════════════ --}}
+        <div class="cc-card p-6">
+            <h2 class="text-sm font-bold text-white mb-5 flex items-center gap-2">
+                <span class="section-num">٣</span>
                 صورة المنتج
             </h2>
-            <div class="flex items-start gap-6">
-                <div class="w-36 h-36 border-2 border-gray-200 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-50">
-                    @if($product->getFirstMediaUrl('products'))
-                    <img x-show="!imagePreview"
-                         src="{{ $product->getFirstMediaUrl('products') }}"
-                         class="w-full h-full object-cover">
+            <div class="flex items-center gap-5">
+                <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-zinc-800 border border-white/5"
+                     id="img-ring">
+                    @php $img = $product->getFirstMediaUrl('products') ?: $product->image_url; @endphp
+                    <img id="img-preview"
+                         src="{{ $img }}"
+                         class="w-full h-full object-cover {{ $img ? '' : 'hidden' }}"
+                         alt="">
+                    @if(!$img)
+                    <div id="img-ph" class="w-full h-full flex items-center justify-center"
+                         style="color:var(--cc-muted)">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586
+                                     a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6
+                                     a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
                     @endif
-                    <template x-if="imagePreview">
-                        <img :src="imagePreview" class="w-full h-full object-cover">
-                    </template>
                 </div>
                 <div class="flex-1">
                     <input type="file" name="main_image" accept="image/*"
-                           @change="const f=$event.target.files[0];if(f){const r=new FileReader();r.onload=e=>imagePreview=e.target.result;r.readAsDataURL(f);}"
-                           class="block w-full text-sm text-gray-500 file:ml-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:bg-brand/10 file:text-brand file:font-bold hover:file:bg-brand/20 transition cursor-pointer">
-                    <p class="mt-2 text-xs text-gray-400">اترك فارغاً للإبقاء على الصورة الحالية</p>
+                           onchange="previewImg(this)"
+                           class="block w-full text-sm cursor-pointer"
+                           style="color:var(--cc-muted)">
+                    <p class="text-[10px] mt-2" style="color:var(--cc-muted)">
+                        اترك فارغاً للإبقاء على الصورة الحالية
+                    </p>
                 </div>
             </div>
         </div>
 
-        {{-- ════ SECTION 4 — Variants ════ --}}
-        <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-            <div class="flex items-center justify-between mb-2">
-                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <span class="w-7 h-7 bg-brand/10 text-brand rounded-lg flex items-center justify-center text-sm font-black">٤</span>
+        {{-- ══ SECTION 4: Variants ════════════════════════════════════ --}}
+        <div class="cc-card p-6">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span class="section-num">٤</span>
                     المتغيرات
+                    <span class="text-amber-400 text-[10px] font-normal">
+                        (سيتم حذف المتغيرات الحالية وإعادة إنشائها)
+                    </span>
                 </h2>
-                <button type="button" onclick="addVariantRow()"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-brand text-white text-sm font-bold rounded-xl hover:bg-brand/90 transition shadow-sm shadow-brand/20">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                <button type="button" onclick="addVariantRow()" class="cc-btn cc-btn-primary cc-btn-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                     </svg>
                     إضافة متغير
                 </button>
             </div>
-            <p class="text-sm text-gray-400 mb-6">
-                سيتم حذف المتغيرات الحالية وإعادة إنشائها عند الحفظ.
-                <span class="text-amber-500 font-semibold">{{ $product->variants->count() }} متغير حالي</span>
-            </p>
 
-            @php
-                $attributesJson = $attributes->map(fn($a) => [
-                    'id'     => $a->id,
-                    'name'   => $a->name,
-                    'type'   => $a->type,
-                    'values' => $a->values->map(fn($v) => [
-                        'id'        => $v->id,
-                        'label'     => $v->label ?? $v->value,
-                        'color_hex' => $v->color_hex,
-                    ]),
-                ]);
-                $existingVariants = $product->variants->map(fn($v) => [
-                    'sku'              => $v->sku,
-                    'stock_quantity'   => $v->stock_quantity,
-                    'price_override'   => $v->price_override,
-                    'attribute_values' => $v->attributeValues->pluck('id')->toArray(),
-                ]);
-            @endphp
-            <script>
-                window.ATTRIBUTES       = @json($attributesJson);
-                window.EXISTING_VARIANTS = @json($existingVariants);
-            </script>
+           <script>
+    window.ATTRIBUTES = {!! json_encode($attributes->map(function($a) {
+        return [
+            'id'     => $a->id,
+            'name'   => $a->name,
+            'type'   => $a->type,
+            'values' => $a->values->map(function($v) {
+                return [
+                    'id'        => $v->id,
+                    'value'     => $v->value ?? $v->label,
+                    'label'     => $v->label ?? $v->value,
+                    'color_hex' => $v->color_hex,
+                ];
+            })->toArray(),
+        ];
+    })->toArray()) !!};
+    
+    window.EXISTING_VARIANTS = {!! json_encode($existingVariants) !!};
+    window.variantIndex = 0;
+</script>
 
-            <div id="variants-container" class="space-y-4"></div>
+            <div id="variants-container" class="space-y-3"></div>
 
-            <div id="variants-empty" class="text-center py-10 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl hidden">
-                <svg class="w-10 h-10 mx-auto mb-2 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                </svg>
+            <div id="variants-empty" class="hidden text-center py-10 rounded-xl border border-dashed"
+                 style="border-color:rgba(255,255,255,.08); color:var(--cc-muted)">
                 لا توجد متغيرات — اضغط "إضافة متغير"
             </div>
         </div>
 
         {{-- Submit --}}
-        <div class="flex justify-end gap-4 pb-8">
-            <a href="{{ route('admin.products.index') }}"
-               class="px-8 py-3 text-gray-500 font-bold hover:text-red-500 transition text-sm">إلغاء</a>
-            <button type="submit"
-                    class="bg-brand text-white px-12 py-3 rounded-xl font-bold shadow-lg shadow-brand/20 hover:bg-brand/90 hover:scale-[1.02] transition-transform active:scale-95">
+        <div class="flex justify-end gap-3 pb-8">
+            <a href="{{ route('admin.products.show', $product) }}" class="cc-btn cc-btn-ghost">إلغاء</a>
+            <button type="submit" class="cc-btn cc-btn-primary px-10">
                 حفظ التعديلات
             </button>
         </div>
@@ -268,131 +307,97 @@
 </div>
 @endsection
 
-@push('scripts')
-{{-- Shared variant logic (same as create page) --}}
+
 <script>
-let variantIndex = 0;
-
-function addVariantRow(prefill = {}) {
-    const i         = variantIndex++;
-    const container = document.getElementById('variants-container');
-    const empty     = document.getElementById('variants-empty');
-
-    if (empty) empty.classList.add('hidden');
-
-    const row        = document.createElement('div');
-    row.className    = 'variant-row border border-gray-200 rounded-xl p-5 bg-gray-50/50 relative';
-    row.dataset.index = i;
-    row.innerHTML    = buildVariantRowHTML(i, prefill);
-    container.appendChild(row);
-
-    row.style.opacity = '0'; row.style.transform = 'translateY(8px)';
-    requestAnimationFrame(() => {
-        row.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-        row.style.opacity = '1'; row.style.transform = 'translateY(0)';
-    });
+function previewImg(input) {
+    if (!input.files?.[0]) return;
+    const r = new FileReader();
+    r.onload = e => {
+        const prev = document.getElementById('img-preview');
+        prev.src = e.target.result;
+        prev.classList.remove('hidden');
+        const ph = document.getElementById('img-ph');
+        if (ph) ph.classList.add('hidden');
+    };
+    r.readAsDataURL(input.files[0]);
 }
 
-function buildVariantRowHTML(i, prefill) {
+function buildVariantRowHTML(i, prefill = {}) {
     const attrs = window.ATTRIBUTES;
-    let attrCols = '';
+    let attrHTML = '';
     attrs.forEach(attr => {
-        const selectedVals = (prefill.attribute_values || []).map(String);
+        const selected = (prefill.attribute_values || []).map(String);
+        let valsHTML = '';
         if (attr.type === 'color') {
-            let s = '';
             attr.values.forEach(v => {
-                const chk = selectedVals.includes(String(v.id)) ? 'checked' : '';
-                s += `<label class="cursor-pointer" title="${v.label}">
+                const chk = selected.includes(String(v.id)) ? 'checked' : '';
+                valsHTML += `<label class="cursor-pointer" title="${v.label||v.value}">
                     <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" ${chk} class="sr-only peer">
-                    <span class="block w-7 h-7 rounded-full border-2 border-transparent peer-checked:border-brand peer-checked:scale-110 hover:scale-105 transition-all" style="background:${v.color_hex||'#ccc'}"></span>
+                    <span class="inline-flex w-8 h-8 rounded-full border-2 border-transparent peer-checked:border-indigo-400 peer-checked:scale-110 hover:scale-105 transition-all" style="background:${v.color_hex||'#888'}"></span>
                 </label>`;
             });
-            attrCols += `<div><p class="text-xs font-bold text-gray-500 mb-2">${attr.name}</p><div class="flex flex-wrap gap-2">${s}</div></div>`;
         } else {
-            let p = '';
             attr.values.forEach(v => {
-                const chk = selectedVals.includes(String(v.id)) ? 'checked' : '';
-                p += `<label class="cursor-pointer">
+                const chk = selected.includes(String(v.id)) ? 'checked' : '';
+                valsHTML += `<label class="cursor-pointer">
                     <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" ${chk} class="sr-only peer">
-                    <span class="block px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 bg-white peer-checked:bg-brand peer-checked:text-white peer-checked:border-brand hover:border-brand/50 transition-all select-none">${v.label}</span>
+                    <span class="inline-block px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/10 bg-white/5 text-zinc-400 peer-checked:bg-indigo-500/20 peer-checked:border-indigo-400/60 peer-checked:text-white transition-all select-none">${v.label||v.value}</span>
                 </label>`;
             });
-            attrCols += `<div><p class="text-xs font-bold text-gray-500 mb-2">${attr.name}</p><div class="flex flex-wrap gap-2">${p}</div></div>`;
         }
+        attrHTML += `<div><p class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color:var(--cc-muted)">${attr.name}</p><div class="flex flex-wrap gap-2">${valsHTML}</div></div>`;
     });
-
-    return `
-    <div class="flex items-center justify-between mb-4">
-        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">متغير #${i+1}</span>
-        <button type="button" onclick="removeVariantRow(this)" class="text-gray-300 hover:text-red-500 transition p-1 rounded-lg hover:bg-red-50">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-${Math.min(attrs.length,3)} gap-5 mb-5">${attrCols}</div>
-    <div class="grid grid-cols-3 gap-4">
-        <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1.5">الكمية <span class="text-red-400">*</span></label>
-            <input type="number" min="0" name="variants[${i}][stock_quantity]" value="${prefill.stock_quantity??''}" placeholder="0"
-                   class="w-full border border-gray-200 rounded-xl p-2.5 text-sm bg-white focus:ring-2 focus:ring-brand/30 focus:border-brand transition">
+    return `<div class="variant-card" data-idx="${i}">
+        <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold text-zinc-500">متغير #${i+1}</span>
+            <button type="button" onclick="removeVariantRow(this)" class="cc-btn cc-btn-danger cc-btn-sm">✕</button>
         </div>
-        <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1.5">تجاوز السعر ($)</label>
-            <input type="number" step="0.01" min="0" name="variants[${i}][price_override]" value="${prefill.price_override??''}" placeholder="يرث السعر الأساسي"
-                   class="w-full border border-gray-200 rounded-xl p-2.5 text-sm bg-white focus:ring-2 focus:ring-brand/30 focus:border-brand transition">
-        </div>
-        <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1.5">SKU</label>
-            <input type="text" name="variants[${i}][sku]" value="${prefill.sku??''}" placeholder="يُولَّد تلقائياً"
-                   class="w-full border border-gray-200 rounded-xl p-2.5 text-sm bg-white font-mono focus:ring-2 focus:ring-brand/30 focus:border-brand transition">
+        ${attrs.length ? `<div class="grid grid-cols-1 sm:grid-cols-${Math.min(attrs.length,3)} gap-4 mb-4">${attrHTML}</div>` : ''}
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t pt-4" style="border-color:rgba(255,255,255,.07)">
+            <div>
+                <label class="cc-label">الكمية *</label>
+                <input type="number" name="variants[${i}][stock_quantity]" value="${prefill.stock_quantity??0}" min="0" required class="cc-input mono">
+            </div>
+            <div>
+                <label class="cc-label">تجاوز السعر</label>
+                <input type="number" step="0.01" min="0" name="variants[${i}][price_override]" value="${prefill.price_override??''}" placeholder="يرث سعر المنتج" class="cc-input mono">
+            </div>
+            <div>
+                <label class="cc-label">SKU</label>
+                <input type="text" name="variants[${i}][sku]" value="${prefill.sku??''}" placeholder="يُولَّد تلقائياً" class="cc-input mono">
+            </div>
         </div>
     </div>`;
 }
 
+function addVariantRow(prefill = {}) {
+    const i         = window.variantIndex++;
+    const container = document.getElementById('variants-container');
+    document.getElementById('variants-empty').classList.add('hidden');
+    const el = document.createElement('div');
+    el.innerHTML = buildVariantRowHTML(i, prefill);
+    const row = el.firstElementChild;
+    row.style.opacity = '0'; row.style.transform = 'translateY(8px)';
+    container.appendChild(row);
+    requestAnimationFrame(() => {
+        row.style.transition = 'opacity .2s, transform .2s';
+        row.style.opacity = '1'; row.style.transform = 'translateY(0)';
+    });
+}
+
 function removeVariantRow(btn) {
-    const row = btn.closest('.variant-row');
-    row.style.transition = 'opacity 0.2s, transform 0.2s';
+    const row = btn.closest('.variant-card');
+    row.style.transition = 'opacity .15s, transform .15s';
     row.style.opacity = '0'; row.style.transform = 'translateY(-6px)';
     setTimeout(() => {
         row.remove();
-        if (!document.querySelectorAll('.variant-row').length)
+        if (!document.querySelectorAll('.variant-card').length) {
             document.getElementById('variants-empty').classList.remove('hidden');
-    }, 200);
+        }
+    }, 160);
 }
 
-function toggleBranch(btn) {
-    const branch = btn.closest('.border').querySelector('.cat-branch');
-    if (!branch) return;
-    const h = branch.classList.toggle('hidden');
-    btn.querySelector('svg').style.transform = h ? 'rotate(-90deg)' : '';
-}
-
-function syncPrimaryRadio(checkbox) {
-    const section = document.getElementById('primary-cat-section');
-    const radios  = document.getElementById('primary-cat-radios');
-    const hidden  = document.getElementById('primary-cat-hidden');
-    const checked = [...document.querySelectorAll('.cat-checkbox:checked')];
-
-    if (!checked.length) { section.classList.add('hidden'); return; }
-    section.classList.remove('hidden');
-    radios.innerHTML = '';
-    checked.forEach(cb => {
-        const label = cb.closest('label')?.querySelector('span.text-sm')?.textContent?.trim() || cb.value;
-        const btn   = document.createElement('label');
-        btn.className = 'cursor-pointer';
-        btn.innerHTML = `<input type="radio" name="_primary_cat_radio" value="${cb.value}"
-                                onchange="document.getElementById('primary-cat-hidden').value=this.value"
-                                class="sr-only peer">
-                         <span class="block px-4 py-2 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 bg-white
-                                peer-checked:bg-brand peer-checked:text-white peer-checked:border-brand hover:border-brand/50 transition-all select-none">${label}</span>`;
-        radios.appendChild(btn);
-    });
-    // restore selection
-    const toSelect = radios.querySelector(`input[value="${hidden.value}"]`)
-                  || radios.querySelector('input[type="radio"]');
-    if (toSelect) { toSelect.checked = true; hidden.value = toSelect.value; }
-}
-
-// ── Seed existing variants on page load ──────────────────────────────────────
+// Seed existing variants on page load
 document.addEventListener('DOMContentLoaded', () => {
     const existing = window.EXISTING_VARIANTS || [];
     if (existing.length) {
@@ -400,10 +405,5 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         document.getElementById('variants-empty').classList.remove('hidden');
     }
-
-    // Bootstrap primary category radios from existing selection
-    const anyCatChecked = document.querySelector('.cat-checkbox:checked');
-    if (anyCatChecked) syncPrimaryRadio(anyCatChecked);
 });
 </script>
-@endpush
