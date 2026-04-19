@@ -109,4 +109,10 @@ class Order extends Model
     {
         return $query->where('status', $status);
     }
+    public function zone(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+{
+    return $this->belongsTo(\App\Models\Zone::class);
+}
+
+
 }

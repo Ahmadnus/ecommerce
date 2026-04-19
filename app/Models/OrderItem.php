@@ -39,4 +39,10 @@ class OrderItem extends Model
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
+    public function productVariant(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+{
+    return $this->belongsTo(\App\Models\ProductVariant::class, 'product_variant_id');
+}
+
+
 }

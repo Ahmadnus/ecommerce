@@ -41,7 +41,9 @@
                     <x-admin-nav-link href="{{ route('admin.dashboard') }}" icon="home" :active="request()->routeIs('admin.dashboard')">
                         الرئيسية
                     </x-admin-nav-link>
-
+<x-admin-nav-link href="{{ route('admin.home-sections.index') }}" icon="home" ...>
+    الصفحة الرئيسية
+</x-admin-nav-link>
                     {{-- المنتجات --}}
                     <x-admin-nav-link href="{{ route('admin.products.index') }}" icon="shopping-bag" :active="request()->routeIs('admin.products.*')">
                         المنتجات
@@ -70,6 +72,7 @@
                             </span>
                         @endif
                     </x-admin-nav-link>
+                    
 <x-admin-nav-link 
     href="{{ route('admin.site-features.index') }}" 
     icon="star" 
@@ -110,6 +113,19 @@
                         <span x-show="sidebarOpen" class="truncate">الصفحات</span>
                     </a>
                 @endcan
+                <div class="pt-4 mt-4 border-t border-gray-800">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" 
+                    class="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl transition-all text-sm font-semibold text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                    :class="sidebarOpen ? '' : 'justify-center'">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span x-show="sidebarOpen" class="truncate">تسجيل الخروج</span>
+            </button>
+        </form>
+    </div>
             </nav>
         </aside>
 

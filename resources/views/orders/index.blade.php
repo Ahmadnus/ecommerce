@@ -77,11 +77,8 @@
                                 {{ $order->status_label }}
                             </span>
 
-                            {{-- رابط التفاصيل (تأكد من اسم الراوت في مشروعك) --}}
-                            <a href="{{ route('orders.show', $order->id) }}" 
-                               class="text-[11px] font-bold opacity-60 hover:opacity-100 transition-opacity underline">
-                                تفاصيل الطلب
-                            </a>
+                        
+                            
                         </div>
                     </div>
 

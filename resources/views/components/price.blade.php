@@ -1,37 +1,34 @@
 {{--
     resources/views/components/price.blade.php
-    ─────────────────────────────────────────────
-    Usage:
-        <x-price :amount="$product->base_price" />
-        <x-price :amount="$product->discount_price" class="text-red-500 font-black" />
-        <x-price :amount="50" symbol-only />
+    ─────────────────────────────────────────────────────────────────────────────
+    Rendered by App\View\Components\Price.
 
-    Props:
-        $amount      float   — Amount in JOD (base currency)
-        $class       string  — Extra Tailwind classes
-        $symbolOnly  bool    — Output symbol only, no number
+    Available variables (set in the component class constructor):
+      $converted  (float)   — The converted amount
+      $formatted  (string)  — e.g. "12.50"
+      $symbol     (string)  — e.g. "د.أ" or "$"
+      $code       (string)  — e.g. "JOD"
+      $display    (string)  — Full string: "12.50 د.أ" or "$12.50"
+      $isPrefix   (bool)    — Symbol before or after the number
+      $tag        (string)  — HTML tag to wrap with (default: "span")
+
+    The outer element merges any extra classes/attributes passed via the
+    component tag (e.g. class="text-red-500 font-black tabular-nums").
+
+    Example outputs:
+      JOD: <span class="tabular-nums">12.50 <span>د.أ</span></span>
+      USD: <span class="tabular-nums"><span>$</span>12.50</span>
 --}}
 
-@props([
-    'amount'     => 0,
-    'class'      => '',
-    'symbolOnly' => false,
-])
+<{{ $tag }} {{ $attributes->merge(['class' => 'tabular-nums']) }}>
 
-@php
-    /** @var \App\Models\Currency $activeCurrency */
-    // $activeCurrency is shared by ResolveCurrency middleware on every request.
-    // Fallback in case middleware isn't registered yet.
-    $cur = $activeCurrency
-        ?? \App\Models\Currency::where('is_base', true)->first()
-        ?? (object)['symbol' => 'د.أ', 'exchange_rate' => 1, 'code' => 'JOD'];
 
-    $converted = round((float) $amount * (float) $cur->exchange_rate, 2);
-    $formatted = number_format($converted, 2);
-@endphp
+    @if($isPrefix)
+        <span class="currency-symbol text-inherit">{{ $symbol }}</span>{{ $formatted }}
 
-@if($symbolOnly)
-    <span {{ $attributes->merge(['class' => $class]) }}>{{ $cur->symbol }}</span>
-@else
-    <span {{ $attributes->merge(['class' => 'tabular-nums ' . $class]) }}>{{ $formatted }} {{ $cur->symbol }}</span>
-@endif
+    {{-- Suffix symbol (د.أ, ر.س …) --}}
+    @else
+        {{ $formatted }} <span class="currency-symbol text-inherit">{{ $symbol }}</span>
+    @endif
+
+</{{ $tag }}>

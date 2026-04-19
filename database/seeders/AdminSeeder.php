@@ -12,42 +12,42 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. تنظيف الكاش (عشان ما يعلق السيستم على بيانات قديمة)
+        // 1. تنظيف الكاش الخاص بصلاحيات Spatie
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // 2. إنشاء الصلاحيات
         $manageCatalog = Permission::firstOrCreate(['name' => 'manage-catalog']);
         $manageAll     = Permission::firstOrCreate(['name' => 'manage-all']);
 
-        // 3. إنشاء رتبة "Admin" واحدة للكل
+        // 3. إنشاء رتبة "Admin"
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
 
-        // 4. إنشاء مستخدم (السوبر أدمن)
+        // 4. إنشاء مستخدم (السوبر أدمن) برقم يبدأ بـ 0962
         $superAdmin = User::updateOrCreate(
-            ['email' => 'super@admin.com'],
+            ['phone' => '0962700000000'], // البحث صار بالرقم لأنه المعرف الأساسي عندك
             [
                 'name'     => 'Super Admin',
-                'phone'    => '0123456789',
-                'password' => Hash::make('password'),
+                'email'    => 'super@admin.com',
+                'password' => Hash::make('password'), // يفضل تغييره لاحقاً
             ]
         );
-        // بنعطيه رتبة أدمن + كل الصلاحيات
+        
         $superAdmin->assignRole($adminRole);
         $superAdmin->givePermissionTo([$manageCatalog, $manageAll]);
 
-        // 5. إنشاء مستخدم (الأدمن العادي)
+        // 5. إنشاء مستخدم (الأدمن العادي) برقم يبدأ بـ 0962
         $regularAdmin = User::updateOrCreate(
-            ['email' => 'admin@admin.com'],
+            ['phone' => '0962711111111'],
             [
                 'name'     => 'Regular Admin',
-                'phone'    => '0987654321',
+                'email'    => 'admin@admin.com',
                 'password' => Hash::make('password'),
             ]
         );
-        // بنعطيه رتبة أدمن + صلاحية الكتالوج فقط
+
         $regularAdmin->assignRole($adminRole);
         $regularAdmin->givePermissionTo($manageCatalog);
 
-        $this->command->info('Two Admins created with different permissions!');
+        $this->command->info('Admins created successfully with 0962 phone prefix!');
     }
 }

@@ -1,6 +1,7 @@
 {{-- resources/views/partials/navbar.blade.php --}}
 
 <header class="sticky top-0 z-40 bg-white/92 backdrop-blur-md border-b border-gray-100 shadow-sm" dir="rtl">
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <nav class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
         <div class="flex items-center justify-between h-14 md:h-16">
 
@@ -10,7 +11,36 @@
                 <a href="/" class="flex-shrink-0 hover:opacity-80 transition-opacity">
                     <img src="{{ $logoUrl }}" alt="Logo" class="h-8 md:h-10 w-auto">
                 </a>
+<div class="relative" x-data="{ open: false }">
+    <button @click.stop="open = !open" type="button" 
+            class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-sm hover:border-brand-200 transition-all">
+        <span class="text-xs font-bold text-gray-700">{{ $activeCurrency->symbol }}</span>
+        <span class="text-xs font-black text-brand-600">{{ $activeCurrency->code }}</span>
+        <svg class="w-3 h-3 text-gray-400 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+    </button>
 
+    <div x-show="open" 
+         x-cloak 
+         @click.outside="open = false"
+         @keydown.escape.window="open = false"
+         x-transition:enter="transition ease-out duration-100"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         class="absolute right-0 mt-2 w-40 bg-white border border-gray-100 rounded-2xl shadow-xl z-[100] overflow-hidden"
+         style="display: none;"> <div class="py-1">
+            @foreach(\App\Models\Currency::active()->get() as $cur)
+                <a href="{{ route('currency.user.switch', $cur->code) }}" 
+                   @click="open = false" 
+                   class="flex items-center justify-between px-4 py-2.5 text-xs hover:bg-gray-50 transition-colors {{ $activeCurrency->code === $cur->code ? 'bg-brand-50 text-brand-700 font-bold' : 'text-gray-600' }}">
+                    <span>{{ $cur->name }}</span>
+                    <span class="opacity-50 uppercase text-[10px]">{{ $cur->code }}</span>
+                </a>
+            @endforeach
+        </div>
+    </div>
+</div>
                 {{-- Desktop navigation --}}
                 <div class="hidden md:flex items-center gap-1">
                     <a href="{{ route('products.index') }}"

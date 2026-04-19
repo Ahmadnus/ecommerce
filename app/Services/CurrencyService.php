@@ -8,136 +8,200 @@ use Illuminate\Support\Facades\Cache;
 /**
  * CurrencyService
  * ─────────────────────────────────────────────────────────────────────────────
- * Single source of truth for:
- *   - Resolving the active currency (session → JOD default → DB fallback)
- *   - Converting amounts from JOD (base) to the active currency
- *   - Formatting prices with the correct symbol
+ * Registered as a singleton in AppServiceProvider.
  *
- * JOD is the BASE currency: exchange_rate = 1.000000
- * All other currencies store their rate RELATIVE TO JOD.
- * Example:  USD exchange_rate = 0.7067   →  1 JOD = 0.7067 USD
- *           SAR exchange_rate = 2.6500   →  1 JOD = 2.6500 SAR
+ * Responsibilities:
+ *   • Resolve the active Currency model for the current request
+ *   • Convert amounts from JOD (base) → active currency
+ *   • Format amounts with the correct symbol and decimal places
+ *
+ * Resolution priority (getActive):
+ *   1. session('currency_code')          — user explicitly switched
+ *   2. 'JOD'                             — hard-coded project default
+ *   3. DB row where is_base = true       — safety if JOD row is renamed
+ *   4. First active row in the table     — last resort
+ *   5. Emergency placeholder             — never fails, even with empty DB
+ *
+ * All prices stored in DB as JOD. Conversion formula:
+ *   displayed = round(jod_amount × exchange_rate, decimal_places)
  */
 class CurrencyService
 {
-    /** ISO code of the global default currency */
-    public const DEFAULT_CODE = 'JOD';
-
-    /** Symbol used when no currency object is available */
-    public const DEFAULT_SYMBOL = 'د.أ';
-
-    // ─── Resolution ──────────────────────────────────────────────────────────
+    /** Per-request cache — avoids multiple DB hits in one page load */
+    private ?Currency $resolved = null;
 
     /**
-     * Get the currently active Currency model.
-     * Cached per-request in a static property to avoid repeated DB hits.
+     * Resolve and return the active Currency model.
+     * Cached per-request in $this->resolved.
      */
     public function getActive(): Currency
     {
-        static $resolved = null;
-
-        if ($resolved !== null) {
-            return $resolved;
+        if ($this->resolved !== null) {
+            return $this->resolved;
         }
 
-        $code     = session('currency_code', self::DEFAULT_CODE);
-        $resolved = $this->findByCode($code)               // 1. session / default
-                 ?? $this->findByCode(self::DEFAULT_CODE)  // 2. JOD hardcoded
-                 ?? $this->dbBase()                        // 3. is_base row
-                 ?? $this->dbFirstActive();                // 4. any active row
+        $code = session('currency_code');
 
-        // Should never be null after fallbacks, but guarantee a safe object
-        if ($resolved === null) {
-            $resolved = $this->makePlaceholder();
+        // 1. Session-stored code
+        if ($code) {
+            $currency = Currency::active()->where('code', $code)->first();
+            if ($currency) {
+                return $this->resolved = $currency;
+            }
+            // Invalid code in session — clear it
+            session()->forget('currency_code');
         }
 
-        return $resolved;
+        // 2. Hard-coded JOD default (base currency for this project)
+        $jod = Currency::active()->where('code', 'JOD')->first();
+        if ($jod) {
+            return $this->resolved = $jod;
+        }
+
+        // 3. DB row flagged is_base = true
+        $base = Currency::active()->where('is_base', true)->first();
+        if ($base) {
+            return $this->resolved = $base;
+        }
+
+        // 4. Any active row
+        $any = Currency::active()->first();
+        if ($any) {
+            return $this->resolved = $any;
+        }
+
+        // 5. Emergency in-memory placeholder — never throws, even with an empty DB
+        return $this->resolved = $this->makePlaceholder();
     }
 
     /**
-     * Explicitly set the session currency by code.
-     * Returns the resolved Currency or null if code is invalid.
+     * Switch the active currency by code.
+     * Stores in session. Returns false if the currency is not found.
      */
-    public function setActive(string $code): ?Currency
+    public function switchTo(string $code): bool
     {
-        $currency = $this->findByCode(strtoupper($code));
-        if ($currency) {
-            session(['currency_code' => $currency->code]);
+        $code     = strtoupper(trim($code));
+        $currency = Currency::active()->where('code', $code)->first();
+
+        if (! $currency) {
+            return false;
         }
-        return $currency;
-    }
 
-    // ─── Conversion & Formatting ─────────────────────────────────────────────
+        session(['currency_code' => $currency->code]);
+        $this->resolved = $currency; // update per-request cache
 
-    /**
-     * Convert an amount stored in JOD to the active currency.
-     */
-    public function convert(float $amountInJod, ?Currency $currency = null): float
-    {
-        $currency ??= $this->getActive();
-        return round($amountInJod * (float) $currency->exchange_rate, 2);
+        return true;
     }
 
     /**
-     * Format a JOD amount as a localized string with symbol.
-     * Example: format(50) → "50.00 د.أ"
+     * Convert a JOD amount to the active currency.
+     *
+     * @param  float  $jod   Amount in Jordanian Dinar (base)
+     * @return float          Converted and rounded amount
      */
-    public function format(float $amountInJod, ?Currency $currency = null): string
+    public function convert(float $jod): float
     {
-        $currency ??= $this->getActive();
-        $converted = $this->convert($amountInJod, $currency);
+        $rate = (float) $this->getActive()->exchange_rate;
+        return round($jod * $rate, 2);
+    }
+
+    /**
+     * Format a JOD amount as a human-readable string with currency symbol.
+     *
+     * Examples:
+     *   format(10.5)  →  "10.50 د.أ"   (JOD)
+     *   format(10.5)  →  "$10.50"       (USD, symbol-prefix currency)
+     *
+     * Symbol placement is determined by whether the symbol looks like a prefix
+     * ($, €, £) or a suffix (د.أ, ر.س).
+     *
+     * @param  float  $jod    Amount in JOD
+     * @return string
+     */
+    public function format(float $jod): string
+    {
+        $currency  = $this->getActive();
+        $converted = $this->convert($jod);
         $formatted = number_format($converted, 2);
-        return "{$formatted} {$currency->symbol}";
+        $symbol    = $currency->symbol;
+
+        // Prefix symbols: $, €, £, ¥, ¢, ₹, ₩, ฿
+        $prefixSymbols = ['$', '€', '£', '¥', '¢', '₹', '₩', '฿', 'R$', 'kr'];
+
+        foreach ($prefixSymbols as $prefix) {
+            if (str_starts_with($symbol, $prefix)) {
+                return $symbol . $formatted;
+            }
+        }
+
+        // Default: suffix
+        return $formatted . ' ' . $symbol;
     }
 
     /**
-     * Return converted amount + symbol separately (useful for Blade).
+     * Return a structured breakdown for use in Blade templates.
+     *
+     * Example return:
+     * [
+     *   'amount'   => 12.5,       // converted float
+     *   'formatted'=> '12.50',    // formatted string without symbol
+     *   'symbol'   => 'د.أ',
+     *   'code'     => 'JOD',
+     *   'display'  => '12.50 د.أ' // full formatted string
+     * ]
      */
-    public function breakdown(float $amountInJod, ?Currency $currency = null): array
+    public function breakdown(float $jod): array
     {
-        $currency ??= $this->getActive();
+        $currency  = $this->getActive();
+        $amount    = $this->convert($jod);
+        $formatted = number_format($amount, 2);
+        $full      = $this->format($jod);
+
         return [
-            'amount'   => $this->convert($amountInJod, $currency),
-            'symbol'   => $currency->symbol,
-            'code'     => $currency->code,
-            'currency' => $currency,
+            'amount'    => $amount,
+            'formatted' => $formatted,
+            'symbol'    => $currency->symbol,
+            'code'      => $currency->code,
+            'display'   => $full,
         ];
     }
 
-    // ─── Private helpers ─────────────────────────────────────────────────────
-
-    private function findByCode(string $code): ?Currency
+    /**
+     * Return all active currencies for a currency switcher UI.
+     * Cached for 10 minutes to avoid repeated DB queries.
+     */
+    public function allActive(): \Illuminate\Database\Eloquent\Collection
     {
-        // Cache active currencies list for 5 minutes to avoid N+1 per request
-        $all = Cache::remember('currencies_active', 300, fn () =>
-            Currency::active()->get()->keyBy('code')
+        return Cache::remember('currencies.active', 600, fn() =>
+            Currency::active()->orderBy('sort_order')->orderBy('name')->get()
         );
-
-        return $all->get($code);
-    }
-
-    private function dbBase(): ?Currency
-    {
-        return Currency::active()->where('is_base', true)->first();
-    }
-
-    private function dbFirstActive(): ?Currency
-    {
-        return Currency::active()->first();
     }
 
     /**
-     * Emergency placeholder — prevents null errors if DB has no currencies.
+     * Invalidate the per-request cache.
+     * Called after switching currency mid-request.
+     */
+    public function flush(): void
+    {
+        $this->resolved = null;
+    }
+
+    /**
+     * Emergency placeholder — returned only when the currencies table is empty.
+     * Prevents null-pointer errors everywhere that uses $activeCurrency.
      */
     private function makePlaceholder(): Currency
     {
-        $c                = new Currency();
-        $c->name          = 'Jordanian Dinar';
-        $c->code          = self::DEFAULT_CODE;
-        $c->symbol        = self::DEFAULT_SYMBOL;
-        $c->exchange_rate = 1.0;
-        $c->is_base       = true;
-        $c->is_active     = true;
-        return $c;
+        $placeholder = new Currency();
+        $placeholder->forceFill([
+            'code'          => 'JOD',
+            'name'          => 'Jordanian Dinar',
+            'symbol'        => 'د.أ',
+            'exchange_rate' => '1.000000',
+            'is_base'       => true,
+            'is_active'     => true,
+        ]);
+
+        return $placeholder;
     }
 }

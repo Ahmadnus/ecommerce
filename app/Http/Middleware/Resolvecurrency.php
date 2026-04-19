@@ -11,14 +11,14 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * ResolveCurrency
  * ─────────────────────────────────────────────────────────────────────────────
- * Runs on every web request. Resolves which currency is active in this session
- * and shares a $activeCurrency view variable globally.
+ * Runs on every web request (registered in bootstrap/app.php).
  *
- * Priority:
- *   1. session('currency_code')    — user explicitly switched via ?currency=JOD
- *   2. JOD                         — hard-coded global default
- *   3. DB is_base = true           — safety fallback if JOD row is deleted
- *   4. First active currency row   — last resort
+ * 1. Checks for a ?currency=USD query parameter → validates → stores in session
+ * 2. Resolves the active Currency via CurrencyService (session → JOD → DB)
+ * 3. Shares $activeCurrency with ALL Blade views via view()->share()
+ *
+ * This means every Blade view, every component, every partial automatically
+ * has access to $activeCurrency without any controller boilerplate.
  */
 class ResolveCurrency
 {
@@ -26,16 +26,16 @@ class ResolveCurrency
 
     public function handle(Request $request, Closure $next): Response
     {
-        // Allow ?currency=USD in URL to switch session currency
+        // Allow ?currency=USD in the URL to switch the active currency
         if ($request->query('currency')) {
-            $code = strtoupper($request->query('currency'));
-            $candidate = Currency::active()->where('code', $code)->first();
-            if ($candidate) {
-                session(['currency_code' => $candidate->code]);
-            }
+            $this->currencyService->switchTo(
+                (string) $request->query('currency')
+            );
+            // Flush per-request cache so getActive() re-resolves with the new code
+            $this->currencyService->flush();
         }
 
-        // Resolve currency and share with all views
+        // Resolve and share — every Blade template now has $activeCurrency
         $currency = $this->currencyService->getActive();
         view()->share('activeCurrency', $currency);
 
