@@ -64,7 +64,7 @@ class CheckoutController extends Controller
         'shipping_phone'   => [
             'required', 
             'string', 
-            'regex:/^0962\d+$/', 
+           
             'min:10', 
             'max:20'
         ],
@@ -77,7 +77,7 @@ class CheckoutController extends Controller
         'payment_method'   => 'required|in:cod',
     ], [
         // رسالة الخطأ المخصصة بالعربي
-        'shipping_phone.regex' => 'رقم الهاتف يجب أن يبدأ بـ 0962.',
+     
         'shipping_phone.required' => 'رقم الهاتف مطلوب لتوصيل الطلب.',
     ]);
 
