@@ -9,89 +9,113 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
+use Propaganistas\LaravelPhone\Rules\Phone as PhoneRule;
 
 class AuthController extends Controller
 {
-    // --- عرض صفحات الدخول ---
-    public function showLogin(): View { return view('auth.login'); }
-    public function showAdminLogin(): View { return view('auth.admin-login'); }
+    // ─── Display pages ────────────────────────────────────────────────────────
 
-    // --- منطق تسجيل الدخول (Login) ---
+    public function showLogin(): View
+    {
+        return view('auth.login');
+    }
+
+    public function showAdminLogin(): View
+    {
+        return view('auth.admin-login');
+    }
+
+    public function showRegister(): View
+    {
+        return view('auth.register');
+    }
+
+    // ─── Login ────────────────────────────────────────────────────────────────
+
     public function login(Request $request): RedirectResponse
     {
-        // 1. الفالديشن الخاص بالدخول (هاتف وكلمة مرور فقط)
-        $credentials = $request->validate([
-            'phone'    => ['required', 'string', 'regex:/^0962\d+$/'],
-            'password' => ['required', 'string'],
+        /*
+         * The hidden input `phone_full` carries the E.164 value from intl-tel-input
+         * (e.g. +9639xxxxxxxx). We validate that field, then use it as the credential.
+         */
+        $request->validate([
+            'phone_full' => [
+                'required',
+                'string',
+                new PhoneRule,          // propaganistas/laravel-phone — validates E.164 / any international
+            ],
+            'password'   => ['required', 'string'],
         ], [
-            'phone.required' => 'رقم الهاتف مطلوب.',
-            'phone.regex'    => 'يجب أن يبدأ رقم الهاتف بـ 0962.',
+            'phone_full.required' => 'رقم الهاتف مطلوب.',
+            'phone_full.phone'    => 'رقم الهاتف غير صحيح أو غير مدعوم.',
+            'password.required'  => 'كلمة المرور مطلوبة.',
         ]);
 
-        $throttleKey = 'login|' . $request->input('phone') . '|' . $request->ip();
+        $phone       = $request->input('phone_full');   // E.164 e.g. +9639...
+        $throttleKey = 'login|' . $phone . '|' . $request->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
-            return back()->withErrors(['phone' => "محاولات كثيرة. انتظر {$seconds} ثانية."]);
+            return back()->withErrors(['phone_full' => "محاولات كثيرة. انتظر {$seconds} ثانية."]);
         }
 
-        // 2. محاولة تسجيل الدخول
+        // Attempt login using the E.164 phone as identifier
+        $credentials = [
+            'phone'    => $phone,
+            'password' => $request->input('password'),
+        ];
+
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             RateLimiter::hit($throttleKey, 60);
-            return back()->withErrors(['phone' => 'بيانات الدخول غير صحيحة.']);
+            return back()->withErrors(['phone_full' => 'بيانات الدخول غير صحيحة.'])->withInput(['phone_full' => $phone]);
         }
 
-        // 3. النجاح
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
         $user = Auth::user();
 
-        // 4. التوجيه
-        if ($user->hasRole('admin')) {
-            return redirect()->to('/admin');
+        // Admin portal check
+        if ($request->boolean('is_admin_login') && !$user->hasRole('admin')) {
+            Auth::logout();
+            return back()->withErrors(['phone_full' => 'هذه البوابة مخصصة للمسؤولين فقط.']);
         }
 
-        if ($request->has('is_admin_login')) {
-            Auth::logout();
-            return back()->withErrors(['phone' => 'هذه البوابة مخصصة للمسؤولين فقط.']);
+        if ($user->hasRole('admin')) {
+            return redirect()->to('/admin');
         }
 
         return redirect()->intended('/');
     }
 
-    // --- منطق إنشاء الحساب (Register) ---
+    // ─── Register ─────────────────────────────────────────────────────────────
+
     public function register(Request $request): RedirectResponse
     {
-        // 1. الفالديشن الخاص بالتسجيل (كامل مع التحقق من التكرار)
         $validated = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'phone'    => [
-                'required', 
-                'string', 
-                'unique:users,phone', 
-                'regex:/^0962\d+$/', 
-                'min:10', 
-                'max:15'
+            'name'      => ['required', 'string', 'max:255'],
+            'phone_full' => [
+                'required',
+                'string',
+                'unique:users,phone',
+                new PhoneRule,          // international format validation
             ],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password'  => ['required', 'string', 'min:8', 'confirmed'],
         ], [
-            'name.required'      => 'الاسم الكامل مطلوب.',
-            'phone.required'     => 'رقم الهاتف مطلوب.',
-            'phone.unique'       => 'رقم الهاتف هذا مسجل مسبقاً.',
-            'phone.regex'        => 'يجب أن يبدأ رقم الهاتف بـ 0962.',
-            'password.required'  => 'كلمة المرور مطلوبة.',
-            'password.min'       => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.',
-            'password.confirmed' => 'كلمتا المرور غير متطابقتين.',
+            'name.required'        => 'الاسم الكامل مطلوب.',
+            'phone_full.required'  => 'رقم الهاتف مطلوب.',
+            'phone_full.unique'    => 'رقم الهاتف هذا مسجل مسبقاً.',
+            'phone_full.phone'     => 'رقم الهاتف غير صحيح أو غير مدعوم.',
+            'password.required'   => 'كلمة المرور مطلوبة.',
+            'password.min'        => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.',
+            'password.confirmed'  => 'كلمتا المرور غير متطابقتين.',
         ]);
 
-        // 2. إنشاء المستخدم
         $user = User::create([
             'name'     => $validated['name'],
-            'phone'    => $validated['phone'],
-            'password' => $validated['password'], // يتم التشفير تلقائياً في الموديل
+            'phone'    => $validated['phone_full'],   // store E.164 directly
+            'password' => $validated['password'],     // auto-hashed via Model cast
         ]);
 
-        // 3. الدخول التلقائي
         Auth::login($user);
         $request->session()->regenerate();
 
@@ -99,7 +123,8 @@ class AuthController extends Controller
                          ->with('success', 'تم إنشاء حسابك بنجاح، مرحباً ' . $user->name . '!');
     }
 
-    // --- تسجيل الخروج ---
+    // ─── Logout ───────────────────────────────────────────────────────────────
+
     public function logout(Request $request): RedirectResponse
     {
         $isAdmin = Auth::check() && Auth::user()->hasRole('admin');
@@ -108,8 +133,8 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return $isAdmin 
-            ? redirect()->to('/adlogin')->with('success', 'تم تسجيل خروج المسؤول.') 
+        return $isAdmin
+            ? redirect()->to('/adlogin')->with('success', 'تم تسجيل خروج المسؤول.')
             : redirect()->route('login')->with('success', 'تم تسجيل الخروج.');
     }
 }

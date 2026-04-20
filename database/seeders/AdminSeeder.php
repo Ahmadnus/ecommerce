@@ -24,7 +24,7 @@ class AdminSeeder extends Seeder
 
         // 4. إنشاء مستخدم (السوبر أدمن) برقم يبدأ بـ 0962
         $superAdmin = User::updateOrCreate(
-            ['phone' => '0962700000000'], // البحث صار بالرقم لأنه المعرف الأساسي عندك
+            ['phone' => '+962790000000'], // البحث صار بالرقم لأنه المعرف الأساسي عندك
             [
                 'name'     => 'Super Admin',
                 'email'    => 'super@admin.com',
@@ -37,7 +37,7 @@ class AdminSeeder extends Seeder
 
         // 5. إنشاء مستخدم (الأدمن العادي) برقم يبدأ بـ 0962
         $regularAdmin = User::updateOrCreate(
-            ['phone' => '0962711111111'],
+            ['phone' => '+962790000001'],
             [
                 'name'     => 'Regular Admin',
                 'email'    => 'admin@admin.com',

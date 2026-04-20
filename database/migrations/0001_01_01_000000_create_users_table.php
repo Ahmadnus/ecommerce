@@ -10,18 +10,22 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-
             $table->string('name');
 
-            // ── Phone-based auth (replaces email) ────────────────────────
-            $table->string('phone')->unique()
-                  ->comment('Primary identifier — used for login');
+            // التعديل هنا: زيادة الطول لـ 20 حرفاً لاستيعاب الصيغة الدولية E.164
+            $table->string('phone', 20)->unique()
+                  ->comment('Primary identifier — stored in E.164 format (+963...)');
+            
             $table->timestamp('phone_verified_at')->nullable();
-$table->string('email')->unique()->nullable();
+            
+            // الإيميل يبقى اختيارياً تماماً
+            $table->string('email')->unique()->nullable();
+            
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
 
+            // الفهرس للبحث السريع
             $table->index('phone');
         });
     }

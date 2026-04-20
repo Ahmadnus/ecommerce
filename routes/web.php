@@ -13,7 +13,8 @@ use App\Http\Controllers\Admin\{
     CountryController, ZoneController, CurrencyController,
     ProductController as AdminProductController,
     OrderController as AdminOrderController,
-    PageController as AdminPageController
+    PageController as AdminPageController,
+    SplashSettingsController
 };
 
 // ─── Public Routes ──────────────────────────────────────────────────────────
@@ -120,3 +121,7 @@ Route::get('/select-currency/{code}', function ($code) {
 
     return back();
 })->name('currency.user.switch');
+Route::prefix('admin/splash')->name('admin.splash.')->middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/', [SplashSettingsController::class, 'edit'])->name('edit');
+    Route::put('/update', [SplashSettingsController::class, 'update'])->name('update');
+});

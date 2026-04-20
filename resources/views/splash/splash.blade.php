@@ -7,7 +7,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;400;900&family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -16,9 +16,6 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        'logo': ['Montserrat', 'sans-serif'],
-                    },
                     animation: {
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'float': 'float 4s ease-in-out infinite',
@@ -75,6 +72,29 @@
         }
     </style>
 </head>
+
+@php
+    // جلب جميع الإعدادات مرة واحدة لتقليل الضغط على الداتابيز
+    $siteSettings = \App\Models\Setting::pluck('value', 'key');
+    
+    // إعدادات اللوغو
+    $logoPath = $siteSettings['site_logo'] ?? null;
+    $logoUrl  = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
+    
+    // إعدادات النصوص
+    $mainTitle   = $siteSettings['splash_title_main'] ?? 'COOL';
+    $subTitle    = $siteSettings['splash_title_sub'] ?? 'VIBES';
+    $loadingText = $siteSettings['splash_loading_text'] ?? 'جاري تحضير تجربتك الخاصة...';
+    
+    // إعدادات الألوان
+    $mainColor = $siteSettings['splash_color_main'] ?? '#000000';
+    $subColor  = $siteSettings['splash_color_sub'] ?? '#D1D5DB';
+    
+    // إعدادات الخطوط
+    $fontSize   = $siteSettings['splash_font_size'] ?? 'text-6xl';
+    $fontFamily = $siteSettings['splash_font_family'] ?? "'Montserrat', sans-serif";
+@endphp
+
 <body class="font-sans antialiased text-gray-900">
 
     <div x-data="{ startFloating: false }" 
@@ -91,38 +111,34 @@
 
         <div class="relative z-10 flex flex-col items-center p-6 text-center">
             
-       <div class="animate-logo-entry mb-12 flex flex-col items-center">
-        @php
-    // جلب الإعدادات واللوغو محلياً داخل الصفحة
-    $siteSettings = \App\Models\Setting::pluck('value', 'key');
-    $logoPath = $siteSettings['site_logo'] ?? null;
-    $logoUrl = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
-@endphp
-    <div :class="{ 'animate-float': startFloating }" class="transition-all duration-1000">
-        {{-- التعديل هنا ليقرأ اللوغو المرفوع من لوحة التحكم --}}
-        <img src="{{ $logoUrl }}" 
-             alt="{{ $siteSettings['site_name'] ?? 'Logo' }}" 
-             class="w-56 md:w-80 h-auto object-contain drop-shadow-[0_40px_40px_rgba(0,0,0,0.1)]">
-    </div>
-</div>
+            <div class="animate-logo-entry mb-12 flex flex-col items-center">
+                <div :class="{ 'animate-float': startFloating }" class="transition-all duration-1000">
+                    <img src="{{ $logoUrl }}" 
+                         alt="{{ $siteSettings['site_name'] ?? 'Logo' }}" 
+                         class="w-56 md:w-80 h-auto object-contain drop-shadow-[0_40px_40px_rgba(0,0,0,0.1)]">
+                </div>
+            </div>
 
-            <div class="overflow-hidden flex flex-col items-center">
-                <h1 class="font-logo text-4xl md:text-6xl font-black text-black leading-none tracking-[0.3em] uppercase mb-5">
-                    COOL <span class="text-gray-300 font-light tracking-tight">VIBES</span>
+            <div class="overflow-hidden flex flex-col items-center" style="font-family: {!! $fontFamily !!};">
+                <h1 class="{{ $fontSize }} font-black leading-none tracking-[0.3em] uppercase mb-5 transition-all duration-300" style="color: {{ $mainColor }};">
+                    {{ $mainTitle }}
+                    <span class="font-light tracking-tight transition-all duration-300" style="color: {{ $subColor }};">
+                        {{ $subTitle }}
+                    </span>
                 </h1>
 
-                <div class="h-1 bg-black w-0 animate-line rounded-full"></div>
+                <div class="h-1 w-0 animate-line rounded-full" style="background-color: {{ $mainColor }};"></div>
             </div>
 
             <div class="mt-16">
                 <p class="text-[10px] font-bold text-gray-400 tracking-[0.5em] uppercase animate-pulse-slow">
-                    جاري تحضير تجربتك الخاصة...
+                    {{ $loadingText }}
                 </p>
             </div>
         </div>
 
         <div class="absolute bottom-10 text-[10px] font-black text-gray-200 tracking-[0.4em] uppercase">
-            &copy; 2026 PREMIUM FASHION EXPERIENCE
+            &copy; {{ date('Y') }} PREMIUM FASHION EXPERIENCE
         </div>
     </div>
 

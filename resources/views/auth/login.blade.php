@@ -3,17 +3,11 @@
 
 @push('head')
 <style>
-    /* Floating label animation */
-    .input-group { position: relative; }
-
     .input-field {
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
-    .input-field:focus {
-        background: #fff;
-    }
+    .input-field:focus { background: #fff; }
 
-    /* Decorative background blobs */
     .auth-bg-blob {
         position: fixed;
         border-radius: 50%;
@@ -23,7 +17,6 @@
         z-index: 0;
     }
 
-    /* Card entrance animation */
     @keyframes cardIn {
         from { opacity: 0; transform: translateY(20px) scale(0.98); }
         to   { opacity: 1; transform: translateY(0)   scale(1); }
@@ -31,9 +24,10 @@
     .auth-card {
         animation: cardIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-
-    /* Stagger children */
-    .auth-card > * { opacity: 0; animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .auth-card > * {
+        opacity: 0;
+        animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
     .auth-card > *:nth-child(1) { animation-delay: 0.08s; }
     .auth-card > *:nth-child(2) { animation-delay: 0.14s; }
     .auth-card > *:nth-child(3) { animation-delay: 0.20s; }
@@ -41,11 +35,9 @@
     .auth-card > *:nth-child(5) { animation-delay: 0.32s; }
     .auth-card > *:nth-child(6) { animation-delay: 0.38s; }
 
-    /* Password toggle */
     .pw-toggle { cursor: pointer; transition: color 0.15s; }
     .pw-toggle:hover { color: var(--brand-color, #0ea5e9); }
 
-    /* Divider */
     .divider { display: flex; align-items: center; gap: 12px; }
     .divider::before, .divider::after {
         content: ''; flex: 1; height: 1px; background: #e5e7eb;
@@ -55,7 +47,6 @@
 
 @section('content')
 
-{{-- Background decorative blobs --}}
 <div class="auth-bg-blob w-96 h-96 bg-blue-400 top-0 right-0 fixed"></div>
 <div class="auth-bg-blob w-80 h-80 bg-sky-300 bottom-10 left-10 fixed"></div>
 
@@ -67,8 +58,8 @@
             <a href="{{ url('/') }}" class="inline-flex flex-col items-center gap-2 group">
                 <div class="w-14 h-14 bg-brand-600 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-600/25 group-hover:scale-105 transition-transform">
                     <div class="w-20 h-20 flex items-center justify-center mb-4">
-    <img src="{{ $logoUrl }}" alt="Logo" class="max-h-full w-auto object-contain">
-</div>
+                        <img src="{{ $logoUrl }}" alt="Logo" class="max-h-full w-auto object-contain">
+                    </div>
                 </div>
                 <span class="font-display text-2xl font-bold text-gray-900">ShopCraft</span>
             </a>
@@ -102,34 +93,20 @@
             <form action="{{ route('login') }}" method="POST" class="space-y-5" novalidate>
                 @csrf
 
-                {{-- Phone Number --}}
-                <div class="input-group">
-                    <label for="phone" class="block text-sm font-semibold text-gray-700 mb-1.5">
+                {{-- ── Phone Number with Country Selector ── --}}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
                         رقم الهاتف
                     </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 end-0 flex items-center pe-3.5 pointer-events-none">
-                            <svg class="w-4.5 h-4.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                            </svg>
-                        </div>
-                        <input
-                            id="phone"
-                            type="tel"
-                            name="phone"
-                            value="{{ old('phone') }}"
-                            required
-                            autocomplete="tel"
-                            placeholder="05XXXXXXXX"
-                            dir="ltr"
-                            class="input-field w-full bg-gray-50 border @error('phone') border-red-400 bg-red-50/30 @else border-gray-200 @enderror
-                                   rounded-xl px-4 pe-10 py-3 text-sm text-gray-800
-                                   focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600
-                                   placeholder:text-gray-400 text-left"
-                        >
-                    </div>
-                    @error('phone')
+
+                    @include('components.phone-input', [
+                        'fieldName'     => 'phone_full',
+                        'initialCountry'=> 'sy',
+                        'oldValue'      => old('phone_full'),
+                        'hasError'      => $errors->has('phone_full'),
+                    ])
+
+                    @error('phone_full')
                         <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
                             <svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -140,7 +117,7 @@
                 </div>
 
                 {{-- Password --}}
-                <div class="input-group">
+                <div>
                     <div class="flex items-center justify-between mb-1.5">
                         <label for="password" class="block text-sm font-semibold text-gray-700">
                             كلمة المرور
@@ -165,7 +142,6 @@
                                    focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600
                                    placeholder:text-gray-400"
                         >
-                        {{-- Show/hide toggle --}}
                         <button type="button"
                                 onclick="togglePassword('password', this)"
                                 class="pw-toggle absolute inset-y-0 end-0 flex items-center pe-3.5 text-gray-400">
@@ -192,7 +168,7 @@
                 </div>
 
                 {{-- Remember me --}}
-                <div class="flex items-center justify-between">
+                <div class="flex items-center">
                     <label class="flex items-center gap-2.5 cursor-pointer select-none">
                         <input
                             type="checkbox"
@@ -217,10 +193,8 @@
 
             </form>
 
-            {{-- Divider --}}
             <div class="divider my-6 text-xs text-gray-400">أو</div>
 
-            {{-- Register link --}}
             <p class="text-center text-sm text-gray-500">
                 ليس لديك حساب؟
                 <a href="{{ route('register') }}"
@@ -231,7 +205,6 @@
 
         </div>
 
-        {{-- Back to shop --}}
         <p class="text-center mt-5">
             <a href="{{ url('/') }}"
                class="text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-1.5">
@@ -254,7 +227,6 @@ function togglePassword(inputId, btn) {
     const eyeOpen   = document.getElementById('eye-open-' + inputId);
     const eyeClosed = document.getElementById('eye-closed-' + inputId);
     const isHidden  = input.type === 'password';
-
     input.type      = isHidden ? 'text' : 'password';
     eyeOpen.classList.toggle('hidden',  isHidden);
     eyeClosed.classList.toggle('hidden', !isHidden);

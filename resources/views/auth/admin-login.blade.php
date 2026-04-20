@@ -9,7 +9,6 @@
         --admin-accent: #38bdf8;
     }
 
-    /* خلفية متدرجة كحلية عميقة */
     .admin-auth-bg {
         background: radial-gradient(circle at top right, #1e293b, #0f172a);
     }
@@ -25,7 +24,6 @@
         box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
     }
 
-    /* تحريك دخول الكرت */
     @keyframes adminCardIn {
         from { opacity: 0; transform: translateY(15px); }
         to { opacity: 1; transform: translateY(0); }
@@ -42,14 +40,28 @@
         background: var(--admin-navy-light);
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
     }
+
+    /* ── intl-tel-input dark-mode overrides for the admin card ── */
+    .admin-card .iti__tel-input {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+    .admin-card .iti__tel-input:focus {
+        background: #fff;
+        border-color: var(--admin-accent);
+        box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
+    }
+    .admin-card .iti--separate-dial-code .iti__selected-flag {
+        border-right-color: #cbd5e1;
+    }
 </style>
 @endpush
 
 @section('content')
 
 <div class="min-h-screen admin-auth-bg flex items-center justify-center px-4 py-12 relative overflow-hidden" dir="rtl">
-    
-    {{-- دوائر زخرفية خلفية --}}
+
     <div class="absolute top-0 -left-20 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl"></div>
     <div class="absolute bottom-0 -right-20 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
 
@@ -58,7 +70,6 @@
         {{-- Logo --}}
         <div class="text-center mb-8">
             <div class="inline-block p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 mb-4">
-                {{-- تم استخدام brightness-0 invert لجعل اللوجو أبيض ليناسب الخلفية الغامقة --}}
                 <img src="{{ $logoUrl }}" alt="Logo" class="h-12 w-auto object-contain brightness-0 invert">
             </div>
             <h2 class="text-white font-display text-2xl font-bold tracking-tight">بوابة الإدارة</h2>
@@ -66,8 +77,7 @@
         </div>
 
         <div class="admin-card bg-white rounded-3xl shadow-2xl border border-slate-200 p-8 sm:p-10">
-            
-            {{-- عرض الأخطاء --}}
+
             @if($errors->any())
             <div class="mb-6 p-4 bg-red-50 border-r-4 border-red-500 rounded-xl">
                 <ul class="text-red-700 text-sm space-y-1">
@@ -83,26 +93,27 @@
 
             <form action="{{ route('login') }}" method="POST" class="space-y-6">
                 @csrf
-                {{-- الحقل المخفي لتمييز دخول الإدارة --}}
                 <input type="hidden" name="is_admin_login" value="1">
 
-                {{-- حقل رقم الهاتف --}}
+                {{-- ── Phone Number with Country Selector ── --}}
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">رقم الهاتف للمسؤول</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                            </svg>
-                        </span>
-                        <input type="tel" name="phone" value="{{ old('phone') }}" required 
-                               placeholder="05xxxxxxxx"
-                               dir="ltr"
-                               class="input-field w-full pr-12 pl-4 py-3.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-0 text-left">
-                    </div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        رقم هاتف المسؤول
+                    </label>
+
+                    @include('components.phone-input', [
+                        'fieldName'      => 'phone_full',
+                        'initialCountry' => 'sy',
+                        'oldValue'       => old('phone_full'),
+                        'hasError'       => $errors->has('phone_full'),
+                    ])
+
+                    @error('phone_full')
+                        <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                {{-- حقل كلمة المرور --}}
+                {{-- Password --}}
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">كلمة المرور</label>
                     <div class="relative">
@@ -111,7 +122,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
                         </span>
-                        <input type="password" name="password" required 
+                        <input type="password" name="password" required
                                placeholder="••••••••"
                                class="input-field w-full pr-12 pl-4 py-3.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-0">
                     </div>

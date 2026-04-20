@@ -39,22 +39,12 @@
     .pw-toggle { cursor: pointer; transition: color 0.15s; }
     .pw-toggle:hover { color: var(--brand-color, #0ea5e9); }
 
-    /* Strength bar */
-    .strength-bar { height: 3px; border-radius: 99px; transition: width 0.3s ease, background 0.3s ease; }
+    .strength-bar { height: 3px; border-radius: 99px; transition: background 0.3s ease; }
 
     .divider { display: flex; align-items: center; gap: 12px; }
     .divider::before, .divider::after {
         content: ''; flex: 1; height: 1px; background: #e5e7eb;
     }
-
-    /* Step indicator */
-    .step-dot {
-        width: 6px; height: 6px;
-        border-radius: 50%;
-        background: #e5e7eb;
-        transition: background 0.3s;
-    }
-    .step-dot.filled { background: var(--brand-color, #0ea5e9); }
 </style>
 @endpush
 
@@ -143,34 +133,20 @@
                     @enderror
                 </div>
 
-                {{-- Phone Number --}}
+                {{-- ── Phone Number with Country Selector ── --}}
                 <div>
-                    <label for="phone" class="block text-sm font-semibold text-gray-700 mb-1.5">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
                         رقم الهاتف
                     </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 end-0 flex items-center pe-3.5 pointer-events-none">
-                            <svg class="w-4.5 h-4.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                            </svg>
-                        </div>
-                        <input
-                            id="phone"
-                            type="tel"
-                            name="phone"
-                            value="{{ old('phone') }}"
-                            required
-                            autocomplete="tel"
-                            placeholder="05XXXXXXXX"
-                            dir="ltr"
-                            class="input-field w-full bg-gray-50 border @error('phone') border-red-400 bg-red-50/30 @else border-gray-200 @enderror
-                                   rounded-xl px-4 pe-10 py-3 text-sm text-gray-800 text-left
-                                   focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600
-                                   placeholder:text-gray-400"
-                        >
-                    </div>
-                    @error('phone')
+
+                    @include('components.phone-input', [
+                        'fieldName'      => 'phone_full',
+                        'initialCountry' => 'sy',
+                        'oldValue'       => old('phone_full'),
+                        'hasError'       => $errors->has('phone_full'),
+                    ])
+
+                    @error('phone_full')
                         <p class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
                             <svg class="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -263,7 +239,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
                             </svg>
                         </button>
-                        {{-- Match indicator --}}
                         <span id="match-icon" class="absolute inset-y-0 start-0 flex items-center ps-3.5 hidden">
                             <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
@@ -273,7 +248,6 @@
                     <p id="match-msg" class="mt-1.5 text-xs hidden"></p>
                 </div>
 
-                {{-- Terms note --}}
                 <p class="text-xs text-gray-400 text-center leading-relaxed">
                     بإنشاء الحساب، أنت توافق على
                     <a href="#" class="text-brand-600 hover:underline">شروط الاستخدام</a>
@@ -281,7 +255,6 @@
                     <a href="#" class="text-brand-600 hover:underline">سياسة الخصوصية</a>
                 </p>
 
-                {{-- Submit --}}
                 <button
                     type="submit"
                     class="w-full bg-brand-600 text-white rounded-xl py-3 font-bold
@@ -293,10 +266,8 @@
 
             </form>
 
-            {{-- Divider --}}
             <div class="divider my-6 text-xs text-gray-400">أو</div>
 
-            {{-- Login link --}}
             <p class="text-center text-sm text-gray-500">
                 لديك حساب بالفعل؟
                 <a href="{{ route('login') }}"
@@ -307,7 +278,6 @@
 
         </div>
 
-        {{-- Back to shop --}}
         <p class="text-center mt-5">
             <a href="{{ url('/') }}"
                class="text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-1.5">
@@ -325,7 +295,6 @@
 
 @push('scripts')
 <script>
-// ── Show / hide password ──────────────────────────────────────────────────────
 function togglePassword(inputId, btn) {
     const input     = document.getElementById(inputId);
     const eyeOpen   = document.getElementById('eye-open-' + inputId);
@@ -336,12 +305,10 @@ function togglePassword(inputId, btn) {
     eyeClosed.classList.toggle('hidden', !isHidden);
 }
 
-// ── Password strength meter ───────────────────────────────────────────────────
 function checkStrength(val) {
     const wrap  = document.getElementById('strength-wrap');
     const label = document.getElementById('strength-label');
-    const bars  = [document.getElementById('sb1'), document.getElementById('sb2'),
-                   document.getElementById('sb3'), document.getElementById('sb4')];
+    const bars  = ['sb1','sb2','sb3','sb4'].map(id => document.getElementById(id));
 
     if (!val) { wrap.style.display = 'none'; return; }
     wrap.style.display = 'block';
@@ -352,24 +319,23 @@ function checkStrength(val) {
     if (/[0-9]/.test(val))        score++;
     if (/[^A-Za-z0-9]/.test(val)) score++;
 
-    const colors  = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
-    const labels  = ['ضعيفة جداً', 'ضعيفة', 'متوسطة', 'قوية'];
-    const txtCols = ['text-red-500', 'text-orange-500', 'text-yellow-500', 'text-green-500'];
+    const colors  = ['#ef4444','#f97316','#eab308','#22c55e'];
+    const labels  = ['ضعيفة جداً','ضعيفة','متوسطة','قوية'];
+    const txtCols = ['text-red-500','text-orange-500','text-yellow-500','text-green-500'];
 
     bars.forEach((b, i) => {
         b.style.background = i < score ? colors[score - 1] : '#e5e7eb';
     });
 
-    label.textContent  = 'قوة كلمة المرور: ' + labels[score - 1];
-    label.className    = 'text-xs ' + (txtCols[score - 1] || 'text-gray-400');
+    label.textContent = 'قوة كلمة المرور: ' + (labels[score - 1] || '');
+    label.className   = 'text-xs ' + (txtCols[score - 1] || 'text-gray-400');
 }
 
-// ── Password confirmation match ───────────────────────────────────────────────
 function checkMatch() {
-    const pw    = document.getElementById('password').value;
-    const conf  = document.getElementById('password_confirmation').value;
-    const msg   = document.getElementById('match-msg');
-    const icon  = document.getElementById('match-icon');
+    const pw   = document.getElementById('password').value;
+    const conf = document.getElementById('password_confirmation').value;
+    const msg  = document.getElementById('match-msg');
+    const icon = document.getElementById('match-icon');
 
     if (!conf) { msg.classList.add('hidden'); icon.classList.add('hidden'); return; }
 

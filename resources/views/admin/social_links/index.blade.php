@@ -1,6 +1,7 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('content')
+{{-- تأكد أن هذا الاسم هو 'admin-content' كما في صفحاتك الأخرى --}}
+@section('admin-content') 
 <div class="max-w-6xl mx-auto p-6 bg-white rounded-2xl shadow-sm" dir="rtl">
     <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
         <span class="w-2 h-6 bg-blue-600 rounded-full"></span>
@@ -11,31 +12,26 @@
     <form action="{{ route('admin.social-links.store') }}" method="POST" class="bg-gray-50 p-6 rounded-xl mb-8 border border-gray-100">
         @csrf
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {{-- اسم المنصة --}}
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-600 mr-2">اسم المنصة</label>
                 <input type="text" name="platform_name" placeholder="مثلاً: واتساب" class="p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required>
             </div>
 
-            {{-- الرابط --}}
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-600 mr-2">الرابط (اختياري للواتساب)</label>
                 <input type="url" name="url" placeholder="https://..." class="p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
-            {{-- رقم الواتساب --}}
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-600 mr-2">رقم الواتساب (للعائم)</label>
                 <input type="text" name="whatsapp_number" placeholder="966500000000" class="p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
-            {{-- كود SVG --}}
             <div class="flex flex-col gap-1 md:col-span-2 lg:col-span-2">
                 <label class="text-sm font-bold text-gray-600 mr-2">كود الأيقونة (SVG)</label>
                 <input type="text" name="icon_svg" placeholder="<svg>...</svg>" class="p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
-            {{-- تفعيل الزر العائم --}}
             <div class="flex items-center gap-2 mt-auto mb-4">
                 <input type="checkbox" name="is_floating" value="1" id="is_floating" class="w-5 h-5 accent-blue-600">
                 <label for="is_floating" class="text-sm font-bold text-gray-700 select-none cursor-pointer">تفعيل كـ زر عائم</label>
@@ -62,9 +58,7 @@
             <tbody class="divide-y">
                 @foreach($links as $link)
                 <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-4">
-                        <span class="font-bold text-gray-800">{{ $link->platform_name }}</span>
-                    </td>
+                    <td class="p-4 font-bold text-gray-800">{{ $link->platform_name }}</td>
                     <td class="p-4">
                         @if($link->whatsapp_number)
                             <span class="text-green-600 font-mono text-sm block">📱 {{ $link->whatsapp_number }}</span>
@@ -74,11 +68,9 @@
                         @endif
                     </td>
                     <td class="p-4 text-center">
-                        @if($link->is_floating)
-                            <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded-full font-bold">عائم 🚀</span>
-                        @else
-                            <span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full font-bold">عادي</span>
-                        @endif
+                        <span class="{{ $link->is_floating ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500' }} text-[10px] px-2 py-1 rounded-full font-bold">
+                            {{ $link->is_floating ? 'عائم 🚀' : 'عادي' }}
+                        </span>
                     </td>
                     <td class="p-4 text-center">
                         <div class="w-6 h-6 mx-auto text-gray-600">
@@ -86,11 +78,9 @@
                         </div>
                     </td>
                     <td class="p-4 text-center">
-                        <form action="{{ route('admin.social-links.destroy', $link->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
+                        <form action="{{ route('admin.social-links.destroy', $link->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد؟')">
                             @csrf @method('DELETE')
-                            <button class="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-all">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
+                            <button class="text-red-500 hover:text-red-700 p-2">حذف</button>
                         </form>
                     </td>
                 </tr>
