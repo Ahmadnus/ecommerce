@@ -9,7 +9,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Country extends Model
 {
     protected $fillable = [
-        'name', 'name_en', 'code', 'is_active', 'sort_order',
+        'name',
+        'name_en',
+        'code',
+        'calling_code',   // ← NEW: international dialling prefix, digits only (e.g. "963")
+        'is_active',
+        'sort_order',
     ];
 
     protected $casts = [
@@ -17,7 +22,7 @@ class Country extends Model
         'sort_order' => 'integer',
     ];
 
-    // ── Relationships ─────────────────────────────────────────────────────
+    // ── Relationships ─────────────────────────────────────────────────────────
 
     public function zones(): HasMany
     {
@@ -40,7 +45,7 @@ class Country extends Model
         return $this->currencies()->wherePivot('is_default', true);
     }
 
-    // ── Scopes ────────────────────────────────────────────────────────────
+    // ── Scopes ────────────────────────────────────────────────────────────────
 
     public function scopeActive($query): mixed
     {
@@ -50,5 +55,28 @@ class Country extends Model
     public function scopeOrdered($query): mixed
     {
         return $query->orderBy('sort_order')->orderBy('name');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Returns the formatted calling code with a leading "+" sign.
+     * Returns null if calling_code is not set.
+     *
+     * Example: country->callingCodeFormatted() → "+963"
+     */
+    public function callingCodeFormatted(): ?string
+    {
+        return $this->calling_code ? '+' . ltrim($this->calling_code, '+') : null;
+    }
+
+    /**
+     * Label used in dropdowns throughout the UI.
+     * Example: "سوريا +963"
+     */
+    public function dropdownLabel(): string
+    {
+        $code = $this->callingCodeFormatted();
+        return $code ? "{$this->name} {$code}" : $this->name;
     }
 }

@@ -202,6 +202,24 @@
     width:44px;height:44px;border-radius:10px;object-fit:cover;
     flex-shrink:0;background:#f3f4f6;
 }
+.scrollbar-hide, [x-category-grid] {
+    padding-top: 12px !important;   /* نعطي مساحة داخلية للبوردر */
+    margin-top: -12px !important;   /* نسحب الكومبوننت لفوق ليعوض المساحة */
+    padding-bottom: 4px !important; 
+    overflow-y: visible !important; /* السماح بظهور العناصر الخارجة عمودياً */
+}
+
+/* تأكد أن الحاوية الأب لا تقص المحتوى */
+.max-w-screen-2xl {
+    overflow: visible !important;
+}
+/* بنعطي مساحة "تنفّس" داخل حاوية الكاتيغوري عشان البوردر ما ينقص */
+    [x-category-grid] .flex, 
+    .overflow-x-auto {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+        margin-top: -8px !important;
+    }
 </style>
 @endpush
 
@@ -325,7 +343,12 @@
             ->with(['allActiveChildren','media'])
             ->orderBy('sort_order')->take(20)->get();
     @endphp
-    <x-category-grid :categories="$topCategories" :current="$currentCategory ?? null" :show-all="true" />
+
+
+    {{-- ── Toolbar: search + sort ──────────────────────────────────────────── --}}
+ <div class="relative overflow-hidden pt-2"> 
+        <x-category-grid :categories="$topCategories" :current="$currentCategory ?? null" :show-all="true" />
+    </div>
 
     {{-- ── Toolbar: search + sort ──────────────────────────────────────────── --}}
     <div class="flex items-center justify-between mb-4 gap-3 mt-4">

@@ -132,7 +132,7 @@
     @yield('content')
 @include('partials.bottombar')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" dir="rtl">
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     {{-- Breadcrumb ──────────────────────────────────────────────────────── --}}
     <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-8 flex-wrap">
@@ -741,11 +741,30 @@ function addToCart() {
         }
         return data;
     })
-    .then(data => {
-        // نجاح الإضافة
-        if(window.Livewire) Livewire.dispatch('cartUpdated');
-        Swal.fire({ icon: 'success', title: 'تمت الإضافة', timer: 1500, showConfirmButton: false });
-    })
+   .then(data => {
+    // 1. تحديث سلة Livewire إذا كانت موجودة
+    if(window.Livewire) {
+        Livewire.dispatch('cartUpdated');
+    }
+
+    // 2. إظهار إشعار نجاح (Toast) جذاب
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
+
+    Toast.fire({
+        icon: 'success',
+        title: 'تمت إضافة المنتج للسلة بنجاح'
+    });
+})
     .catch(error => {
         console.error('Error:', error);
         Swal.fire({ icon: 'warning', title: 'تنبيه', text: error.message });

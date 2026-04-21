@@ -19,11 +19,14 @@ use Illuminate\Support\Facades\Auth;
  */
 class AppServiceProvider extends ServiceProvider
 {
+
     public function register(): void
     {
         // Repository bindings — the interface is what controllers/services depend on
         $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
         $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
+        $this->app->singleton(\App\Services\SmsService::class);
+        
     }
 
   public function boot(): void

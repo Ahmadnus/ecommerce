@@ -6,9 +6,44 @@
     <div class="p-6 border-b border-gray-50 flex justify-between items-center">
         <h3 class="font-bold text-gray-800">قائمة الطلبات الأخيرة</h3>
     </div>
+<div class="p-6 border-b border-gray-50 flex flex-wrap gap-3 items-center justify-between">
+    
+    <h3 class="font-bold text-gray-800">قائمة الطلبات</h3>
 
+    <form method="GET" class="flex gap-2 items-center">
+        <select name="status" onchange="this.form.submit()"
+            class="text-xs rounded-lg px-3 py-2 border border-gray-200 focus:ring-0">
+
+            <option value="">كل الحالات</option>
+
+            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>
+                قيد الانتظار
+            </option>
+
+            <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>
+                جاري التجهيز
+            </option>
+
+            <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>
+                تم الشحن
+            </option>
+
+            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>
+                مكتمل
+            </option>
+
+            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>
+                ملغي
+            </option>
+        </select>
+    </form>
+
+</div>
     <div class="overflow-x-auto">
+
+
         <table class="w-full text-right">
+
             <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
                 <tr>
                     <th class="px-6 py-4">رقم الطلب</th>
@@ -26,6 +61,7 @@
                     <td class="px-6 py-4">
                         <div class="text-sm font-medium text-gray-900">{{ $order->shipping_name }}</div>
                         <div class="text-xs text-gray-400 mb-2">{{ $order->shipping_phone }}</div>
+
                         
                         {{-- بداية قسم التفاصيل المضافة --}}
                         <div class="space-y-1 border-t border-gray-50 pt-2">
@@ -53,7 +89,7 @@
                         </div>
                         {{-- نهاية قسم التفاصيل المضافة --}}
                     </td>
-                    <td class="px-6 py-4 font-bold">{{ number_format($order->total_amount, 2) }} ر.س</td>
+                    <td class="px-6 py-4 font-bold">{{ number_format($order->total_amount, 2) }} {{ $activeCurrency->symbol ?? 'د.أ' }}</td>
                     <td class="px-6 py-4">
                         <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="inline-block">
                             @csrf @method('PATCH')

@@ -151,6 +151,12 @@
         <x-admin-nav-link href="{{ route('admin.currencies.index') }}" icon="currency-dollar" :active="request()->routeIs('admin.currencies.*')">
             العملات
         </x-admin-nav-link>
+        <x-admin-nav-link
+    href="{{ route('admin.settings.sms') }}"
+    icon="phone"
+    :active="request()->routeIs('admin.settings.sms*')">
+    إعدادات SMS API
+</x-admin-nav-link>
 
         {{-- الإعدادات العامة --}}
         <x-admin-nav-link href="{{ route('admin.settings') }}" icon="cog" :active="request()->routeIs('admin.settings')">

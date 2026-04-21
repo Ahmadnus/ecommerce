@@ -11,22 +11,28 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-
-            // التعديل هنا: زيادة الطول لـ 20 حرفاً لاستيعاب الصيغة الدولية E.164
-            $table->string('phone', 20)->unique()
-                  ->comment('Primary identifier — stored in E.164 format (+963...)');
             
+            // الهاتف هو المعرف الأساسي
+            $table->string('phone', 20)->unique()->index();
+            
+            // حقول الـ OTP والتحقق
+            $table->string('otp', 10)->nullable();
+            $table->timestamp('otp_expires_at')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
-            
-            // الإيميل يبقى اختيارياً تماماً
+
+            // الإيميل اختياري
             $table->string('email')->unique()->nullable();
             
+            // الربط مع الدول - تأكد أن جدول countries موجود
+       
+
             $table->string('password');
+            
+            // حقل الأدمن للعزل الصارم
+            $table->boolean('is_admin')->default(false); 
+            
             $table->rememberToken();
             $table->timestamps();
-
-            // الفهرس للبحث السريع
-            $table->index('phone');
         });
     }
 

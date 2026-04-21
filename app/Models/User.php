@@ -14,13 +14,10 @@ class User extends Authenticatable  // أضف implements FilamentUser
 
     // ─── Mass-assignable fields ───────────────────────────────────────────────
 
-    protected $fillable = [
-        'name',
-        'phone',
-        'email',
-        'password',
-    ];
-
+protected $fillable = [
+    'name', 'phone', 'email', 'password',
+    'country_id', 'otp', 'otp_expires_at', 'phone_verified_at',
+];
     // ─── Hidden from serialization ────────────────────────────────────────────
 
     protected $hidden = [
@@ -30,13 +27,14 @@ class User extends Authenticatable  // أضف implements FilamentUser
 
     // ─── Casts ────────────────────────────────────────────────────────────────
 
-    protected function casts(): array
-    {
-        return [
-            'phone_verified_at' => 'datetime',
-            'password'          => 'hashed',   // Laravel 12 — auto-hashes on set
-        ];
-    }
+  protected function casts(): array
+{
+    return [
+        'phone_verified_at' => 'datetime',
+        'otp_expires_at'    => 'datetime',
+        'password'          => 'hashed',
+    ];
+}
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 

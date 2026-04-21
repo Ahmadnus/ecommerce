@@ -16,16 +16,23 @@ use Illuminate\Http\Request;
  */
 class OrderController extends Controller
 {
-    public function index()
-    {
-        $orders = Order::with([
-            'items.product',
-            'items.productVariant.attributeValues.attribute',
-            'zone',
-        ])->latest()->paginate(10);
+ public function index(Request $request)
+{
+    $query = Order::with([
+        'items.product',
+        'items.productVariant.attributeValues.attribute',
+        'zone',
+    ])->latest();
 
-        return view('admin.orders.index', compact('orders'));
+    // فلترة حسب الحالة
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
     }
+
+    $orders = $query->paginate(10)->withQueryString();
+
+    return view('admin.orders.index', compact('orders'));
+}
 
     public function show(Order $order)
     {

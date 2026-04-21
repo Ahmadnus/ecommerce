@@ -67,12 +67,19 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1.5">
-                            سعر الشحن ($) <span class="text-red-500">*</span>
+                            سعر sss ($) <span class="text-red-500">*</span>
                         </label>
-                        <input type="number" name="shipping_price" value="{{ old('shipping_price', '0.00') }}"
-                               step="0.01" min="0" required
-                               class="w-full border border-gray-200 rounded-xl p-2.5 bg-gray-50 text-sm tabular-nums
-                                      focus:bg-white focus:outline-none focus:ring-2 focus:border-brand transition-all">
+                       <div>
+ 
+
+    <input type="number"
+           step="0.01"
+           name="shipping_price"
+           value="{{ old('shipping_price', $zone->shipping_price ?? 0) }}"
+           placeholder="0.00"
+           class="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-sm
+                  focus:bg-white focus:outline-none focus:ring-2 focus:border-brand transition-all">
+</div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1.5">أيام التسليم</label>

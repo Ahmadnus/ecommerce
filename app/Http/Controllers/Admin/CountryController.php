@@ -29,23 +29,28 @@ class CountryController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:100',
-            'name_en'     => 'nullable|string|max:100',
-            'code'        => 'required|string|max:3|unique:countries,code',
-            'is_active'   => 'nullable|boolean',
-            'sort_order'  => 'nullable|integer|min:0',
-            'currencies'  => 'nullable|array',
-            'currencies.*'=> 'exists:currencies,id',
+            'name'             => 'required|string|max:100',
+            'name_en'          => 'nullable|string|max:100',
+            'code'             => 'required|string|max:3|unique:countries,code',
+            'calling_code'     => ['required', 'string', 'max:10', 'regex:/^\+?\d{1,10}$/'],
+            'is_active'        => 'nullable|boolean',
+            'sort_order'       => 'nullable|integer|min:0',
+            'currencies'       => 'nullable|array',
+            'currencies.*'     => 'exists:currencies,id',
             'default_currency' => 'nullable|exists:currencies,id',
+        ], [
+            'calling_code.required' => 'رمز الاتصال الدولي مطلوب.',
+            'calling_code.regex'    => 'رمز الاتصال يجب أن يحتوي على أرقام فقط (مثال: 963 أو +963).',
         ]);
 
-        $validated['is_active']  = $request->boolean('is_active', true);
-        $validated['sort_order'] = $validated['sort_order'] ?? 0;
-        $validated['code']       = strtoupper($validated['code']);
+        $validated['is_active']    = $request->boolean('is_active', true);
+        $validated['sort_order']   = $validated['sort_order'] ?? 0;
+        $validated['code']         = strtoupper($validated['code']);
+        // Normalise: strip leading "+" so we always store digits only (963 not +963)
+        $validated['calling_code'] = ltrim($validated['calling_code'], '+');
 
         $country = Country::create($validated);
 
-        // Attach currencies with default flag
         if (!empty($validated['currencies'])) {
             $pivot = [];
             foreach ($validated['currencies'] as $currencyId) {
@@ -78,23 +83,27 @@ class CountryController extends Controller
     public function update(Request $request, Country $country): RedirectResponse
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:100',
-            'name_en'     => 'nullable|string|max:100',
-            'code'        => 'required|string|max:3|unique:countries,code,' . $country->id,
-            'is_active'   => 'nullable|boolean',
-            'sort_order'  => 'nullable|integer|min:0',
-            'currencies'  => 'nullable|array',
-            'currencies.*'=> 'exists:currencies,id',
+            'name'             => 'required|string|max:100',
+            'name_en'          => 'nullable|string|max:100',
+            'code'             => 'required|string|max:3|unique:countries,code,' . $country->id,
+            'calling_code'     => ['required', 'string', 'max:10', 'regex:/^\+?\d{1,10}$/'],
+            'is_active'        => 'nullable|boolean',
+            'sort_order'       => 'nullable|integer|min:0',
+            'currencies'       => 'nullable|array',
+            'currencies.*'     => 'exists:currencies,id',
             'default_currency' => 'nullable|exists:currencies,id',
+        ], [
+            'calling_code.required' => 'رمز الاتصال الدولي مطلوب.',
+            'calling_code.regex'    => 'رمز الاتصال يجب أن يحتوي على أرقام فقط (مثال: 963 أو +963).',
         ]);
 
-        $validated['is_active']  = $request->boolean('is_active', true);
-        $validated['sort_order'] = $validated['sort_order'] ?? 0;
-        $validated['code']       = strtoupper($validated['code']);
+        $validated['is_active']    = $request->boolean('is_active', true);
+        $validated['sort_order']   = $validated['sort_order'] ?? 0;
+        $validated['code']         = strtoupper($validated['code']);
+        $validated['calling_code'] = ltrim($validated['calling_code'], '+');
 
         $country->update($validated);
 
-        // Re-sync currencies
         $pivot = [];
         foreach ($validated['currencies'] ?? [] as $currencyId) {
             $pivot[(int) $currencyId] = [

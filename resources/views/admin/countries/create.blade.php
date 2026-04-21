@@ -50,8 +50,8 @@
                 </div>
             </div>
 
-            {{-- Code + Sort --}}
-            <div class="grid grid-cols-2 gap-4">
+            {{-- Code + Calling Code + Sort --}}
+            <div class="grid grid-cols-3 gap-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">
                         رمز الدولة (ISO) <span class="text-red-500">*</span>
@@ -63,6 +63,29 @@
                                   @error('code') border-red-400 @enderror">
                     @error('code')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
+
+                {{-- ── NEW: Calling Code ── --}}
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">
+                        رمز الاتصال الدولي <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 text-sm font-bold pointer-events-none select-none">+</span>
+                        <input type="text" name="calling_code"
+                               value="{{ old('calling_code') }}"
+                               required
+                               maxlength="10"
+                               placeholder="963"
+                               dir="ltr"
+                               inputmode="numeric"
+                               class="w-full border border-gray-200 rounded-xl p-3 pl-3 pr-8 bg-gray-50 text-sm font-mono
+                                      focus:bg-white focus:outline-none focus:ring-2 focus:border-brand transition-all
+                                      @error('calling_code') border-red-400 @enderror">
+                    </div>
+                    <p class="mt-1 text-[11px] text-gray-400">أرقام فقط، بدون + (مثال: 963)</p>
+                    @error('calling_code')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                </div>
+
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">ترتيب العرض</label>
                     <input type="number" name="sort_order" value="{{ old('sort_order', 0) }}"
@@ -113,7 +136,7 @@
                        class="w-5 h-5 text-brand border-gray-300 rounded focus:ring-brand/30">
                 <div>
                     <p class="text-sm font-semibold text-gray-800">تفعيل الدولة</p>
-                    <p class="text-xs text-gray-400">تظهر في قائمة الشحن عند الدفع</p>
+                    <p class="text-xs text-gray-400">تظهر في نماذج التسجيل والشحن</p>
                 </div>
             </label>
         </div>
@@ -133,25 +156,17 @@
 @push('scripts')
 <script>
 function updateDefaultOptions() {
-    const checked = [...document.querySelectorAll('input[name="currencies[]"]:checked')];
-    const wrap    = document.getElementById('default-currency-wrap');
-    const select  = document.getElementById('default-currency-select');
-
+    const checked  = [...document.querySelectorAll('input[name="currencies[]"]:checked')];
+    const wrap     = document.getElementById('default-currency-wrap');
+    const select   = document.getElementById('default-currency-select');
     if (checked.length === 0) { wrap.classList.add('hidden'); return; }
     wrap.classList.remove('hidden');
-
     const checkedIds = checked.map(c => c.value);
     select.querySelectorAll('.currency-opt').forEach(opt => {
         opt.classList.toggle('hidden', !checkedIds.includes(opt.value));
     });
-
-    // Auto-select first if nothing selected
-    if (!checkedIds.includes(select.value)) {
-        select.value = checkedIds[0] || '';
-    }
+    if (!checkedIds.includes(select.value)) select.value = checkedIds[0] || '';
 }
-
-// Run on load in case old() repopulates checkboxes
 document.addEventListener('DOMContentLoaded', updateDefaultOptions);
 </script>
 @endpush

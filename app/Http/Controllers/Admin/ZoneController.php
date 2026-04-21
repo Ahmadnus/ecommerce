@@ -9,36 +9,36 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+/**
+ * ZoneController — Admin CRUD for zones (states / cities) under a Country.
+ *
+ * Routes (add inside your admin group, nested under countries):
+ *
+ *   Route::resource('countries.zones', ZoneController::class)
+ *        ->names('admin.countries.zones')
+ *        ->shallow();   // ← shallow gives clean /zones/{zone}/edit URLs
+ */
 class ZoneController extends Controller
 {
-    /**
-     * List all zones for a given country.
-     */
+    // ── Index ──────────────────────────────────────────────────────────────────
+
     public function index(Country $country): View
     {
-        $zones = $country->zones()->get();
+        $zones = $country->zones()->ordered()->get();
+
         return view('admin.zones.index', compact('country', 'zones'));
     }
 
-    /**
-     * Store a new zone via inline form (no separate create page needed).
-     */
+    // ── Create / Store ─────────────────────────────────────────────────────────
+
+    public function create(Country $country): View
+    {
+        return view('admin.zones.create', compact('country'));
+    }
+
     public function store(Request $request, Country $country): RedirectResponse
     {
-        $validated = $request->validate([
-            'name'           => 'required|string|max:100',
-            'shipping_price' => 'required|numeric|min:0',
-            'delivery_days'  => 'nullable|integer|min:1|max:365',
-            'is_active'      => 'nullable|boolean',
-            'sort_order'     => 'nullable|integer|min:0',
-        ], [
-            'name.required'           => 'اسم المنطقة مطلوب.',
-            'shipping_price.required' => 'سعر الشحن مطلوب.',
-            'shipping_price.numeric'  => 'سعر الشحن يجب أن يكون رقماً.',
-        ]);
-
-        $validated['is_active']  = $request->boolean('is_active', true);
-        $validated['sort_order'] = $validated['sort_order'] ?? 0;
+        $validated = $this->validateZone($request);
 
         $country->zones()->create($validated);
 
@@ -47,34 +47,64 @@ class ZoneController extends Controller
             ->with('success', 'تمت إضافة المنطقة بنجاح.');
     }
 
-    /**
-     * Update an existing zone (inline, no separate edit page).
-     */
-    public function update(Request $request, Country $country, Zone $zone): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name'           => 'required|string|max:100',
-            'shipping_price' => 'required|numeric|min:0',
-            'delivery_days'  => 'nullable|integer|min:1|max:365',
-            'is_active'      => 'nullable|boolean',
-            'sort_order'     => 'nullable|integer|min:0',
-        ]);
+    // ── Edit / Update ──────────────────────────────────────────────────────────
 
-        $validated['is_active']  = $request->boolean('is_active', true);
-        $validated['sort_order'] = $validated['sort_order'] ?? 0;
+    public function edit(Zone $zone): View
+    {
+        $zone->load('country');
+        $country = $zone->country;
+
+        return view('admin.zones.edit', compact('zone', 'country'));
+    }
+
+    public function update(Request $request, Zone $zone): RedirectResponse
+    {
+        $validated = $this->validateZone($request, $zone);
 
         $zone->update($validated);
 
         return redirect()
-            ->route('admin.countries.zones.index', $country)
+            ->route('admin.countries.zones.index', $zone->country_id)
             ->with('success', 'تم تحديث المنطقة بنجاح.');
     }
 
-    public function destroy(Country $country, Zone $zone): RedirectResponse
+    // ── Delete ─────────────────────────────────────────────────────────────────
+
+    public function destroy(Zone $zone): RedirectResponse
     {
+        $countryId = $zone->country_id;
         $zone->delete();
+
         return redirect()
-            ->route('admin.countries.zones.index', $country)
+            ->route('admin.countries.zones.index', $countryId)
             ->with('success', 'تم حذف المنطقة.');
+    }
+
+    // ── Private ────────────────────────────────────────────────────────────────
+
+    private function validateZone(Request $request, ?Zone $zone = null): array
+    {
+        $validated = $request->validate([
+            'name'         => 'required|string|max:120',
+            'name_en'      => 'nullable|string|max:120',
+            'shipping_price' => 'nullable|numeric|min:0',
+            'calling_code' => ['nullable', 'string', 'max:10', 'regex:/^\+?\d{0,10}$/'],
+            'is_active'    => 'nullable|boolean',
+            'sort_order'   => 'nullable|integer|min:0',
+        ], [
+            
+            'name.required'      => 'اسم المنطقة مطلوب.',
+            'calling_code.regex' => 'رمز الاتصال يجب أن يحتوي على أرقام فقط (مثال: 963 أو +963).',
+        ]);
+$validated['shipping_price'] = $validated['shipping_price'] ?? 0;
+        $validated['is_active']  = $request->boolean('is_active', true);
+        $validated['sort_order'] = $validated['sort_order'] ?? 0;
+
+        // Normalise: strip leading "+" — store digits only
+        if (!empty($validated['calling_code'])) {
+            $validated['calling_code'] = ltrim($validated['calling_code'], '+');
+        }
+
+        return $validated;
     }
 }

@@ -9,17 +9,49 @@ use App\Http\Controllers\{
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\{
     DashboardController, CategoryController, HeroBannerController, SettingController,
-    AnnouncementController, HomeSectionController, SiteFeatureController,
+    AnnouncementController, AttributeController, AttributeValueController, HomeSectionController, SiteFeatureController,
     CountryController, ZoneController, CurrencyController,
     ProductController as AdminProductController,
     OrderController as AdminOrderController,
     PageController as AdminPageController,
+    SmsSettingsController,
     SplashSettingsController
 };
 
 // ─── Public Routes ──────────────────────────────────────────────────────────
 Route::get('/', function () {
     return view('splash.splash');
+});
+
+
+
+// ── Standard user auth (blocked for logged-in admins/users) ───────────────────
+Route::middleware('user.route.only')->group(function () {
+    Route::get('/login',     [AuthController::class, 'showLogin'])->name('login');
+    Route::get('/register',  [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/login',    [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+});
+
+// ── Admin-only login portal ────────────────────────────────────────────────────
+Route::middleware('admin.route.only')->group(function () {
+    Route::get('/adlogin',  [AuthController::class, 'showAdminLogin'])->name('admin.login');
+    Route::post('/adlogin', [AuthController::class, 'login']);
+});
+
+// ── OTP ────────────────────────────────────────────────────────────────────────
+Route::get('/verify-otp',  [AuthController::class, 'showVerifyOtp'])->name('otp.verify');
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('otp.submit');
+Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('otp.resend');
+
+// ── Logout ─────────────────────────────────────────────────────────────────────
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+// ── Admin SMS Settings (add inside your admin route group) ─────────────────────
+Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('settings/sms',       [SmsSettingsController::class, 'show'])->name('admin.settings.sms');
+    Route::post('settings/sms',      [SmsSettingsController::class, 'update'])->name('admin.settings.sms.update');
+    Route::post('settings/sms/test', [SmsSettingsController::class, 'test'])->name('admin.settings.sms.test');
 });
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -125,3 +157,35 @@ Route::prefix('admin/splash')->name('admin.splash.')->middleware(['auth', 'role:
     Route::get('/', [SplashSettingsController::class, 'edit'])->name('edit');
     Route::put('/update', [SplashSettingsController::class, 'update'])->name('update');
 });
+
+
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+Route::get('/test-sms-raw', function () {
+    $url = "https://gwjo1s.broadnet.me:8443/websmpp/websms?user=JbuyApp1&pass=429J@NewY&sid=Jbuy.App&mno=962782237460&type=4&text=test_raw";
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // تجاهل الشهادة
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // تجاهل المضيف
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);    // مهلة الاتصال 10 ثواني
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);           // مهلة التنفيذ 20 ثانية
+    
+    // أهم سطرين لحل مشكلة Windows Handshake
+    curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+    curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
+    $response = curl_exec($ch);
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($error) {
+        return "❌ Error: " . $error;
+    }
+
+    return "✅ Response: " . $response;
+});
+Route::resource('attributes', AttributeController::class)->names('admin.attributes');
+Route::resource('attribute-values', AttributeValueController::class)->names('admin.attribute-values');

@@ -23,14 +23,18 @@
     </div>
     @endif
 
-    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST"
-          enctype="multipart/form-data" class="space-y-6">
+    {{-- الفورم الأساسي للتعديل --}}
+    <form action="{{ route('admin.categories.update', $category->id) }}" 
+          method="POST"
+          id="main-edit-form"
+          enctype="multipart/form-data" 
+          class="space-y-6">
         @csrf
         @method('PUT')
 
         <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
 
-            {{-- ── Circular image with current + replace ─────────────── --}}
+            {{-- ── صورة التصنيف ── --}}
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-3">
                     صورة التصنيف
@@ -38,11 +42,8 @@
                 </label>
 
                 <div class="flex items-start gap-6">
-                    {{-- Current image (circular) --}}
                     <div class="flex flex-col items-center gap-1 flex-shrink-0">
-                        <div class="w-20 h-20 rounded-full overflow-hidden ring-2 ring-offset-2
-                                    ring-[var(--brand-color,#0ea5e9)] bg-gray-100"
-                             id="preview-ring">
+                        <div class="w-20 h-20 rounded-full overflow-hidden ring-2 ring-offset-2 ring-[var(--brand-color,#0ea5e9)] bg-gray-100" id="preview-ring">
                             <img id="img-preview"
                                  src="{{ $category->getCategoryImageUrl('thumb') }}"
                                  alt="{{ $category->name }}"
@@ -50,179 +51,105 @@
                         </div>
                         <span class="text-[9px] text-gray-400">المعاينة</span>
 
-                        {{-- Remove current image --}}
                         @if($category->hasImage())
                         <label class="flex items-center gap-1 cursor-pointer mt-1">
-                            <input type="checkbox" name="remove_image" value="1"
-                                   class="w-3 h-3 text-red-500 border-gray-300 rounded">
+                            <input type="checkbox" name="remove_image" value="1" class="w-3 h-3 text-red-500 border-gray-300 rounded">
                             <span class="text-[10px] text-red-500 font-semibold">حذف الصورة</span>
                         </label>
                         @endif
                     </div>
 
                     <div class="flex-1">
-                        <p class="text-xs text-gray-500 font-semibold mb-2">
-                            اختر صورة جديدة (اتركه فارغاً للإبقاء على الحالية)
-                        </p>
-                        <input type="file" name="image" accept="image/*"
-                               onchange="previewImg(this)"
-                               class="block w-full text-sm text-gray-500
-                                      file:ml-4 file:py-2.5 file:px-6 file:rounded-xl
-                                      file:border-0 file:bg-brand/10 file:text-brand file:font-bold
-                                      hover:file:bg-brand/20 transition cursor-pointer">
-                        <p class="mt-2 text-xs text-gray-400">
-                            PNG، JPG، WebP — يُنصح بصورة مربعة 400×400 على الأقل
-                        </p>
+                        <p class="text-xs text-gray-500 font-semibold mb-2">اختر صورة جديدة (اتركه فارغاً للإبقاء على الحالية)</p>
+                        <input type="file" name="image" accept="image/*" onchange="previewImg(this)"
+                               class="block w-full text-sm text-gray-500 file:ml-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:bg-brand/10 file:text-brand file:font-bold hover:file:bg-brand/20 transition cursor-pointer">
                     </div>
                 </div>
             </div>
 
             {{-- Name --}}
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">
-                    اسم التصنيف <span class="text-red-500">*</span>
-                </label>
+                <label class="block text-sm font-bold text-gray-700 mb-2">اسم التصنيف <span class="text-red-500">*</span></label>
                 <input type="text" name="name" value="{{ old('name', $category->name) }}" required
-                       class="w-full border border-gray-200 rounded-xl focus:ring-2
-                              focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition">
+                       class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition">
             </div>
 
             {{-- Slug --}}
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">
-                    الـ Slug
-                    <span class="text-gray-400 font-normal text-xs">
-                        (تغييره يكسر الروابط الموجودة — تعديل بحذر)
-                    </span>
-                </label>
+                <label class="block text-sm font-bold text-gray-700 mb-2">الـ Slug</label>
                 <input type="text" name="slug" value="{{ old('slug', $category->slug) }}" required
-                       class="w-full border border-gray-200 rounded-xl focus:ring-2
-                              focus:ring-brand/30 focus:border-brand p-3 bg-gray-50
-                              font-mono text-sm transition">
+                       class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 font-mono text-sm transition">
             </div>
 
             {{-- Parent Category --}}
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">
-                    التصنيف الأب
-                </label>
+                <label class="block text-sm font-bold text-gray-700 mb-2">التصنيف الأب</label>
                 <div class="border border-gray-200 rounded-xl overflow-hidden bg-gray-50">
                     <label class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white transition border-b border-gray-100">
-                        <input type="radio" name="parent_id" value=""
-                               {{ old('parent_id', $category->parent_id) === null ? 'checked' : '' }}
-                               class="w-4 h-4 text-brand border-gray-300 focus:ring-brand">
+                        <input type="radio" name="parent_id" value="" {{ old('parent_id', $category->parent_id) === null ? 'checked' : '' }} class="w-4 h-4 text-brand border-gray-300 focus:ring-brand">
                         <span class="text-sm font-semibold text-gray-800">بدون أب — تصنيف رئيسي</span>
-                        <span class="mr-auto text-[10px] bg-brand/10 text-brand px-2 py-0.5 rounded-full font-bold">Root</span>
                     </label>
 
                     @foreach($parentOptions->where('depth', 0) as $root)
-                    <div class="border-b border-gray-100 last:border-0">
-                        <label class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white transition">
-                            <div class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 bg-gray-100">
-                                <img src="{{ $root->getCategoryImageUrl('thumb') }}"
-                                     class="w-full h-full object-cover" alt="">
-                            </div>
-                            <input type="radio" name="parent_id" value="{{ $root->id }}"
-                                   {{ old('parent_id', $category->parent_id) == $root->id ? 'checked' : '' }}
-                                   class="w-4 h-4 text-brand border-gray-300 focus:ring-brand">
-                            <span class="text-sm font-medium text-gray-800">{{ $root->name }}</span>
-                            <span class="mr-auto text-[10px] text-gray-400">{{ $root->slug }}</span>
-                        </label>
+                        <div class="border-b border-gray-100 last:border-0">
+                            <label class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white transition">
+                                <input type="radio" name="parent_id" value="{{ $root->id }}" {{ old('parent_id', $category->parent_id) == $root->id ? 'checked' : '' }} class="w-4 h-4 text-brand border-gray-300 focus:ring-brand">
+                                <span class="text-sm font-medium text-gray-800">{{ $root->name }}</span>
+                            </label>
 
-                        @foreach($parentOptions->where('parent_id', $root->id) as $sub)
-                        <label class="flex items-center gap-3 px-4 py-2.5 ps-10 cursor-pointer hover:bg-white transition bg-gray-50/70 border-t border-gray-100">
-                            <div class="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-gray-100">
-                                <img src="{{ $sub->getCategoryImageUrl('thumb') }}"
-                                     class="w-full h-full object-cover" alt="">
-                            </div>
-                            <input type="radio" name="parent_id" value="{{ $sub->id }}"
-                                   {{ old('parent_id', $category->parent_id) == $sub->id ? 'checked' : '' }}
-                                   class="w-4 h-4 text-brand border-gray-300 focus:ring-brand">
-                            <svg class="w-3.5 h-3.5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                            <span class="text-sm text-gray-700">{{ $sub->name }}</span>
-                        </label>
-                        @endforeach
-                    </div>
+                            @foreach($parentOptions->where('parent_id', $root->id) as $sub)
+                                <label class="flex items-center gap-3 px-4 py-2.5 ps-10 cursor-pointer hover:bg-white transition bg-gray-50/70 border-t border-gray-100">
+                                    <input type="radio" name="parent_id" value="{{ $sub->id }}" {{ old('parent_id', $category->parent_id) == $sub->id ? 'checked' : '' }} class="w-4 h-4 text-brand border-gray-300 focus:ring-brand">
+                                    <span class="text-sm text-gray-700">{{ $sub->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Description --}}
+            {{-- Description & Sort Order --}}
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">الوصف (اختياري)</label>
-                <textarea name="description" rows="3"
-                          class="w-full border border-gray-200 rounded-xl focus:ring-2
-                                 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 text-sm
-                                 transition resize-none">{{ old('description', $category->description) }}</textarea>
+                <label class="block text-sm font-bold text-gray-700 mb-2">الوصف</label>
+                <textarea name="description" rows="3" class="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-sm transition resize-none">{{ old('description', $category->description) }}</textarea>
             </div>
 
-            {{-- Sort order --}}
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-2">ترتيب العرض</label>
-                <input type="number" name="sort_order"
-                       value="{{ old('sort_order', $category->sort_order) }}" min="0"
-                       class="w-32 border border-gray-200 rounded-xl focus:ring-2
-                              focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition">
+                <input type="number" name="sort_order" value="{{ old('sort_order', $category->sort_order) }}" class="w-32 border border-gray-200 rounded-xl p-3 bg-gray-50 transition">
             </div>
 
-            {{-- is_active --}}
             <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white transition cursor-pointer">
-                <input type="checkbox" name="is_active" value="1"
-                       {{ old('is_active', $category->is_active) ? 'checked' : '' }}
-                       class="w-5 h-5 text-brand border-gray-300 rounded focus:ring-brand">
-                <div>
-                    <p class="text-sm font-semibold text-gray-800">تفعيل التصنيف</p>
-                    <p class="text-xs text-gray-400">سيظهر في المتجر والتصنيفات الدائرية</p>
-                </div>
+                <input type="checkbox" name="is_active" value="1" {{ old('is_active', $category->is_active) ? 'checked' : '' }} class="w-5 h-5 text-brand border-gray-300 rounded focus:ring-brand">
+                <span class="text-sm font-semibold text-gray-800">تفعيل التصنيف</span>
             </label>
-
         </div>
 
-        {{-- Actions --}}
+        {{-- الأزرار داخل الفورم الأساسي --}}
         <div class="flex justify-between items-center">
-            {{-- Delete --}}
-            <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST"
-                  onsubmit="return confirm('حذف تصنيف \'{{ addslashes($category->name) }}\'؟ سيتم حذف كل التصنيفات الفرعية.')">
-                @csrf @method('DELETE')
-                <button type="submit"
-                        class="flex items-center gap-2 text-sm text-red-500 hover:text-red-700
-                               hover:bg-red-50 px-4 py-2.5 rounded-xl transition font-semibold">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    حذف التصنيف
-                </button>
-            </form>
+            {{-- زر الحذف: سنقوم بربطه بفورم خارجي --}}
+            <button type="button" 
+                    onclick="if(confirm('حذف تصنيف \'{{ addslashes($category->name) }}\'؟ سيتم حذف كل التصنيفات الفرعية.')) document.getElementById('delete-category-form').submit();"
+                    class="flex items-center gap-2 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 px-4 py-2.5 rounded-xl transition font-semibold">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                حذف التصنيف
+            </button>
 
             <div class="flex gap-3">
-                <a href="{{ route('admin.categories.index') }}"
-                   class="px-6 py-3 text-gray-500 font-bold hover:text-red-500 transition text-sm">
-                    إلغاء
-                </a>
-                <button type="submit"
-                        class="bg-brand text-white px-10 py-3 rounded-xl font-bold shadow-lg
-                               shadow-brand/20 hover:bg-brand/90 hover:scale-[1.02]
-                               transition-transform active:scale-95">
+                <a href="{{ route('admin.categories.index') }}" class="px-6 py-3 text-gray-500 font-bold hover:text-red-500 transition text-sm">إلغاء</a>
+                <button type="submit" class="bg-brand text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:bg-brand/90 hover:scale-[1.02] transition-transform active:scale-95">
                     حفظ التعديلات
                 </button>
             </div>
         </div>
     </form>
+
+    {{-- فورم الحذف المنفصل (خارج الفورم الأساسي) --}}
+    <form id="delete-category-form" action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" class="hidden">
+        @csrf
+        @method('DELETE')
+    </form>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-function previewImg(input) {
-    if (!input.files?.[0]) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById('img-preview').src = e.target.result;
-    };
-    reader.readAsDataURL(input.files[0]);
-}
-</script>
-@endpush
