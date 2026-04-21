@@ -162,30 +162,54 @@ Route::prefix('admin/splash')->name('admin.splash.')->middleware(['auth', 'role:
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-Route::get('/test-sms-raw', function () {
-    $url = "https://gwjo1s.broadnet.me:8443/websmpp/websms?user=JbuyApp1&pass=429J@NewY&sid=Jbuy.App&mno=962782237460&type=4&text=test_raw";
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // تجاهل الشهادة
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // تجاهل المضيف
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);    // مهلة الاتصال 10 ثواني
-    curl_setopt($ch, CURLOPT_TIMEOUT, 20);           // مهلة التنفيذ 20 ثانية
-    
-    // أهم سطرين لحل مشكلة Windows Handshake
-    curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
-    curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-
-    $response = curl_exec($ch);
-    $error = curl_error($ch);
-    curl_close($ch);
-
-    if ($error) {
-        return "❌ Error: " . $error;
-    }
-
-    return "✅ Response: " . $response;
-});
 Route::resource('attributes', AttributeController::class)->names('admin.attributes');
 Route::resource('attribute-values', AttributeValueController::class)->names('admin.attribute-values');
+
+Route::get('/send-test-sms', function () {
+
+    $number = "962799400020";
+    $text   = "مرحبا";
+
+    function normalize_msisdn($input) {
+        $digits = preg_replace('/\D+/', '', $input);
+        if (strpos($digits, '962') === 0) return $digits;
+        if (strpos($digits, '0') === 0)   return '962' . substr($digits, 1);
+        return $digits;
+    }
+
+    $params = [
+        "user" => "JbuyApp1",
+        "pass" => "429J@NewY",
+        "sid"  => "Jbuy.App",
+        "mno"  => normalize_msisdn($number),
+        "type" => 4,
+        "text" => $text,
+    ];
+
+    $url = "https://gwjo1s.broadnet.me:8443/websmpp/websms?" . http_build_query($params);
+
+  $ch = curl_init("https://gwjo1s.broadnet.me:8443/websmpp/websms");
+
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 30,
+    CURLOPT_SSL_VERIFYPEER => false,
+    CURLOPT_SSL_VERIFYHOST => false,
+
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => http_build_query($params),
+]);
+    $response = curl_exec($ch);
+    $err = curl_error($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return [
+        "sent_to" => $number,
+        "message" => $text,
+        "response" => $response,
+        "error" => $err,
+        "status" => $code,
+    ];
+});
