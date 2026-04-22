@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            
+               'guest.checkout' => \App\Http\Middleware\GuestCheckout::class,
             // الـ Middlewares الجديدة التي طلبت إضافتها
             'admin.route.only'   => \App\Http\Middleware\AdminRouteOnly::class,
             'user.route.only'    => \App\Http\Middleware\UserRouteOnly::class,

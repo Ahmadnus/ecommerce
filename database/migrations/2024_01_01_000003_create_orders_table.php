@@ -10,37 +10,33 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            
+            // ربط المستخدم (تم جعله Nullable للسماح بالزوار)
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('order_number')->unique();
+            
+            // حقول الزوار (بدون استخدام after لأننا في مرحلة الـ create)
+            $table->string('guest_email')->nullable();
+            $table->string('guest_session_id')->nullable();
 
-            // الحالة - Status
+            // معلومات الطلب
+            $table->string('order_number')->unique();
             $table->string('status')->default('pending');
 
-            // الدفع - Payment
+            // الدفع والمبالغ
             $table->string('payment_method')->default('cod');
             $table->string('payment_status')->default('pending');
-
-            // المبالغ المالية
             $table->decimal('subtotal', 10, 2)->default(0);
-            $table->decimal('delivery_fee', 10, 2)->default(0); // البديل عن الضريبة
-            
-            // إضافة هذا الحقل ضروري لأن الكود يرسله ✅
-            $table->decimal('shipping_amount', 10, 2)->default(0); 
-            
+            $table->decimal('delivery_fee', 10, 2)->default(0);
+            $table->decimal('shipping_amount', 10, 2)->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
 
             // معلومات الشحن
             $table->string('shipping_name');
-            
-            // إضافة الإيميل لأن الكود يرسله في الـ Resource والـ Controller ✅
             $table->string('shipping_email')->nullable(); 
-            
             $table->string('shipping_phone')->nullable();
             $table->string('shipping_address');
             $table->string('shipping_city');
             $table->string('shipping_zip')->nullable();
-            
-            // حقل إضافي للدولة إذا كان الكود يرسله
             $table->string('shipping_country')->default('EG');
 
             $table->text('notes')->nullable();
@@ -55,8 +51,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('orders');
-        Schema::enableForeignKeyConstraints();
     }
 };

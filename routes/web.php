@@ -9,7 +9,7 @@ use App\Http\Controllers\{
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\{
     DashboardController, CategoryController, HeroBannerController, SettingController,
-    AnnouncementController, AttributeController, AttributeValueController, HomeSectionController, SiteFeatureController,
+    AnnouncementController, AttributeController, AttributeValueController, CheckoutSettingsController, HomeSectionController, SiteFeatureController,
     CountryController, ZoneController, CurrencyController,
     ProductController as AdminProductController,
     OrderController as AdminOrderController,
@@ -23,7 +23,43 @@ Route::get('/', function () {
     return view('splash.splash');
 });
 
+// ── CHECKOUT (replaces your existing checkout routes) ─────────────────────────
+//
+// BEFORE (your current routes):
+//   Route::middleware('auth')->group(function () {
+//       Route::get('/checkout', ...)->name('checkout.index');
+//       Route::post('/checkout', ...)->name('checkout.place');
+//   });
+//
+// AFTER: swap 'auth' for 'guest.checkout'
+Route::middleware('guest.checkout')->group(function () {
+    Route::get('/checkout',  [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
+});
+ 
+// Zone-selection routes (no auth required)
+Route::get('/checkout/select-zone',  [CheckoutController::class, 'selectZone'])->name('checkout.select-zone');
+Route::post('/checkout/confirm-zone',[CheckoutController::class, 'confirmZone'])->name('checkout.confirm-zone');
+ 
+// Zones API (called by JS — no auth required)
+Route::get('/api/shipping/zones/{country}', [CheckoutController::class, 'zonesForCountry'])
+     ->name('checkout.zones');
+ 
+// ── ADMIN: Checkout settings ──────────────────────────────────────────────────
+// Add inside your existing admin middleware group:
+Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('settings/checkout',  [CheckoutSettingsController::class, 'show'])
+         ->name('admin.settings.checkout');
+    Route::post('settings/checkout', [CheckoutSettingsController::class, 'update'])
+         ->name('admin.settings.checkout.update');
+});
+ use App\Http\Controllers\Auth\RegisterController; // تأكد من مسار الكنترولر عندك
 
+// صفحة عرض واجهة إدخال الرمز
+Route::get('/verify-otp', [AuthController::class, 'showVerifyForm'])->name('otp.verify');
+
+// معالجة الرمز المرسل من المستخدم
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('otp.verify.submit');
 
 // ── Standard user auth (blocked for logged-in admins/users) ───────────────────
 Route::middleware('user.route.only')->group(function () {
@@ -88,8 +124,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/wishlist/toggle/{product}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
 
     // Checkout & Order Flow
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
+   
     
     // 1. مسار اختيار المدينة بعد الطلب (الجديد)
     Route::get('/orders/{orderNumber}/select-city', [OrderController::class, 'selectCity'])->name('orders.selectCity');
@@ -98,9 +133,9 @@ Route::middleware('auth')->group(function () {
     // Orders Details
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/show/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::get('/orders/success/{orderNumber}', [OrderController::class, 'success'])->name('orders.success');
+  
 });
-
+  Route::get('/orders/success/{orderNumber}', [OrderController::class, 'success'])->name('orders.success');
 // ─── API Routes (Shipping) ────────────────────────────────────────────────────
 Route::prefix('api/shipping')->name('api.shipping.')->group(function () {
     Route::get('countries', [ShippingApiController::class, 'countries'])->name('countries');
@@ -136,6 +171,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('pages', AdminPageController::class);
     Route::resource('countries', CountryController::class);
     Route::resource('currencies', CurrencyController::class);
+    
     Route::resource('countries.zones', ZoneController::class)->only(['index', 'store', 'update', 'destroy']);
 });
 Route::post('/set-user-currency', function (Illuminate\Http\Request $request) {

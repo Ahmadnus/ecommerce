@@ -157,7 +157,9 @@
     :active="request()->routeIs('admin.settings.sms*')">
     إعدادات SMS API
 </x-admin-nav-link>
-
+<x-admin-nav-link href="{{ route('admin.settings.checkout') }}" icon="credit-card" :active="request()->is('admin/settings/checkout')">
+    إعدادات الدفع
+</x-admin-nav-link>
         {{-- الإعدادات العامة --}}
         <x-admin-nav-link href="{{ route('admin.settings') }}" icon="cog" :active="request()->routeIs('admin.settings')">
             الإعدادات العامة

@@ -78,7 +78,7 @@ private function type(): int    { return config('sms.jordan_api.type'); }
      */
     public function send(string $phone, string $message): array
     {
-    
+   
         $msisdn = $this->normalizeMsisdn($phone);
 
         $params = [
@@ -153,7 +153,7 @@ private function type(): int    { return config('sms.jordan_api.type'); }
      */
     public function sendOtp(\App\Models\User $user): array
     {
-         
+  
         $otp       = $this->generateOtp();
         $expiresAt = now()->addMinutes($this->ttl());
 
@@ -168,12 +168,8 @@ private function type(): int    { return config('sms.jordan_api.type'); }
         if (!$result['success']) {
             throw new \RuntimeException('فشل إرسال رمز التحقق. يرجى المحاولة مرة أخرى.');
         }
-return [
-    'otp'        => $otp,
-    'expires_at' => $expiresAt,
-    'sms'        => $result, // 🔥 هون المهم
-];
-     
+
+        return [$otp, $expiresAt];
     }
 
     // ── OTP verification ──────────────────────────────────────────────────────

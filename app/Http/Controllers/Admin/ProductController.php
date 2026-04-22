@@ -13,73 +13,55 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    // ─── Constants ────────────────────────────────────────────────────────────
-
-    /** Qty below which a variant is "low stock" */
     private const LOW_STOCK_THRESHOLD = 5;
 
-    // ─── Index ────────────────────────────────────────────────────────────────
+    // ─── Index (unchanged) ────────────────────────────────────────────────────
 
     public function index(Request $request)
     {
         $query = Product::with([
             'categories',
-            'variants' => fn($q) => $q->orderBy('is_active', 'desc'),
+            'variants'                     => fn($q) => $q->orderBy('is_active', 'desc'),
             'variants.attributeValues.attribute',
             'media',
-        ])
-        ->withCount('variants');
+        ])->withCount('variants');
 
-        // ── Search ──────────────────────────────────────────────────────────
         if ($request->filled('search')) {
             $query->where(fn($q) => $q
                 ->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('sku', 'like', '%' . $request->search . '%')
-            );
+                ->orWhere('sku', 'like', '%' . $request->search . '%'));
         }
-
-        // ── Status filter ────────────────────────────────────────────────────
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-
-        // ── Stock filter ─────────────────────────────────────────────────────
         if ($request->filled('stock')) {
             match ($request->stock) {
-                'out'  => $query->whereHas('variants', fn($q) => $q->where('stock_quantity', 0)),
-                'low'  => $query->whereHas('variants', fn($q) => $q->where('stock_quantity', '>', 0)
-                                  ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)),
+                'out'   => $query->whereHas('variants', fn($q) => $q->where('stock_quantity', 0)),
+                'low'   => $query->whereHas('variants', fn($q) => $q
+                               ->where('stock_quantity', '>', 0)
+                               ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)),
                 default => null,
             };
         }
-
-        // ── Category filter ──────────────────────────────────────────────────
         if ($request->filled('category')) {
             $query->whereHas('categories', fn($q) => $q->where('categories.id', $request->category));
         }
-
-        // ── Sort ─────────────────────────────────────────────────────────────
         match ($request->get('sort', 'newest')) {
-            'name_asc'    => $query->orderBy('name'),
-            'name_desc'   => $query->orderByDesc('name'),
-            'price_asc'   => $query->orderBy('base_price'),
-            'price_desc'  => $query->orderByDesc('base_price'),
-            'stock_asc'   => $query->withSum('variants', 'stock_quantity')
-                                   ->orderBy('variants_sum_stock_quantity'),
-            default       => $query->latest(),
+            'name_asc'   => $query->orderBy('name'),
+            'name_desc'  => $query->orderByDesc('name'),
+            'price_asc'  => $query->orderBy('base_price'),
+            'price_desc' => $query->orderByDesc('base_price'),
+            default      => $query->latest(),
         };
 
         $products   = $query->paginate(20)->withQueryString();
         $categories = Category::active()->orderBy('name')->get();
-
-        // ── Dashboard stats ──────────────────────────────────────────────────
         $stats = [
-            'total'   => Product::count(),
-            'active'  => Product::where('status', 'active')->count(),
-            'out'     => ProductVariant::where('stock_quantity', 0)->count(),
-            'low'     => ProductVariant::where('stock_quantity', '>', 0)
-                                       ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)
-                                       ->count(),
+            'total'  => Product::count(),
+            'active' => Product::where('status', 'active')->count(),
+            'out'    => ProductVariant::where('stock_quantity', 0)->count(),
+            'low'    => ProductVariant::where('stock_quantity', '>', 0)
+                                      ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)->count(),
         ];
 
         return view('admin.products.index', compact('products', 'categories', 'stats'));
@@ -89,20 +71,15 @@ class ProductController extends Controller
 
     public function create()
     {
-        $categories = Category::active()
-            ->roots()
-            ->with('allActiveChildren')
-            ->orderBy('sort_order')
-            ->get();
-
-        $attributes = Attribute::with('values')
-            ->orderBy('sort_order')
-            ->get();
+        $categories = Category::active()->roots()
+            ->with('allActiveChildren')->orderBy('sort_order')->get();
+        $attributes = Attribute::with('values')->orderBy('sort_order')->get();
 
         return view('admin.products.create', compact('categories', 'attributes'));
     }
 
     // ─── Store ────────────────────────────────────────────────────────────────
+    // CHANGED: accepts `product_images[]` (multiple) instead of `main_image` (single)
 
     public function store(Request $request)
     {
@@ -116,7 +93,12 @@ class ProductController extends Controller
             'category_ids'                  => 'required|array|min:1',
             'category_ids.*'                => 'exists:categories,id',
             'primary_category_id'           => 'required|exists:categories,id',
-            'main_image'                    => 'nullable|image|max:4096',
+
+            // ── MULTI-IMAGE UPLOAD ─────────────────────────────────────────
+            'product_images'                => 'nullable|array|max:10',
+            'product_images.*'              => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
+            // ──────────────────────────────────────────────────────────────
+
             'variants'                      => 'required|array|min:1',
             'variants.*.stock_quantity'     => 'required|integer|min:0',
             'variants.*.price_override'     => 'nullable|numeric|min:0',
@@ -126,12 +108,9 @@ class ProductController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
-            // 1. Product
-            $slug = $this->uniqueSlug($request->name);
-
             $product = Product::create([
                 'name'              => $request->name,
-                'slug'              => $slug,
+                'slug'              => $this->uniqueSlug($request->name),
                 'description'       => $request->description,
                 'short_description' => $request->short_description,
                 'base_price'        => $request->base_price,
@@ -141,7 +120,7 @@ class ProductController extends Controller
                 'is_featured'       => $request->boolean('is_featured'),
             ]);
 
-            // 2. Categories (pivot: is_primary)
+            // Categories
             $pivot = [];
             foreach ($request->category_ids as $catId) {
                 $pivot[(int) $catId] = [
@@ -150,33 +129,31 @@ class ProductController extends Controller
             }
             $product->categories()->attach($pivot);
 
-            // 3. Main image via Spatie
-            if ($request->hasFile('main_image')) {
-                $product->addMediaFromRequest('main_image')
-                        ->toMediaCollection('products');
+            // ── Multi-image upload ─────────────────────────────────────────
+            if ($request->hasFile('product_images')) {
+                foreach ($request->file('product_images') as $index => $image) {
+                    $product->addMedia($image)
+                            ->withCustomProperties(['order' => $index])
+                            ->toMediaCollection('products');
+                }
             }
+            // ──────────────────────────────────────────────────────────────
 
-            // 4. Variants + attribute_values pivot
+            // Variants
             foreach ($request->variants as $variantData) {
                 $this->createVariant($product, $variantData);
             }
         });
 
-        return redirect()
-            ->route('admin.products.index')
-            ->with('success', 'تم إضافة المنتج بنجاح');
+        return redirect()->route('admin.products.index')
+                         ->with('success', 'تم إضافة المنتج بنجاح');
     }
 
-    // ─── Show (product detail with inventory breakdown) ───────────────────────
+    // ─── Show ─────────────────────────────────────────────────────────────────
 
     public function show(Product $product)
     {
-        $product->load([
-            'categories',
-            'variants.attributeValues.attribute',
-            'media',
-        ]);
-
+        $product->load(['categories', 'variants.attributeValues.attribute', 'media']);
         $lowThreshold = self::LOW_STOCK_THRESHOLD;
 
         return view('admin.products.show', compact('product', 'lowThreshold'));
@@ -186,20 +163,11 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $product->load([
-            'categories',
-            'variants.attributeValues.attribute',
-        ]);
+        $product->load(['categories', 'variants.attributeValues.attribute']);
 
-        $categories = Category::active()
-            ->roots()
-            ->with('allActiveChildren')
-            ->orderBy('sort_order')
-            ->get();
-
-        $attributes = Attribute::with('values')
-            ->orderBy('sort_order')
-            ->get();
+        $categories = Category::active()->roots()
+            ->with('allActiveChildren')->orderBy('sort_order')->get();
+        $attributes = Attribute::with('values')->orderBy('sort_order')->get();
 
         $selectedCatIds = $product->categories->pluck('id')->toArray();
         $primaryCatId   = $product->categories
@@ -215,13 +183,20 @@ class ProductController extends Controller
             'attribute_values' => $v->attributeValues->pluck('id')->toArray(),
         ]);
 
+        // Pass existing media for preview in the edit form
+        $existingImages = $product->getMedia('products')->map(fn($m) => [
+            'id'  => $m->id,
+            'url' => $m->getUrl(),
+        ]);
+
         return view('admin.products.edit', compact(
             'product', 'categories', 'attributes',
-            'selectedCatIds', 'primaryCatId', 'existingVariants'
+            'selectedCatIds', 'primaryCatId', 'existingVariants', 'existingImages'
         ));
     }
 
     // ─── Update ───────────────────────────────────────────────────────────────
+    // CHANGED: handles new uploads + deletion of individual existing images
 
     public function update(Request $request, Product $product)
     {
@@ -232,7 +207,15 @@ class ProductController extends Controller
             'category_ids'                  => 'required|array|min:1',
             'category_ids.*'                => 'exists:categories,id',
             'primary_category_id'           => 'required|exists:categories,id',
-            'main_image'                    => 'nullable|image|max:4096',
+
+            // ── MULTI-IMAGE UPLOAD ─────────────────────────────────────────
+            'product_images'                => 'nullable|array|max:10',
+            'product_images.*'              => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
+            // IDs of existing media that should be DELETED
+            'delete_media_ids'              => 'nullable|array',
+            'delete_media_ids.*'            => 'integer',
+            // ──────────────────────────────────────────────────────────────
+
             'variants'                      => 'required|array|min:1',
             'variants.*.stock_quantity'     => 'required|integer|min:0',
             'variants.*.price_override'     => 'nullable|numeric|min:0',
@@ -242,7 +225,6 @@ class ProductController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $product) {
-            // 1. Base product
             if ($request->name !== $product->name) {
                 $product->slug = $this->uniqueSlug($request->name, $product->id);
             }
@@ -257,7 +239,7 @@ class ProductController extends Controller
                 'is_featured'       => $request->boolean('is_featured'),
             ]);
 
-            // 2. Re-sync categories
+            // Re-sync categories
             $pivot = [];
             foreach ($request->category_ids as $catId) {
                 $pivot[(int) $catId] = [
@@ -266,28 +248,38 @@ class ProductController extends Controller
             }
             $product->categories()->sync($pivot);
 
-            // 3. Image
-            if ($request->hasFile('main_image')) {
-                $product->clearMediaCollection('products');
-                $product->addMediaFromRequest('main_image')
-                        ->toMediaCollection('products');
+            // ── Delete individually removed images ─────────────────────────
+            $deleteIds = $request->input('delete_media_ids', []);
+            if (!empty($deleteIds)) {
+                $product->media()
+                        ->whereIn('id', $deleteIds)
+                        ->get()
+                        ->each(fn($m) => $m->delete());
             }
 
-            // 4. Variants: delete all + recreate
-            //    (simple and safe — avoids stale pivot rows)
-            $product->variants()->delete();
+            // ── Add newly uploaded images ──────────────────────────────────
+            if ($request->hasFile('product_images')) {
+                $existingCount = $product->getMedia('products')->count();
+                foreach ($request->file('product_images') as $index => $image) {
+                    $product->addMedia($image)
+                            ->withCustomProperties(['order' => $existingCount + $index])
+                            ->toMediaCollection('products');
+                }
+            }
+            // ──────────────────────────────────────────────────────────────
 
+            // Variants: delete all + recreate
+            $product->variants()->delete();
             foreach ($request->variants as $variantData) {
                 $this->createVariant($product, $variantData);
             }
         });
 
-        return redirect()
-            ->route('admin.products.show', $product)
-            ->with('success', 'تم تحديث المنتج بنجاح');
+        return redirect()->route('admin.products.show', $product)
+                         ->with('success', 'تم تحديث المنتج بنجاح');
     }
 
-    // ─── Bulk stock update (AJAX / form from show page) ──────────────────────
+    // ─── Stock update (unchanged) ─────────────────────────────────────────────
 
     public function updateStock(Request $request, Product $product)
     {
@@ -301,7 +293,7 @@ class ProductController extends Controller
 
         foreach ($request->variants as $data) {
             ProductVariant::where('id', $data['id'])
-                ->where('product_id', $product->id)   // ownership check
+                ->where('product_id', $product->id)
                 ->update([
                     'stock_quantity' => $data['stock_quantity'],
                     'price_override' => $data['price_override'] ?: null,
@@ -316,24 +308,18 @@ class ProductController extends Controller
         return back()->with('success', 'تم تحديث المخزون بنجاح');
     }
 
-    // ─── Destroy (soft delete) ────────────────────────────────────────────────
+    // ─── Destroy ──────────────────────────────────────────────────────────────
 
     public function destroy(Product $product)
     {
-        // Soft-delete cascades because variants check the product's deleted_at
-        // via the SoftDeletes trait; add a global scope if needed.
         $product->delete();
 
-        return redirect()
-            ->route('admin.products.index')
-            ->with('success', 'تم نقل المنتج إلى المحذوفات');
+        return redirect()->route('admin.products.index')
+                         ->with('success', 'تم نقل المنتج إلى المحذوفات');
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────
 
-    /**
-     * Generate a guaranteed-unique slug for the products table.
-     */
     private function uniqueSlug(string $name, ?int $excludeId = null): string
     {
         $slug  = Str::slug($name);
@@ -341,7 +327,6 @@ class ProductController extends Controller
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
-
         if ($query->exists()) {
             $slug .= '-' . Str::lower(Str::random(4));
         }
@@ -349,9 +334,6 @@ class ProductController extends Controller
         return $slug;
     }
 
-    /**
-     * Create a single variant and attach its attribute values.
-     */
     private function createVariant(Product $product, array $data): ProductVariant
     {
         $variant = $product->variants()->create([
@@ -368,7 +350,6 @@ class ProductController extends Controller
             ->toArray();
 
         if (!empty($avIds)) {
-            // Uses the product_variant_attribute_values pivot table
             $variant->attributeValues()->attach($avIds);
         }
 

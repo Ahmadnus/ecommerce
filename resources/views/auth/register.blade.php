@@ -78,7 +78,13 @@
                            class="input-field w-full bg-gray-50 border @error('name') border-red-400 @else border-gray-200 @enderror rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent" 
                            style="--tw-ring-color:var(--brand-color)">
                 </div>
-
+<div>
+    <label class="block text-sm font-semibold text-gray-700 mb-1.5">البريد الإلكتروني</label>
+    <input type="email" name="email" value="{{ old('email') }}" required
+           placeholder="example@mail.com"
+           class="input-field w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent"
+           style="--tw-ring-color:var(--brand-color)">
+</div>
                 {{-- اختيار الدولة --}}
 <div>
     <label class="block text-sm font-semibold text-gray-700 mb-1.5">دولة الحساب</label>

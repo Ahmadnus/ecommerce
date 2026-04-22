@@ -57,17 +57,17 @@ class ZoneController extends Controller
         return view('admin.zones.edit', compact('zone', 'country'));
     }
 
-    public function update(Request $request, Zone $zone): RedirectResponse
-    {
-        $validated = $this->validateZone($request, $zone);
+ public function update(Request $request, $country, Zone $zone): RedirectResponse
+{
+    // الآن $zone سيحتوي على الموديل الصحيح لـ App\Models\Zone
+    $validated = $this->validateZone($request, $zone);
 
-        $zone->update($validated);
+    $zone->update($validated);
 
-        return redirect()
-            ->route('admin.countries.zones.index', $zone->country_id)
-            ->with('success', 'تم تحديث المنطقة بنجاح.');
-    }
-
+    return redirect()
+        ->route('admin.countries.zones.index', $zone->country_id)
+        ->with('success', 'تم تحديث المنطقة بنجاح.');
+}
     // ── Delete ─────────────────────────────────────────────────────────────────
 
     public function destroy(Zone $zone): RedirectResponse
