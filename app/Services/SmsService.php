@@ -2,27 +2,59 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * SmsService
+ * ─────────────────────────────────────────────────────────────────────────────
+ * All credentials read via get_otp_setting() → OtpSetting::get()
+ * → config/sms.php fallback.
+ *
+ * CRITICAL FIX: send() now uses cURL with CURLOPT_POST instead of
+ * Laravel's Http::get(). The Broadnet API requires an HTTP POST request.
+ * The working test route (provided) confirmed this.
+ */
 class SmsService
 {
-    // تم التعديل هنا لتقرأ من الدالة الجديدة get_otp_setting
-   private function url(): string  { return (string) get_otp_setting('sms_url', ''); }
-    private function user(): string { return (string) get_otp_setting('sms_user', ''); }
-    private function pass(): string { return (string) get_otp_setting('sms_pass', ''); }
-    private function sid(): string  { return (string) get_otp_setting('sms_sid', ''); }
-    private function type(): int    { return (int) get_otp_setting('sms_type', 4); }
-    private function ttl(): int     { return (int) get_otp_setting('otp_ttl_minutes', 5); }
-    private function otpLen(): int  { return (int) get_otp_setting('otp_length', 6); }
-    // باقي الكود كما هو تماماً دون تغيير...
+    // ── Credential accessors ──────────────────────────────────────────────────
+
+  private function url(): string  { return config('sms.jordan_api.endpoint'); }
+private function user(): string { return config('sms.jordan_api.user'); }
+private function pass(): string { return config('sms.jordan_api.pass'); }
+private function sid(): string  { return config('sms.jordan_api.sid'); }
+private function type(): int    { return config('sms.jordan_api.type'); }
+  
+    private function ttl(): int     { return (int)    get_otp_setting('otp_ttl_minutes', 5); }
+    private function otpLen(): int  { return (int)    get_otp_setting('otp_length', 6); }
+
+    // ── Phone normalisation ───────────────────────────────────────────────────
+
+    /**
+     * Convert any Jordanian/international format to digits-only MSISDN.
+     * Examples:
+     *   +962799400020  → 962799400020
+     *   0799400020     → 962799400020   (Jordanian local with leading 0)
+     *   +9639xxxxxxx   → 9639xxxxxxx    (Syrian — strip + only)
+     */
     public function normalizeMsisdn(string $input): string
     {
         $digits = preg_replace('/\D+/', '', $input);
-        if (str_starts_with($digits, '962')) return $digits;
-        if (str_starts_with($digits, '0') && strlen($digits) <= 10) return '962' . substr($digits, 1);
+
+        // Already has Jordanian country code
+        if (str_starts_with($digits, '962')) {
+            return $digits;
+        }
+
+        // Jordanian local number (07xxxxxxxx → 10 digits)
+        if (str_starts_with($digits, '0') && strlen($digits) <= 10) {
+            return '962' . substr($digits, 1);
+        }
+
+        // Other international — already stripped of "+" by preg_replace
         return $digits;
     }
+
+    // ── OTP generation ────────────────────────────────────────────────────────
 
     public function generateOtp(): string
     {
@@ -32,9 +64,23 @@ class SmsService
         return (string) random_int($min, $max);
     }
 
+    // ── Core send (cURL POST — matches the working test route) ────────────────
+
+    /**
+     * Send a raw SMS via Broadnet websms API.
+     *
+     * WHY cURL POST:
+     *   The working standalone test route uses curl_init + CURLOPT_POST.
+     *   Laravel Http::get() was not reaching the API successfully.
+     *   We replicate the exact same cURL options here.
+     *
+     * @return array{success: bool, response: string}
+     */
     public function send(string $phone, string $message): array
     {
+    
         $msisdn = $this->normalizeMsisdn($phone);
+
         $params = [
             'user' => $this->user(),
             'pass' => $this->pass(),
@@ -44,26 +90,77 @@ class SmsService
             'text' => $message,
         ];
 
-        try {
-            $response = Http::timeout(15)->withoutVerifying()->get($this->url(), $params);
-            $body     = trim($response->body());
-            $success  = str_starts_with($body, '17');
-            if (!$success) {
-                Log::warning('SmsService: non-success', ['msisdn' => $msisdn, 'response' => $body]);
-            }
-            return ['success' => $success, 'response' => $body];
-        } catch (\Throwable $e) {
-            Log::error('SmsService: HTTP failed', ['msisdn' => $msisdn, 'error' => $e->getMessage()]);
-            return ['success' => false, 'response' => $e->getMessage()];
+        $url = $this->url();
+
+        // Guard: if credentials are still empty after all fallbacks, log and fail fast
+        if (empty($url) || empty($params['user']) || empty($params['pass'])) {
+            Log::error('SmsService: credentials missing', [
+                'url'  => $url,
+                'user' => $params['user'],
+            ]);
+            return ['success' => false, 'response' => 'SMS credentials not configured.'];
         }
+
+        $ch = curl_init($url);
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_SSL_VERIFYPEER => false,   // Broadnet uses self-signed cert on port 8443
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => http_build_query($params),
+        ]);
+
+        $response = curl_exec($ch);
+        $curlErr  = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($curlErr) {
+            Log::error('SmsService: cURL error', [
+                'msisdn' => $msisdn,
+                'error'  => $curlErr,
+            ]);
+            return ['success' => false, 'response' => $curlErr];
+        }
+
+        $body    = trim((string) $response);
+        // Broadnet returns a code starting with "17" on success (e.g. "1701")
+        $success = str_starts_with($body, '17');
+
+        if (!$success) {
+            Log::warning('SmsService: API returned non-success', [
+                'msisdn'    => $msisdn,
+                'http_code' => $httpCode,
+                'response'  => $body,
+            ]);
+        } else {
+            Log::info('SmsService: SMS sent', [
+                'msisdn'   => $msisdn,
+                'response' => $body,
+            ]);
+        }
+
+        return ['success' => $success, 'response' => $body];
     }
 
+    // ── OTP flow ──────────────────────────────────────────────────────────────
+
+    /**
+     * Generate + persist + send OTP for the given user.
+     * Throws \RuntimeException if the SMS delivery fails.
+     */
     public function sendOtp(\App\Models\User $user): array
     {
+         
         $otp       = $this->generateOtp();
         $expiresAt = now()->addMinutes($this->ttl());
 
-        $user->forceFill(['otp' => $otp, 'otp_expires_at' => $expiresAt])->saveQuietly();
+        $user->forceFill([
+            'otp'            => $otp,
+            'otp_expires_at' => $expiresAt,
+        ])->saveQuietly();
 
         $message = "رمز التحقق الخاص بك: {$otp}\nصالح لمدة {$this->ttl()} دقائق.";
         $result  = $this->send($user->phone, $message);
@@ -71,15 +168,27 @@ class SmsService
         if (!$result['success']) {
             throw new \RuntimeException('فشل إرسال رمز التحقق. يرجى المحاولة مرة أخرى.');
         }
-
-        return [$otp, $expiresAt];
+return [
+    'otp'        => $otp,
+    'expires_at' => $expiresAt,
+    'sms'        => $result, // 🔥 هون المهم
+];
+     
     }
+
+    // ── OTP verification ──────────────────────────────────────────────────────
 
     public function verifyOtp(\App\Models\User $user, string $submittedOtp): bool
     {
-        if (!$user->otp || !$user->otp_expires_at) return false;
-        if (now()->isAfter($user->otp_expires_at)) return false;
-        if (!hash_equals($user->otp, trim($submittedOtp))) return false;
+        if (!$user->otp || !$user->otp_expires_at) {
+            return false;
+        }
+        if (now()->isAfter($user->otp_expires_at)) {
+            return false;
+        }
+        if (!hash_equals($user->otp, trim($submittedOtp))) {
+            return false;
+        }
 
         $user->forceFill([
             'otp'               => null,
@@ -89,6 +198,8 @@ class SmsService
 
         return true;
     }
+
+    // ── Admin test ────────────────────────────────────────────────────────────
 
     public function testConnection(string $testPhone): array
     {

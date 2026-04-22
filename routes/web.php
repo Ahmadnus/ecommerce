@@ -213,3 +213,58 @@ curl_setopt_array($ch, [
         "status" => $code,
     ];
 });
+
+/*
+|--------------------------------------------------------------------------
+| Diagnostic / Debug Routes
+|--------------------------------------------------------------------------
+| Add these to routes/web.php TEMPORARILY during development.
+| REMOVE BEFORE PRODUCTION — these routes expose credentials.
+|
+| Usage:
+|   /debug-otp-chain        → shows what each layer resolves to
+|   /debug-send-test-sms    → sends a real SMS to the hardcoded number
+*/
+
+use App\Models\OtpSetting;
+use App\Services\SmsService;
+
+
+// ── 1. Check the full resolution chain ────────────────────────────────────────
+Route::get('/debug-otp-chain', function () {
+    $keys = ['sms_url', 'sms_user', 'sms_pass', 'sms_sid', 'sms_type', 'otp_ttl_minutes', 'otp_length'];
+
+    $result = [];
+    foreach ($keys as $key) {
+        $dbRaw     = OtpSetting::where('key', $key)->value('value');
+        $resolved  = get_otp_setting($key);
+
+        $result[$key] = [
+            'db_raw'     => $dbRaw,        // null = using config fallback
+            'resolved'   => $key === 'sms_pass' ? (empty($resolved) ? '(empty)' : '***hidden***') : $resolved,
+            'source'     => (!is_null($dbRaw) && $dbRaw !== '') ? 'database' : 'config/sms.php',
+        ];
+    }
+
+    return response()->json($result, 200, ['Content-Type' => 'application/json']);
+})->middleware('auth'); // Protect with auth — remove if testing before login
+
+// ── 2. Send a real test SMS ────────────────────────────────────────────────────
+Route::get('/debug-send-test-sms', function (SmsService $sms) {
+    $testNumber = '962799400020'; // ← change to your own number for testing
+
+    $result = $sms->send($testNumber, 'اختبار النظام — إذا وصلتك هذه الرسالة فالنظام يعمل ✓');
+
+    return response()->json([
+        'sent_to'   => $testNumber,
+        'success'   => $result['success'],
+        'response'  => $result['response'],
+        'resolved_credentials' => [
+            'url'  => get_otp_setting('sms_url'),
+            'user' => get_otp_setting('sms_user'),
+            'sid'  => get_otp_setting('sms_sid'),
+            'type' => get_otp_setting('sms_type'),
+            // pass intentionally omitted
+        ],
+    ]);
+})->middleware('auth');

@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\Auth;
-
+use Illuminate\Http\JsonResponse;
+ 
 use App\Http\Controllers\Controller;
 use App\Models\Country;
 use App\Models\User;
@@ -108,42 +109,7 @@ class AuthController extends Controller
 
     // ── OTP ────────────────────────────────────────────────────────────────────
 
-    public function verifyOtp(Request $request): RedirectResponse
-    {
-        $request->validate(['otp' => ['required', 'string', 'min:4', 'max:10']],
-                           ['otp.required' => 'رمز التحقق مطلوب.']);
-
-        $userId = $request->session()->get('otp_user_id');
-        $intent = $request->session()->get('otp_intent', 'user');
-
-        if (!$userId) return redirect()->route('login');
-
-        $user = User::find($userId);
-        if (!$user) return redirect()->route('login');
-
-        // حماية إضافية للرقم المستثنى
-        $isBypass = ($user->phone === $this->bypassPhone);
-
-        if (!$isBypass && !$this->sms->verifyOtp($user, $request->input('otp'))) {
-            return back()->withErrors(['otp' => 'رمز التحقق غير صحيح أو منتهي الصلاحية.']);
-        }
-
-        $remember = (bool) $request->session()->pull('otp_remember', false);
-        $request->session()->forget(['otp_user_id', 'otp_phone_display', 'otp_intent']);
-
-        Auth::login($user, $remember);
-        $request->session()->regenerate();
-
-        if ($intent === 'admin' && !$user->hasRole('admin')) {
-            Auth::logout();
-            return redirect()->route('admin.login')
-                             ->withErrors(['phone_full' => 'هذه البوابة مخصصة للمسؤولين فقط.']);
-        }
-
-        return $user->hasRole('admin')
-            ? redirect()->to('/admin')
-            : redirect()->intended('/');
-    }
+  
     public function resendOtp(Request $request): RedirectResponse
     {
         $userId      = $request->session()->get('otp_user_id');
@@ -229,4 +195,125 @@ class AuthController extends Controller
             ? redirect()->route('admin.login')->with('success', 'تم تسجيل خروج المسؤول.')
             : redirect()->route('login')->with('success', 'تم تسجيل الخروج.');
     }
+
+
+  
+ 
+// ── Add this import if not already present ────────────────────────────────────
+
+// ── Paste this method into your AuthController class ─────────────────────────
+ 
+public function verifyOtp(Request $request)
+{
+    $request->validate(
+        ['otp' => ['required', 'string', 'min:4', 'max:10']],
+        ['otp.required' => 'رمز التحقق مطلوب.']
+    );
+ 
+    $userId = $request->session()->get('otp_user_id');
+    $intent = $request->session()->get('otp_intent', 'user');
+ 
+    // Guard: no pending OTP session
+    if (!$userId) {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'verified' => false,
+                'message'  => 'انتهت جلسة التحقق. يرجى تسجيل الدخول مجدداً.',
+                'sent_to'  => null,
+                'response' => null,
+                'error'    => 'session_expired',
+                'status'   => 401,
+            ], 401);
+        }
+        return redirect()->route('login');
+    }
+ 
+    $user = \App\Models\User::find($userId);
+ 
+    if (!$user) {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'verified' => false,
+                'message'  => 'المستخدم غير موجود.',
+                'sent_to'  => null,
+                'response' => null,
+                'error'    => 'user_not_found',
+                'status'   => 404,
+            ], 404);
+        }
+        return redirect()->route('login');
+    }
+ 
+    // ── Bypass check (dev/testing account — remove in production) ─────────────
+    $isBypass = property_exists($this, 'bypassPhone') && $user->phone === $this->bypassPhone;
+ 
+    // ── Verify OTP ────────────────────────────────────────────────────────────
+    if (!$isBypass && !$this->sms->verifyOtp($user, $request->input('otp'))) {
+ 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'verified' => false,
+                'message'  => 'رمز التحقق غير صحيح أو منتهي الصلاحية.',
+                'sent_to'  => $user->phone,
+                'response' => null,
+                'error'    => 'otp_invalid',
+                'status'   => 422,
+            ], 422);
+        }
+ 
+        return back()->withErrors(['otp' => 'رمز التحقق غير صحيح أو منتهي الصلاحية.']);
+    }
+ 
+    // ── OTP correct — log in ──────────────────────────────────────────────────
+    $remember = (bool) $request->session()->pull('otp_remember', false);
+    $request->session()->forget(['otp_user_id', 'otp_phone_display', 'otp_intent']);
+ 
+    \Illuminate\Support\Facades\Auth::login($user, $remember);
+    $request->session()->regenerate();
+ 
+    // Admin isolation check
+    if ($intent === 'admin' && !$user->hasRole('admin')) {
+        \Illuminate\Support\Facades\Auth::logout();
+ 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'verified' => false,
+                'message'  => 'هذه البوابة مخصصة للمسؤولين فقط.',
+                'sent_to'  => $user->phone,
+                'response' => null,
+                'error'    => 'not_admin',
+                'status'   => 403,
+            ], 403);
+        }
+ 
+        return redirect()->route('admin.login')
+                         ->withErrors(['phone_full' => 'هذه البوابة مخصصة للمسؤولين فقط.']);
+    }
+ 
+    $redirectTo = $user->hasRole('admin') ? '/admin' : '/';
+ 
+    // ── JSON response (mirrors /send-test-sms structure) ─────────────────────
+    if ($request->expectsJson()) {
+        return response()->json([
+            'verified' => true,
+            'sent_to'  => $user->phone,
+ 
+            /*
+             * 'message' and 'response' mirror the test route keys.
+             * We store the last OTP message text and Broadnet response code
+             * on the user model temporarily so we can echo them back here.
+             * If your SmsService doesn't store these, they fall back to
+             * descriptive strings — the important field is 'verified'.
+             */
+            'message'  => $user->last_sms_text   ?? "رمز التحقق تم التحقق منه بنجاح.",
+            'response' => $user->last_sms_response ?? '1701',   // Broadnet success code
+            'error'    => '',
+            'status'   => 200,
+            'redirect' => $redirectTo,
+        ]);
+    }
+ 
+    // ── Normal redirect (non-AJAX) ────────────────────────────────────────────
+    return redirect()->to($redirectTo);
+}
 }

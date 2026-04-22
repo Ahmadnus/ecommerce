@@ -2,34 +2,36 @@
 
 /*
 |--------------------------------------------------------------------------
-| OTP & SMS Settings Helper
+| OTP Settings Helper
 |--------------------------------------------------------------------------
-| Register this file in composer.json autoload.files
-| Then run: composer dump-autoload
+| Add to composer.json autoload.files, then run: composer dump-autoload
+|
+|   "autoload": {
+|       "files": ["app/Helpers/otp_settings.php"]
+|   }
 */
 
 if (!function_exists('get_otp_setting')) {
     /**
-     * جلب إعدادات الـ OTP من جدول otpsettings حصراً.
-     * * الأولويات:
-     * 1. قاعدة البيانات (جدول otpsettings)
-     * 2. قيمة الـ $default الممررة يدوياً
-     * 3. القيم الافتراضية في config/sms.php
+     * Fetch a value from the otpsettings table.
+     *
+     * Priority:
+     *   1. DB (otpsettings table, cached 60 min)
+     *   2. $default argument
+     *   3. config/sms.php fallback
      */
     function get_otp_setting(string $key, mixed $default = null): mixed
     {
-        // استدعاء الموديل الجديد OtpSetting وليس Setting
         return \App\Models\OtpSetting::get($key, $default);
     }
 }
 
 if (!function_exists('set_otp_setting')) {
     /**
-     * حفظ الإعداد في جدول otpsettings ومسح الكاش.
+     * Persist a value to otpsettings and bust its cache.
      */
     function set_otp_setting(string $key, mixed $value): void
     {
-        // استدعاء الموديل الجديد OtpSetting وليس Setting
         \App\Models\OtpSetting::set($key, $value);
     }
 }
