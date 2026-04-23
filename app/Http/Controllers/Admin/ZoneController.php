@@ -70,15 +70,15 @@ class ZoneController extends Controller
 }
     // ── Delete ─────────────────────────────────────────────────────────────────
 
-    public function destroy(Zone $zone): RedirectResponse
-    {
-        $countryId = $zone->country_id;
-        $zone->delete();
+ public function destroy($country, Zone $zone): RedirectResponse
+{
+    $countryId = $zone->country_id;
+    $zone->delete();
 
-        return redirect()
-            ->route('admin.countries.zones.index', $countryId)
-            ->with('success', 'تم حذف المنطقة.');
-    }
+    return redirect()
+        ->route('admin.countries.zones.index', $countryId)
+        ->with('success', 'تم حذف المنطقة.');
+}
 
     // ── Private ────────────────────────────────────────────────────────────────
 

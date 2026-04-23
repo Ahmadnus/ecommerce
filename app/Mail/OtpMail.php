@@ -12,32 +12,28 @@ class OtpMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $user;
-    public $otp;
-
-    /**
-     * نمرر كائن المستخدم والرمز المولد هنا
-     */
-    public function __construct($user, $otp)
-    {
-        $this->user = $user;
-        $this->otp = $otp;
-    }
+    public function __construct(
+        public readonly object $user,
+        public readonly string $otp,
+        public readonly int    $ttlMinutes = 5
+    ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'رمز التحقق الخاص بك - ' . config('app.name'),
+            subject: 'رمز التحقق الخاص بك — ' . config('app.name'),
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.otp', // سننشئ هذا الملف الآن
+            view: 'emails.otp',
             with: [
-                'name' => $this->user->name,
-                'code' => $this->otp,
+                'name'       => $this->user->name,
+                'code'       => $this->otp,
+                'ttl'        => $this->ttlMinutes,
+                'appName'    => config('app.name'),
             ],
         );
     }

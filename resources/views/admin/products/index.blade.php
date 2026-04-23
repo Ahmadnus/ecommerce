@@ -172,30 +172,74 @@ body { font-family: var(--cc-sans); }
     </div>
     @endif
 
-    {{-- ══ Stat cards ══════════════════════════════════════════════════════ --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="stat-card brand">
-            <p class="text-xs font-bold uppercase tracking-widest mb-2" style="color:var(--cc-muted)">المنتجات</p>
-            <p class="text-3xl font-black text-white">{{ number_format($stats['total']) }}</p>
-            <p class="text-xs mt-1" style="color:var(--cc-muted)">{{ $stats['active'] }} نشط</p>
+   {{-- ══ Stat cards ══════════════════════════════════════════════════════ --}}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    
+    {{-- بطاقة إجمالي المنتجات - لون براند مضيء --}}
+<div class="stat-card brand group hover:cursor-default">
+        <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-[--cc-muted]">المنتجات</p>
+        <div class="flex items-baseline gap-2">
+            {{-- الرقم الآن بلون سماوي مشع (Cyan-400) يبرز بقوة فوق الخلفية الداكنة --}}
+            <p class="text-4xl font-black text-cyan-400 leading-none tracking-tighter drop-shadow-[0_0_12px_rgba(34,211,238,0.4)]">
+                {{ number_format($stats['total']) }}
+            </p>
         </div>
-        <div class="stat-card emerald">
-            <p class="text-xs font-bold uppercase tracking-widest mb-2" style="color:var(--cc-muted)">نشطة</p>
-            <p class="text-3xl font-black text-white">{{ number_format($stats['active']) }}</p>
-            <p class="text-xs mt-1 text-emerald-400">متاح للبيع</p>
-        </div>
-        <div class="stat-card amber">
-            <p class="text-xs font-bold uppercase tracking-widest mb-2" style="color:var(--cc-muted)">مخزون منخفض</p>
-            <p class="text-3xl font-black text-amber-400">{{ number_format($stats['low']) }}</p>
-            <p class="text-xs mt-1" style="color:var(--cc-muted)">≤ 5 قطعة / متغير</p>
-        </div>
-        <div class="stat-card rose">
-            <p class="text-xs font-bold uppercase tracking-widest mb-2" style="color:var(--cc-muted)">نفد المخزون</p>
-            <p class="text-3xl font-black text-rose-400">{{ number_format($stats['out']) }}</p>
-            <p class="text-xs mt-1" style="color:var(--cc-muted)">متغيرات بمخزون صفر</p>
-        </div>
+        <p class="text-[11px] mt-4 font-bold flex items-center gap-1.5 text-cyan-500/90">
+            <span class="relative flex h-1.5 w-1.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-500"></span>
+            </span>
+            {{ $stats['active'] }} وحدة نشطة
+        </p>
     </div>
 
+    {{-- بطاقة النشطة - لون زمردي مشع --}}
+    <div class="stat-card emerald group hover:cursor-default">
+        <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style="color: var(--cc-muted)">نشطة</p>
+        <div class="flex items-baseline gap-2">
+            {{-- الرقم بلون أخضر زمردي فاتح جداً لينافس الظلام --}}
+            <p class="text-3xl font-black text-emerald-400 leading-none tracking-tighter drop-shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                {{ number_format($stats['active']) }}
+            </p>
+        </div>
+        <p class="text-[11px] mt-3 font-bold flex items-center gap-1.5 text-emerald-500">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            متاح للبيع
+        </p>
+    </div>
+
+    {{-- بطاقة مخزون منخفض - لون برتقالي إنذار --}}
+    <div class="stat-card amber group hover:cursor-default">
+        <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style="color: var(--cc-muted)">مخزون منخفض</p>
+        <div class="flex items-baseline gap-2">
+            <p class="text-3xl font-black text-amber-400 leading-none tracking-tighter font-mono drop-shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                {{ number_format($stats['low']) }}
+            </p>
+        </div>
+        <p class="text-[11px] mt-3 font-bold text-amber-500/90 flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"></path></svg>
+            تحذير المخزون
+        </p>
+    </div>
+
+    {{-- بطاقة نفد المخزون - لون أحمر صارخ --}}
+    <div class="stat-card rose group hover:cursor-default">
+        <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style="color: var(--cc-muted)">نفد المخزون</p>
+        <div class="flex items-baseline gap-2">
+            <p class="text-3xl font-black text-rose-500 leading-none tracking-tighter font-mono drop-shadow-[0_0_15px_rgba(244,63,94,0.3)]">
+                {{ number_format($stats['out']) }}
+            </p>
+        </div>
+        <p class="text-[11px] mt-3 font-bold text-rose-500 flex items-center gap-1.5">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+            </span>
+            مطلوب فوراً
+        </p>
+    </div>
+
+</div>
     {{-- ══ Filters / toolbar ══════════════════════════════════════════════ --}}
     <form method="GET" action="{{ route('admin.products.index') }}"
           class="flex flex-wrap items-center gap-3 mb-6">

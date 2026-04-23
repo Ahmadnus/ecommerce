@@ -161,13 +161,14 @@
                             </span>
                         </div>
                     </div>
+                    
                     @empty
                     <div class="text-center py-8">
                         <p class="text-gray-400 text-sm">لا توجد طلبات سابقة</p>
                     </div>
                     @endforelse
                 </div>
-
+   @include('partials.bottombar')
             </div>
         </div>
     </div>

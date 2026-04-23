@@ -91,5 +91,6 @@
             {{ $orders->links() }}
         </div>
     @endif
+    @include('partials.bottombar')
 </div>
 @endsection

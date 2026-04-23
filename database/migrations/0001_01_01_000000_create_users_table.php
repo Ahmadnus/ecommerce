@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('name');
             
             // الهاتف هو المعرف الأساسي
-            $table->string('phone', 20)->unique()->index();
+            $table->string('phone', 20)->unique()->index()->nullable();
             
             // حقول الـ OTP والتحقق
             $table->string('otp', 10)->nullable();

@@ -60,21 +60,30 @@
     <div class="flex items-stretch">
 
         {{-- الرئيسية --}}
-        <a href="{{ url('/') }}"
-           class="bb-item {{ request()->is('/') ? 'active' : '' }}">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-            </svg>
-            الرئيسية
-        </a>
-
+       
         {{-- المتجر --}}
-        <a href="{{ route('products.index') }}"
-           class="bb-item {{ request()->routeIs('products.index') ? 'active' : '' }}">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h8m-8 6h16"/>
-            </svg>
-            المتجر
+      <a href="{{ route('products.index') }}"
+   class="bb-item {{ request()->routeIs('products.index') ? 'active' : '' }}">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3"/>
+    </svg>
+    المتجر
+</a>
+ <a href="{{ auth()->check() ? route('wishlist.index') : route('login') }}"
+           class="bb-item relative {{ request()->routeIs('wishlist.*') ? 'active' : '' }}">
+            <div class="relative">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+                @auth
+                    @php $wlCount = auth()->user()->wishlistedProducts()->count(); @endphp
+                    @if($wlCount > 0)
+                    <span class="bb-badge">{{ $wlCount }}</span>
+                    @endif
+                @endauth
+            </div>
+            المفضلة
         </a>
 
         {{-- السلة --}}
@@ -97,21 +106,14 @@
         </a>
 
         {{-- المفضلة --}}
-        <a href="{{ auth()->check() ? route('wishlist.index') : route('login') }}"
-           class="bb-item relative {{ request()->routeIs('wishlist.*') ? 'active' : '' }}">
-            <div class="relative">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                </svg>
-                @auth
-                    @php $wlCount = auth()->user()->wishlistedProducts()->count(); @endphp
-                    @if($wlCount > 0)
-                    <span class="bb-badge">{{ $wlCount }}</span>
-                    @endif
-                @endauth
-            </div>
-            المفضلة
-        </a>
+      <a href="{{ url('/orders') }}"
+   class="bb-item {{ request()->is('orders*') ? 'active' : '' }}">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 5H7a2 2 0 00-2 2v14h14V7a2 2 0 00-2-2h-2M9 5a3 3 0 006 0M9 5a3 3 0 013-3 3 3 0 013 3"/>
+    </svg>
+    طلباتي
+</a>
 
         {{-- الملف الشخصي --}}
         <a href="{{ auth()->check() ? route('myprofile.show') : route('login') }}"

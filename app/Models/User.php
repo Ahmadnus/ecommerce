@@ -24,7 +24,7 @@ protected $fillable = [
         'password',
         'remember_token',
     ];
-
+protected $primaryKey = 'id';
     // ─── Casts ────────────────────────────────────────────────────────────────
 
   protected function casts(): array
@@ -82,9 +82,6 @@ public function hasWishlisted(int $productId): bool
  
     return $this->wishlistedProducts()->where('product_id', $productId)->exists();
 }
-public function getAuthIdentifierName()
-{
-    return 'phone';
-}
+
 
 }
