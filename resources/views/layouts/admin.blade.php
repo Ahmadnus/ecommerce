@@ -95,6 +95,15 @@
         <x-admin-nav-link href="{{ route('admin.categories.index') }}" icon="folder" :active="request()->routeIs('admin.categories.*')">
             التصنيفات
         </x-admin-nav-link>
+
+        <x-admin-nav-link href="{{ route('admin.attributes.index') }}" icon="tag" :active="request()->routeIs('admin.attributes.*')">
+            السمات والخصائص
+        </x-admin-nav-link>
+
+        {{-- قيم السمات (جديد) --}}
+        <x-admin-nav-link href="{{ route('admin.attribute-values.index') }}" icon="view-list" :active="request()->routeIs('admin.attribute-values.*')">
+            قيم السمات
+        </x-admin-nav-link>
     @endcan
 
     {{-- القسم المخصص للسوبر أدمن --}}

@@ -557,7 +557,7 @@
                  onclick="window.location='{{ route('products.show', $sp->slug) }}'">
                 <div class="relative overflow-hidden bg-gray-100" style="padding-top:126%">
                     <div class="shimmer absolute inset-0 z-0" id="fsk-{{ $sp->id }}"></div>
-                    <img src="{{ $sp->getFirstMediaUrl('products') ?: ($sp->image_url ?? 'https://picsum.photos/seed/'.$sp->id.'/300/390') }}"
+                    <img src="{{ $sp->getFirstMediaUrl('main') ?: ($sp->image_url ?? 'https://picsum.photos/seed/'.$sp->id.'/300/390') }}"
                          alt="{{ $sp->name }}"
                          class="fc-img absolute inset-0 w-full h-full object-cover z-10"
                          loading="lazy"
@@ -640,7 +640,8 @@
 
             <div class="relative overflow-hidden bg-gray-100" style="padding-top:130%">
                 <div class="shimmer absolute inset-0 z-0" id="sk-{{ $product->id }}"></div>
-                <img src="{{ $product->getFirstMediaUrl('products') ?: asset('images/placeholder.jpg') }}"
+              {{-- CORRECT: matches the collection name used in the controller --}}
+<<img src="{{ $product->getFirstMediaUrl('products') ?: asset('images/placeholder.jpg') }}"
                      alt="{{ $product->name }}"
                      class="pcard-img absolute inset-0 w-full h-full object-cover z-10"
                      loading="lazy"

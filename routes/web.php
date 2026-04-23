@@ -146,7 +146,8 @@ Route::prefix('api/shipping')->name('api.shipping.')->group(function () {
 Route::get('/adlogin', [AuthController::class, 'showAdminLogin'])->name('admin.login');
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    
+   Route::resource('attributes', AttributeController::class);
+    Route::resource('attribute-values', AttributeValueController::class);
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     
     // المحتوى والمنتجات
@@ -199,8 +200,7 @@ Route::prefix('admin/splash')->name('admin.splash.')->middleware(['auth', 'role:
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-Route::resource('attributes', AttributeController::class)->names('admin.attributes');
-Route::resource('attribute-values', AttributeValueController::class)->names('admin.attribute-values');
+
 
 Route::get('/send-test-sms', function () {
 

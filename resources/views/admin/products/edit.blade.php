@@ -212,42 +212,67 @@ body { font-family:var(--cc-sans); }
         </div>
 
         {{-- ══ SECTION 3: Image ═══════════════════════════════════════ --}}
-        <div class="cc-card p-6">
-            <h2 class="text-sm font-bold text-white mb-5 flex items-center gap-2">
-                <span class="section-num">٣</span>
-                صورة المنتج
-            </h2>
-            <div class="flex items-center gap-5">
-                <div class="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-zinc-800 border border-white/5"
-                     id="img-ring">
-                    @php $img = $product->getFirstMediaUrl('products') ?: $product->image_url; @endphp
-                    <img id="img-preview"
-                         src="{{ $img }}"
-                         class="w-full h-full object-cover {{ $img ? '' : 'hidden' }}"
-                         alt="">
-                    @if(!$img)
-                    <div id="img-ph" class="w-full h-full flex items-center justify-center"
-                         style="color:var(--cc-muted)">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586
-                                     a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6
-                                     a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                    @endif
-                </div>
-                <div class="flex-1">
-                    <input type="file" name="main_image" accept="image/*"
-                           onchange="previewImg(this)"
-                           class="block w-full text-sm cursor-pointer"
-                           style="color:var(--cc-muted)">
-                    <p class="text-[10px] mt-2" style="color:var(--cc-muted)">
-                        اترك فارغاً للإبقاء على الصورة الحالية
-                    </p>
+       {{-- ══ SECTION 3: Images (Main & Gallery) ════════════════════════════════ --}}
+<div class="cc-card p-6">
+    <h2 class="text-sm font-bold text-white mb-6 flex items-center gap-2">
+        <span class="section-num">٣</span>
+        إدارة الصور
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {{-- A. الصورة الأساسية (Collection: main) --}}
+        <div class="space-y-4">
+            <label class="cc-label">الصورة الأساسية (Main Image)</label>
+            <div class="relative group w-full aspect-video rounded-2xl overflow-hidden bg-white/5 border border-dashed border-white/10 flex items-center justify-center">
+                @php $mainImg = $product->getFirstMediaUrl('main') ?: asset('images/placeholder.jpg'); @endphp
+                <img id="main-preview" src="{{ $mainImg }}" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    <label class="cc-btn cc-btn-primary cc-btn-sm cursor-pointer">
+                        تغيير الصورة
+                        <input type="file" name="main_image" accept="image/*" class="hidden" onchange="previewMain(this)">
+                    </label>
                 </div>
             </div>
+            <p class="text-[10px] text-center" style="color:var(--cc-muted)">سيتم استبدال الصورة القديمة في حال رفع صورة جديدة</p>
         </div>
 
+        {{-- B. معرض الصور (Collection: products) --}}
+        <div class="space-y-4">
+            <label class="cc-label">صور المعرض (Gallery)</label>
+            
+            {{-- الصور الموجودة حالياً --}}
+            <div class="grid grid-cols-4 gap-2" id="existing-gallery">
+                @foreach($product->getMedia('products') as $media)
+                    <div class="relative aspect-square rounded-lg overflow-hidden border border-white/5 group" id="media-{{ $media->id }}">
+                        <img src="{{ $media->getUrl() }}" class="w-full h-full object-cover">
+                        <button type="button" onclick="markForDeletion({{ $media->id }})" 
+                                class="absolute top-1 right-1 w-6 h-6 bg-rose-500 text-white rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg">
+                            ✕
+                        </button>
+                        {{-- الحقل المخفي الذي سيُرسل للـ Controller --}}
+                    <input type="hidden" 
+       name="delete_media_ids[]" 
+       value="{{ $media->id }}" 
+       id="delete-input-{{ $media->id }}" 
+       disabled>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- رفع صور جديدة --}}
+            <div class="pt-4 border-t border-white/5">
+                <label class="cc-btn cc-btn-ghost w-full justify-center border-dashed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    إضافة صور للمعرض
+                    <input type="file" name="product_images[]" multiple accept="image/*" class="hidden" onchange="previewGallery(this)">
+                </label>
+                <div id="new-gallery-preview" class="grid grid-cols-4 gap-2 mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
         {{-- ══ SECTION 4: Variants ════════════════════════════════════ --}}
         <div class="cc-card p-6">
             <div class="flex items-center justify-between mb-5">
@@ -406,4 +431,76 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('variants-empty').classList.remove('hidden');
     }
 });
+
+// 1. معاينة الصورة الأساسية
+function previewMain(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('main-preview').src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// 2. معاينة صور المعرض الجديدة قبل الرفع
+function previewGallery(input) {
+    const container = document.getElementById('new-gallery-preview');
+    container.innerHTML = ''; // مسح المعاينة السابقة
+    if (input.files) {
+        Array.from(input.files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = "relative aspect-square rounded-lg overflow-hidden border border-emerald-500/30 shadow-inner";
+                div.innerHTML = `
+                    <img src="${e.target.result}" class="w-full h-full object-cover">
+                    <div class="absolute top-0 left-0 bg-emerald-500 text-[8px] px-1 text-white font-bold">NEW</div>
+                `;
+                container.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
+// 3. وضع علامة حذف على الصور القديمة
+function markForDeletion(mediaId) {
+    const wrapper = document.getElementById('media-' + mediaId);
+    const input = document.getElementById('delete-input-' + mediaId);
+    
+    if (input.value === "") {
+        // تفعيل الحذف
+        input.value = mediaId; 
+        wrapper.style.opacity = "0.3";
+        wrapper.style.filter = "grayscale(1)";
+        wrapper.style.border = "2px solid #f43f5e";
+    } else {
+        // تراجع عن الحذف
+        input.value = "";
+        wrapper.style.opacity = "1";
+        wrapper.style.filter = "none";
+        wrapper.style.border = "1px solid rgba(255,255,255,.05)";
+    }
+}
+function markForDeletion(mediaId) {
+    const wrapper = document.getElementById('media-' + mediaId);
+    const input = document.getElementById('delete-input-' + mediaId);
+    
+    // إذا كان الحقل معطلاً (يعني لا نريد الحذف حالياً)
+    if (input.disabled) {
+        input.disabled = false; // نفعله لكي يُرسل الـ ID للسيرفر ويتم الحذف
+        wrapper.style.opacity = "0.3";
+        wrapper.style.filter = "grayscale(1)";
+        wrapper.style.border = "2px solid #f43f5e";
+    } else {
+        // التراجع عن الحذف
+        input.disabled = true; // نعطله مرة أخرى لكي يتجاهله السيرفر
+        wrapper.style.opacity = "1";
+        wrapper.style.filter = "none";
+        wrapper.style.border = "1px solid rgba(255,255,255,.05)";
+    }
+}
+// كود المتغيرات (Variants) الذي كان عندك سابقاً يبقى كما هو دون تغيير...
+
 </script>

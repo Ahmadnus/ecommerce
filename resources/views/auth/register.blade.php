@@ -63,17 +63,16 @@
 <div class="w-full max-w-md">
 
     {{-- Logo --}}
-    <div class="text-center mb-8">
-        <a href="{{ url('/') }}" class="inline-flex flex-col items-center gap-2 group">
-            <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform"
-                 style="background:var(--brand-color,#0ea5e9)">
-                <img src="{{ $logoUrl ?? asset('images/logo.png') }}" alt="Logo"
-                     class="h-9 w-auto object-contain brightness-0 invert">
-            </div>
-            <span class="font-display text-2xl font-bold text-gray-900">{{ get_otp_setting('site_name', config('app.name')) }}</span>
-        </a>
-        <p class="text-gray-500 text-sm mt-2">أنشئ حسابك وابدأ التسوق الآن</p>
-    </div>
+<div class="text-center mb-8">
+    <a href="{{ url('/') }}" class="inline-flex flex-col items-center gap-2 group">
+        <div class="flex items-center justify-center group-hover:scale-105 transition-transform">
+            <img src="{{ $logoUrl ?? asset('images/logo.png') }}" 
+                 alt="Logo"
+                 class="h-14 w-auto object-contain"> 
+                 </div>
+    </a>
+    <p class="text-gray-500 text-sm mt-2">أنشئ حسابك وابدأ التسوق الآن</p>
+</div>
 
     <div class="auth-card bg-white rounded-2xl shadow-lg border border-gray-100 p-8"
          x-data="registerForm('{{ old('email') ? 'email' : 'phone' }}')">
@@ -126,7 +125,7 @@
             {{-- ── PHONE section ───────────────────────────────────────── --}}
             <div x-show="method === 'phone'" x-transition>
                 {{-- Country select --}}
-                <div class="mb-4">
+            <div class="mb-4 hidden">
                     @include('components.country-select', [
                         'countries'   => $countries,
                         'name'        => 'country_id',

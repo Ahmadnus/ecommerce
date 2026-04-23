@@ -81,38 +81,50 @@ class ProductController extends Controller
      * Single product detail page.
      */
    public function show(string $slug): View
-    {
-        $product = Product::where('slug', $slug)
-            ->active()
+{
+    $product = Product::where('slug', $slug)
+        ->active()
+        ->with([
+            'categories.parent',
+            'media',                          // ← ADD THIS
+            'variants' => fn($q) => $q->with('attributeValues.attribute')
+                                      ->orderBy('is_active', 'desc')
+                                      ->orderBy('price_override'),
+        ])
+        ->firstOrFail();
+
+    $primaryCategory = $product->categories->first();
+
+    $related = $primaryCategory
+        ? Product::active()
+            ->inCategory($primaryCategory->id)
+            ->where('id', '!=', $product->id)
             ->with([
-                'categories.parent',
-                'variants' => fn($q) => $q->with('attributeValues.attribute')
-                                          ->orderBy('is_active', 'desc')
-                                          ->orderBy('price_override'),
+                'media',                      // ← ADD THIS too
+                'variants' => fn($q) => $q->where('is_active', true),
             ])
-            ->firstOrFail();
- 
-        $primaryCategory = $product->categories->first();
- 
-        $related = $primaryCategory
-            ? Product::active()
-                ->inCategory($primaryCategory->id)
-                ->where('id', '!=', $product->id)
-                ->with(['variants' => fn($q) => $q->where('is_active', true)])
-                ->limit(4)
-                ->get()
-            : collect();
- 
-        $variantAttributes = $product->variants
-            ->flatMap(fn(ProductVariant $v) => $v->attributeValues)
-            ->unique('id')
-            ->groupBy(fn(AttributeValue $av) => $av->attribute->name);
- 
-        return view('products.show', [
-            'product'           => $product,
-            'related'           => $related,
-            'variantAttributes' => $variantAttributes,
-        ]);
-    }
+            ->limit(4)
+            ->get()
+        : collect();
+
+    $variantAttributes = $product->variants
+        ->flatMap(fn(ProductVariant $v) => $v->attributeValues)
+        ->unique('id')
+        ->groupBy(fn(AttributeValue $av) => $av->attribute->name);
+
+    // ← ADD isWishlisted
+    $isWishlisted = auth()->check()
+        ? auth()->user()->wishlistedProducts()
+                        ->where('product_id', $product->id)
+                        ->exists()
+        : false;
+
+    return view('products.show', [
+        'product'           => $product,
+        'related'           => $related,
+        'variantAttributes' => $variantAttributes,
+        'isWishlisted'      => $isWishlisted,   // ← ADD THIS
+    ]);
+}
 
 }

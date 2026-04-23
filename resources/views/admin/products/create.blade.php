@@ -3,533 +3,425 @@
 
 @push('head')
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Cairo:wght@400;600;700;800&display=swap');
-:root {
-    --cc-bg:#0f1117; --cc-surface:#1a1d27; --cc-border:rgba(255,255,255,.07);
-    --cc-text:#e2e8f0; --cc-muted:#64748b; --cc-amber:#f59e0b;
-    --cc-emerald:#10b981; --cc-rose:#f43f5e; --cc-brand:var(--brand-color,#6366f1);
-    --cc-mono:'JetBrains Mono',monospace; --cc-sans:'Cairo',sans-serif;
-}
-body { font-family:var(--cc-sans); }
-.cc-page { background:var(--cc-bg); min-height:100vh; }
-.cc-card { background:var(--cc-surface); border:1px solid var(--cc-border); border-radius:16px; }
-.cc-label { display:block; font-size:11px; font-weight:700; text-transform:uppercase;
-    letter-spacing:.06em; margin-bottom:6px; color:var(--cc-muted); }
-.cc-input {
-    background:rgba(255,255,255,.05); border:1px solid var(--cc-border);
-    border-radius:10px; color:var(--cc-text); padding:10px 14px; font-size:13px;
-    outline:none; transition:border-color .15s, background .15s; width:100%;
-    font-family:var(--cc-sans);
-}
-.cc-input:focus { border-color:var(--cc-brand); background:rgba(255,255,255,.07); }
-.cc-input::placeholder { color:var(--cc-muted); }
-.cc-input.mono { font-family:var(--cc-mono); }
-.cc-input.has-error { border-color:var(--cc-rose); }
-.cc-btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px;
-    border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none;
-    transition:all .15s; font-family:var(--cc-sans); }
-.cc-btn-primary { background:var(--cc-brand); color:#fff; }
-.cc-btn-primary:hover { filter:brightness(1.1); transform:translateY(-1px); }
-.cc-btn-ghost { background:rgba(255,255,255,.06); border:1px solid var(--cc-border); color:var(--cc-text); }
-.cc-btn-ghost:hover { background:rgba(255,255,255,.1); }
-.cc-btn-danger { background:rgba(244,63,94,.12); border:1px solid rgba(244,63,94,.3); color:#f43f5e; }
-.cc-btn-sm { padding:6px 12px; font-size:11.5px; border-radius:8px; }
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+    
+    :root {
+        --bg-deep: #0a0a0a;       /* أسود عميق للخلفية */
+        --card-bg: #e5e7eb;       /* رمادي فاتح جداً لتبرز عليه النصوص السوداء */
+        --text-black: #000000;    /* أسود صريح للخطوط بناءً على طلبك */
+        --text-muted: #333333;    /* أسود خفيف للعناصر الأقل أهمية */
+        --brand-accent: #4f46e5;  /* لون تفاعلي بسيط */
+    }
 
-.section-num {
-    width:26px; height:26px; border-radius:8px;
-    background:rgba(255,255,255,.08); color:var(--cc-text);
-    font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
-}
+    body { 
+        font-family: 'Cairo', sans-serif; 
+        background-color: var(--bg-deep); 
+        color: var(--text-black); /* النص الأساسي أسود */
+        direction: rtl;
+    }
 
-.variant-card {
-    background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.07);
-    border-radius:12px; padding:16px;
-    transition:border-color .15s;
-}
-.variant-card:hover { border-color:rgba(255,255,255,.14); }
-.variant-card .drag-handle { cursor:grab; opacity:.4; }
-.variant-card .drag-handle:hover { opacity:.8; }
+    /* العناوين والخطوط - كلها سوداء صريحة */
+    h1, h2, h3, h4, label, span, p, input, textarea, select {
+        color: var(--text-black) !important;
+        font-weight: 700; /* جعل الخط سميك لزيادة الوضوح */
+    }
 
-/* Attribute value chip toggle */
-.av-check { display:none; }
-.av-chip {
-    display:inline-flex; align-items:center; gap:5px;
-    padding:5px 11px; border-radius:8px; font-size:11.5px; font-weight:600;
-    border:1.5px solid rgba(255,255,255,.1);
-    color:var(--cc-muted); cursor:pointer;
-    transition:all .15s; user-select:none;
-}
-.av-check:checked + .av-chip {
-    border-color:var(--cc-brand); color:var(--cc-text);
-    background:rgba(99,102,241,.15);
-}
-.color-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
+    .cc-card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
 
-/* Preview ring for image --*/
-.img-ring {
-    width:88px; height:88px; border-radius:14px; overflow:hidden;
-    border:2px dashed rgba(255,255,255,.15); background:rgba(255,255,255,.03);
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    transition:border-color .2s;
-}
-.img-ring.has-img { border-style:solid; border-color:var(--cc-brand); }
+    .cc-input {
+        background-color: rgba(255, 255, 255, 0.5);
+        border: 2px solid #000; /* حدود سوداء واضحة */
+        border-radius: 8px;
+        color: var(--text-black) !important;
+        padding: 12px 15px;
+        width: 100%;
+        outline: none;
+    }
 
-/* Category tree --*/
-.cat-radio { display:none; }
-.cat-label {
-    display:flex; align-items:center; gap:10px; padding:10px 14px;
-    cursor:pointer; border-bottom:1px solid rgba(255,255,255,.04);
-    transition:background .12s; font-size:13px; color:var(--cc-text);
-}
-.cat-label:hover { background:rgba(255,255,255,.04); }
-.cat-radio:checked + .cat-label {
-    background:rgba(99,102,241,.1); color:white;
-}
-.cat-check { display:none; }
-.cat-check-label {
-    display:flex; align-items:center; gap:10px; padding:10px 14px;
-    cursor:pointer; border-bottom:1px solid rgba(255,255,255,.04);
-    transition:background .12s; font-size:13px; color:var(--cc-text);
-}
-.cat-check-label:hover { background:rgba(255,255,255,.04); }
-.cat-check:checked + .cat-check-label { color:white; }
-.cat-check:checked + .cat-check-label .cat-radio-indicator {
-    background:var(--cc-brand); border-color:var(--cc-brand);
-}
-.cat-radio-indicator {
-    width:15px; height:15px; border-radius:50%;
-    border:2px solid rgba(255,255,255,.3); flex-shrink:0;
-    transition:all .12s;
-}
+    .cc-input:focus {
+        background-color: #fff;
+        border-color: var(--brand-accent);
+    }
+
+    .cc-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        text-transform: uppercase;
+    }
+
+    .cc-btn-primary {
+        background-color: #000;
+        color: #fff !important; /* الكتابة داخل الزر أبيض ليظهر فوق الأسود */
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-weight: 900;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .cc-btn-primary:hover {
+        background-color: var(--brand-accent);
+        transform: translateY(-2px);
+    }
+
+    /* منطقة الرفع */
+    .upload-zone {
+        border: 3px dashed #000;
+        background-color: rgba(0,0,0,0.05);
+        border-radius: 12px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .section-number {
+        background: #000;
+        color: #fff !important;
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        margin-left: 10px;
+    }
 </style>
 @endpush
 
 @section('admin-content')
-<div class="cc-page p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto" dir="rtl">
+<div class="cc-page p-4 sm:p-10 max-w-7xl mx-auto" dir="rtl">
 
-    {{-- Back --}}
-    <div class="mb-6">
-        <a href="{{ route('admin.products.index') }}"
-           class="flex items-center gap-2 text-sm transition-colors"
-           style="color:var(--cc-muted)">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            العودة
-        </a>
+    {{-- Header --}}
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+        <div>
+            <nav class="flex gap-2 text-xs font-bold mb-3 uppercase tracking-widest text-zinc-600">
+                <a href="{{ route('admin.products.index') }}" class="hover:text-indigo-400 transition-colors">المنتجات</a>
+                <span>/</span>
+                <span class="text-zinc-400">إضافة جديد</span>
+            </nav>
+            <h1 class="text-3xl font-extrabold text-zinc-100tracking-tighter">إنشاء منتج جديد</h1>
+        </div>
+        <button type="submit" form="product-form" class="cc-btn-primary shadow-lg shadow-indigo-500/10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            نشر المنتج في المتجر
+        </button>
     </div>
 
-    <h1 class="text-xl font-black text-white mb-1 flex items-center gap-3">
-        <span class="w-8 h-8 rounded-xl text-sm font-black flex items-center justify-center"
-              style="background:var(--cc-brand)">+</span>
-        إضافة منتج جديد
-    </h1>
-    <p class="text-sm mb-8" style="color:var(--cc-muted)">
-        أنشئ منتجاً أساسياً مع جميع متغيراته دفعة واحدة
-    </p>
-
     @if($errors->any())
-    <div class="mb-6 cc-card p-4 border-rose-500/30">
-        <p class="text-rose-400 text-sm font-bold mb-2">يوجد أخطاء في البيانات:</p>
-        <ul class="space-y-1">
+    <div class="mb-10 p-5 bg-rose-950/30 border border-rose-500/20 rounded-2xl">
+        <h4 class="text-rose-400 font-bold text-sm mb-3 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
+            مراجعة الحقول التالية:
+        </h4>
+        <ul class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1.5">
             @foreach($errors->all() as $e)
-            <li class="text-rose-300 text-xs flex items-center gap-2">
-                <span class="w-1 h-1 rounded-full bg-rose-400 flex-shrink-0"></span>{{ $e }}
+            <li class="text-rose-300/90 text-xs flex items-center gap-2.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>{{ $e }}
             </li>
             @endforeach
         </ul>
     </div>
     @endif
 
-    <form action="{{ route('admin.products.store') }}" method="POST"
-          enctype="multipart/form-data" id="product-form" class="space-y-5">
+    <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" id="product-form">
         @csrf
 
-        {{-- ══ SECTION 1: Basic Info ══════════════════════════════════ --}}
-        <div class="cc-card p-6">
-            <h2 class="text-sm font-bold text-white mb-5 flex items-center gap-2">
-                <span class="section-num">١</span>
-                معلومات المنتج الأساسية
-            </h2>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
+            {{-- Main Form Column --}}
+            <div class="lg:col-span-8 space-y-10">
+                
+                {{-- 01: Information --}}
+                <div class="cc-card p-8 md:p-10">
+                    <div class="flex items-center gap-4 mb-10 pb-4 border-b border-white/[0.03]">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold">01</div>
+                        <h2 class="text-2xl font-bold text-zinc-100">المعلومات الأساسية</h2>
+                    </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-                {{-- Name --}}
-                <div class="sm:col-span-2">
-                    <label class="cc-label">اسم المنتج <span class="text-rose-400">*</span></label>
-                    <input type="text" name="name" value="{{ old('name') }}" required
-                           class="cc-input @error('name') has-error @enderror"
-                           placeholder="مثال: حذاء رياضي Air Max">
-                </div>
-
-                {{-- Base price --}}
-                <div>
-                    <label class="cc-label">السعر الأساسي <span class="text-rose-400">*</span></label>
-                    <input type="number" step="0.01" min="0" name="base_price"
-                           value="{{ old('base_price') }}" required
-                           class="cc-input mono @error('base_price') has-error @enderror"
-                           placeholder="0.00">
-                </div>
-
-                {{-- Discount price --}}
-                <div>
-                    <label class="cc-label">
-                        سعر الخصم
-                        <span class="text-[9px] font-normal" style="color:var(--cc-muted)">(اختياري — أقل من الأساسي)</span>
-                    </label>
-                    <input type="number" step="0.01" min="0" name="discount_price"
-                           value="{{ old('discount_price') }}"
-                           class="cc-input mono @error('discount_price') has-error @enderror"
-                           placeholder="0.00">
-                </div>
-
-                {{-- SKU --}}
-                <div>
-                    <label class="cc-label">SKU المنتج <span class="text-[9px] font-normal">(اختياري)</span></label>
-                    <input type="text" name="sku" value="{{ old('sku') }}"
-                           class="cc-input mono @error('sku') has-error @enderror"
-                           placeholder="PROD-001">
-                </div>
-
-                {{-- Short description --}}
-                <div>
-                    <label class="cc-label">وصف قصير</label>
-                    <input type="text" name="short_description"
-                           value="{{ old('short_description') }}" maxlength="500"
-                           class="cc-input @error('short_description') has-error @enderror"
-                           placeholder="جملة وصفية مختصرة...">
-                </div>
-
-                {{-- Description --}}
-                <div class="sm:col-span-2">
-                    <label class="cc-label">الوصف التفصيلي</label>
-                    <textarea name="description" rows="3"
-                              class="cc-input @error('description') has-error @enderror"
-                              placeholder="وصف كامل للمنتج...">{{ old('description') }}</textarea>
-                </div>
-
-                {{-- Toggles --}}
-                <div class="sm:col-span-2 flex flex-wrap gap-3">
-                    <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-colors"
-                           style="background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07)">
-                        <input type="checkbox" name="is_active" value="1"
-                               {{ old('is_active', '1') ? 'checked' : '' }}
-                               class="w-4 h-4 accent-emerald-500">
-                        <div>
-                            <p class="text-sm font-semibold text-white leading-tight">تفعيل المنتج</p>
-                            <p class="text-[10px]" style="color:var(--cc-muted)">يظهر في المتجر</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="md:col-span-2">
+                            <label class="cc-label">اسم المنتج</label>
+                            <input type="text" name="name" value="{{ old('name') }}" required class="cc-input" placeholder="اسم المنتج الواضح للعملاء">
                         </div>
-                    </label>
-                    <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-colors"
-                           style="background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07)">
-                        <input type="checkbox" name="is_featured" value="1"
-                               {{ old('is_featured') ? 'checked' : '' }}
-                               class="w-4 h-4 accent-amber-400">
+                        
                         <div>
-                            <p class="text-sm font-semibold text-white leading-tight">منتج مميز ⭐</p>
-                            <p class="text-[10px]" style="color:var(--cc-muted)">يظهر في الواجهة</p>
+                            <label class="cc-label">السعر الأساسي ($)</label>
+                            <input type="number" step="0.01" name="base_price" required class="cc-input font-mono text-emerald-400" placeholder="0.00">
                         </div>
-                    </label>
-                </div>
-            </div>
-        </div>
 
-        {{-- ══ SECTION 2: Categories ══════════════════════════════════ --}}
-        <div class="cc-card p-6">
-            <h2 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
-                <span class="section-num">٢</span>
-                التصنيفات <span class="text-rose-400">*</span>
-            </h2>
-            <p class="text-[11px] mb-4" style="color:var(--cc-muted)">
-                اختر تصنيفاً أو أكثر ثم حدد التصنيف الأساسي بواسطة زر الاختيار على اليمين
-            </p>
+                        <div>
+                            <label class="cc-label">سعر الخصم (اختياري)</label>
+                            <input type="number" step="0.01" name="discount_price" class="cc-input font-mono text-zinc-400" placeholder="0.00">
+                        </div>
 
-            <div class="rounded-xl overflow-hidden border" style="border-color:var(--cc-border)">
-                {{-- Header row --}}
-                <div class="grid grid-cols-[1fr_auto] px-4 py-2 text-[10px] font-bold uppercase tracking-widest border-b"
-                     style="color:var(--cc-muted); border-color:var(--cc-border); background:rgba(255,255,255,.02)">
-                    <span>التصنيف</span>
-                    <span>أساسي</span>
-                </div>
-
-                @foreach($categories as $root)
-                {{-- Root --}}
-                <div class="grid grid-cols-[1fr_auto] items-center border-b"
-                     style="border-color:var(--cc-border)">
-                    <label class="cat-check-label ps-4">
-                        <input type="checkbox" name="category_ids[]"
-                               value="{{ $root->id }}"
-                               {{ is_array(old('category_ids')) && in_array($root->id, old('category_ids')) ? 'checked' : '' }}
-                               onchange="syncPrimaryRadios()"
-                               class="cat-check" id="cat-{{ $root->id }}">
-                        <label for="cat-{{ $root->id }}" class="cat-check-label p-0 border-0 bg-transparent flex-1 cursor-pointer">
-                            <div class="cat-radio-indicator"></div>
-                            <span class="font-bold">{{ $root->name }}</span>
-                            <span class="text-[10px] ms-auto mono" style="color:var(--cc-muted)">{{ $root->slug }}</span>
-                        </label>
-                    </label>
-                    <div class="px-4">
-                        <input type="radio" name="primary_category_id" value="{{ $root->id }}"
-                               {{ old('primary_category_id') == $root->id ? 'checked' : '' }}
-                               class="primary-radio w-4 h-4 accent-indigo-400">
+                        <div class="md:col-span-2">
+                            <label class="cc-label">وصف المنتج الكامل</label>
+                            <textarea name="description" rows="6" class="cc-input custom-scroll" placeholder="اكتب هنا تفاصيل ومواصفات المنتج..."></textarea>
+                        </div>
                     </div>
                 </div>
 
-                {{-- Children --}}
-                @foreach($root->allActiveChildren as $sub)
-                <div class="grid grid-cols-[1fr_auto] items-center border-b ps-5"
-                     style="border-color:var(--cc-border); background:rgba(0,0,0,.15)">
-                    <label class="cat-check-label">
-                        <input type="checkbox" name="category_ids[]"
-                               value="{{ $sub->id }}"
-                               {{ is_array(old('category_ids')) && in_array($sub->id, old('category_ids')) ? 'checked' : '' }}
-                               onchange="syncPrimaryRadios()"
-                               class="cat-check" id="cat-{{ $sub->id }}">
-                        <label for="cat-{{ $sub->id }}" class="cat-check-label p-0 border-0 bg-transparent flex-1 cursor-pointer">
-                            <svg class="w-3 h-3 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                            <div class="cat-radio-indicator"></div>
-                            <span>{{ $sub->name }}</span>
-                            <span class="text-[10px] ms-auto mono" style="color:var(--cc-muted)">{{ $sub->slug }}</span>
-                        </label>
-                    </label>
-                    <div class="px-4">
-                        <input type="radio" name="primary_category_id" value="{{ $sub->id }}"
-                               {{ old('primary_category_id') == $sub->id ? 'checked' : '' }}
-                               class="primary-radio w-4 h-4 accent-indigo-400">
+                {{-- 02: Visuals --}}
+                <div class="cc-card p-8 md:p-10">
+                    <div class="flex items-center gap-4 mb-10 pb-4 border-b border-white/[0.03]">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold">02</div>
+                        <h2 class="text-2xl font-bold text-zinc-100">صور المنتج</h2>
+                    </div>
+
+                    <div class="space-y-10">
+                        {{-- Main Upload --}}
+                        <div class="flex flex-col md:flex-row gap-8 items-center p-6 rounded-3xl bg-black/10 border border-white/[0.02]">
+                            <div class="relative">
+                                <div class="w-40 h-40 rounded-3xl overflow-hidden border-2 border-dashed border-zinc-700 bg-black/20 flex items-center justify-center" id="main-preview-container">
+                                    <img id="img-preview" class="w-full h-full object-cover hidden" alt="">
+                                    <div id="img-ph" class="text-center text-zinc-700">
+                                        <svg class="w-12 h-12 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="1.5"/></svg>
+                                        <span class="text-[10px] font-bold uppercase tracking-widest">Cover</span>
+                                    </div>
+                                </div>
+                                <label class="absolute -bottom-2 -left-2 bg-indigo-600 hover:bg-indigo-500 w-11 h-11 rounded-2xl flex items-center justify-center cursor-pointer shadow-xl transition-all active:scale-95">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2.5" stroke-linecap="round"/></svg>
+                                    <input type="file" name="main_image" accept="image/*" onchange="previewMainImg(this)" class="hidden">
+                                </label>
+                            </div>
+                            <div class="flex-1 text-center md:text-right">
+                                <h3 class="text-lg font-bold text-zinc-100 mb-1">صورة الغلاف</h3>
+                                <p class="text-sm text-zinc-500 leading-relaxed max-w-sm">هذه الصورة ستظهر كواجهة للمنتج في صفحات المتجر. اختر صورة واضحة وعالية الجودة.</p>
+                            </div>
+                        </div>
+
+                        {{-- Gallery --}}
+                        <div>
+                            <label class="cc-label">صور إضافية للألبوم (حتى ١٠ صور)</label>
+                            <div class="upload-zone" onclick="document.getElementById('multi-input').click()">
+                                <input type="file" id="multi-input" name="product_images[]" multiple accept="image/*" class="hidden" onchange="handleMultiImages(this)">
+                                <div class="space-y-4">
+                                    <div class="w-16 h-16 bg-white/[0.03] rounded-full flex items-center justify-center mx-auto text-indigo-400">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-zinc-200 font-bold">اسحب الصور هنا أو اضغط للاختيار</p>
+                                        <p class="text-xs text-zinc-600 mt-2">PNG, JPG, WebP (Max 5MB لكل صورة)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="multi-preview" class="grid grid-cols-4 md:grid-cols-6 gap-5 mt-8"></div>
+                        </div>
                     </div>
                 </div>
-                @endforeach
 
-                @endforeach
-            </div>
-        </div>
+                {{-- 03: Inventory & Variants --}}
+                <div class="cc-card p-8 md:p-10">
+                    <div class="flex items-center justify-between mb-10 gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold">03</div>
+                            <h2 class="text-2xl font-bold text-zinc-100">المخزون والمتغيرات</h2>
+                        </div>
+                        <button type="button" onclick="addVariantRow()" class="px-5 py-2.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 text-xs font-bold rounded-xl transition-colors">
+                            + إضافة خيار
+                        </button>
+                    </div>
 
-        {{-- ══ SECTION 3: Image ═══════════════════════════════════════ --}}
-        <div class="cc-card p-6">
-            <h2 class="text-sm font-bold text-white mb-5 flex items-center gap-2">
-                <span class="section-num">٣</span>
-                الصورة الرئيسية
-            </h2>
-            <div class="flex items-center gap-5">
-                <div class="img-ring" id="img-ring">
-                    <img id="img-preview" class="w-full h-full object-cover hidden" alt="">
-                    <svg id="img-ph" class="w-8 h-8" style="color:var(--cc-muted)"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586
-                                 a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6
-                                 a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <input type="file" name="main_image" accept="image/*"
-                           onchange="previewImg(this)"
-                           class="block w-full text-sm file:ml-4 file:py-2 file:px-5
-                                  file:rounded-lg file:border-0 file:text-sm file:font-bold
-                                  file:transition-colors cursor-pointer"
-                           style="color:var(--cc-muted)"
-                           x-file-style>
-                    <p class="text-[10px] mt-2" style="color:var(--cc-muted)">PNG / JPG / WebP — حد 4MB</p>
+                    <div id="variants-container" class="space-y-6"></div>
+
+                    <div id="variants-empty" class="text-center py-20 bg-black/10 border-2 border-dashed border-white/[0.02] rounded-3xl">
+                        <svg class="w-16 h-16 mx-auto mb-5 text-zinc-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke-width="1"/></svg>
+                        <p class="text-zinc-700 text-sm font-medium">اضغط على "إضافة خيار" لتحديد الألوان أو المقاسات المتاحة.</p>
+                    </div>
                 </div>
             </div>
+
+            {{-- Sidebar Column --}}
+            <div class="lg:col-span-4 space-y-10">
+                
+                {{-- Visibility --}}
+                <div class="cc-card p-7">
+                    <h3 class="text-lg font-bold text-zinc-100 mb-7 flex items-center gap-3">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                        النشر والظهور
+                    </h3>
+                    <div class="space-y-5">
+                        <label class="flex items-center justify-between p-4 rounded-2xl bg-black/10 border border-white/[0.02] hover:border-white/[0.05] cursor-pointer transition-colors">
+                            <span class="text-sm font-bold text-zinc-300">تفعيل المنتج للعملاء</span>
+                            <div class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="is_active" value="1" checked class="sr-only peer">
+                                <div class="w-11 h-6 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                            </div>
+                        </label>
+                        <label class="flex items-center justify-between p-4 rounded-2xl bg-black/10 border border-white/[0.02] hover:border-white/[0.05] cursor-pointer transition-colors">
+                            <span class="text-sm font-bold text-zinc-300">تمييز كمنتج مميز ⭐</span>
+                            <div class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="is_featured" value="1" class="sr-only peer">
+                                <div class="w-11 h-6 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {{-- Categories --}}
+                <div class="cc-card p-7">
+                    <h3 class="text-lg font-bold text-zinc-100 mb-7">أقسام المنتج</h3>
+                    <div class="max-h-[550px] overflow-y-auto custom-scroll pr-3 space-y-4">
+                        @foreach($categories as $root)
+                        <div class="p-4 rounded-2xl bg-black/10 border border-white/[0.02]">
+                            <div class="flex items-center gap-3.5">
+                                <input type="checkbox" name="category_ids[]" value="{{ $root->id }}" id="cat-{{ $root->id }}" class="w-5 h-5 rounded-md border-zinc-700 text-indigo-600 focus:ring-offset-0 focus:ring-indigo-600 bg-zinc-900">
+                                <label for="cat-{{ $root->id }}" class="text-sm font-extrabold text-zinc-100 flex-1 cursor-pointer">{{ $root->name }}</label>
+                                <input type="radio" name="primary_category_id" value="{{ $root->id }}" class="w-4 h-4 text-emerald-500 bg-zinc-900 border-zinc-700 focus:ring-offset-0 focus:ring-emerald-500" title="تعيين كأساسي">
+                            </div>
+
+                            @if($root->allActiveChildren->count() > 0)
+                            <div class="mt-4 mr-7 space-y-3.5 border-r border-white/[0.03] pr-4">
+                                @foreach($root->allActiveChildren as $sub)
+                                <div class="flex items-center gap-3 group">
+                                    <input type="checkbox" name="category_ids[]" value="{{ $sub->id }}" id="cat-{{ $sub->id }}" class="w-4 h-4 rounded border-zinc-700 text-indigo-500 bg-zinc-900">
+                                    <label for="cat-{{ $sub->id }}" class="text-xs font-bold text-zinc-500 group-hover:text-zinc-300 cursor-pointer flex-1 transition-colors">{{ $sub->name }}</label>
+                                    <input type="radio" name="primary_category_id" value="{{ $sub->id }}" class="w-3 h-3 text-emerald-500 bg-zinc-900 border-zinc-700 focus:ring-offset-0 focus:ring-emerald-500">
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Information Box --}}
+                <div class="p-6 rounded-3xl bg-indigo-950/20 border border-indigo-500/10">
+                    <div class="flex gap-4">
+                        <svg class="w-6 h-6 text-indigo-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <p class="text-xs text-indigo-300/90 leading-relaxed">
+                            في حال وجود متغيرات، تأكد من ضبط الكميات بدقة لكل متغير. سيتم استخدام "السعر الأساسي" كافتراضي إذا لم يتم تحديد سعر خاص للمتغير.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
+    </form>
+</div>
 
-        {{-- ══ SECTION 4: Variants ════════════════════════════════════ --}}
-        <div class="cc-card p-6">
-            <div class="flex items-center justify-between mb-2">
-                <h2 class="text-sm font-bold text-white flex items-center gap-2">
-                    <span class="section-num">٤</span>
-                    المتغيرات (Variants)
-                    <span class="text-[10px] font-normal" style="color:var(--cc-muted)">
-                        — كل متغير هو وحدة مستقلة في المخزن
-                    </span>
-                </h2>
-                <button type="button" onclick="addVariantRow()" class="cc-btn cc-btn-primary cc-btn-sm">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    إضافة متغير
-                </button>
-            </div>
-
-            {{-- Pricing priority reminder --}}
-            <div class="flex items-center gap-2 text-[10px] mb-5 flex-wrap"
-                 style="color:var(--cc-muted)">
-                <span>السعر الفعّال:</span>
-                <span class="px-2 py-0.5 rounded" style="background:rgba(245,158,11,.1);color:#f59e0b">تجاوز المتغير</span>
-                <span>›</span>
-                <span class="px-2 py-0.5 rounded" style="background:rgba(244,63,94,.1);color:#f43f5e">خصم المنتج</span>
-                <span>›</span>
-                <span>السعر الأساسي</span>
-            </div>
-
-           
-            <script>
+<script>
+    // الحفاظ على كافة البراميتارز البرمجية دون تغيير
     window.ATTRIBUTES = {!! json_encode($attributes->map(fn($a) => [
         'id'     => $a->id,
         'name'   => $a->name,
         'type'   => $a->type,
         'values' => $a->values->map(fn($v) => [
             'id'        => $v->id,
-            'value'     => $v->value ?? $v->label,
             'label'     => $v->label ?? $v->value,
             'color_hex' => $v->color_hex,
-        ])->toArray(), // تحويل القيم لمصفوفة
-    ])->toArray()) !!}; // تحويل الخصائص لمصفوفة
-
+        ])
+    ])) !!};
     window.variantIndex = 0;
-</script>
 
-            <div id="variants-container" class="space-y-3">
-                {{-- Populated by JS --}}
-            </div>
+    function previewMainImg(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('img-preview').src = e.target.result;
+                document.getElementById('img-preview').classList.remove('hidden');
+                document.getElementById('img-ph').classList.add('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
-            {{-- Empty state --}}
-            <div id="variants-empty"
-                 class="text-center py-10 rounded-xl border border-dashed"
-                 style="border-color:rgba(255,255,255,.08); color:var(--cc-muted)">
-                <svg class="w-10 h-10 mx-auto mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                </svg>
-                اضغط "إضافة متغير" — كل متغير يمثل تركيبة لون/مقاس في المستودع
-            </div>
-        </div>
-
-        {{-- Submit --}}
-        <div class="flex justify-end gap-3 pb-8">
-            <a href="{{ route('admin.products.index') }}" class="cc-btn cc-btn-ghost">إلغاء</a>
-            <button type="submit" class="cc-btn cc-btn-primary px-10">
-                حفظ المنتج
-            </button>
-        </div>
-
-    </form>
-</div>
-@endsection
-
-
-<script>
-// 1. تأكد من تهيئة المتغيرات الأساسية أولاً
-window.variantIndex = window.variantIndex || 0;
-window.ATTRIBUTES = window.ATTRIBUTES || [];
-
-function buildVariantRowHTML(i, prefill = {}) {
-    // فلتر أمان لضمان أن attrs هي مصفوفة دائماً
-    const attrs = window.ATTRIBUTES || [];
-    let attrHTML = '';
-
-    attrs.forEach(attr => {
-        // تحويل القيم المختارة مسبقاً لمصفوفة نصوص للمقارنة
-        const selected = (prefill.attribute_values || []).map(val => String(val.id || val));
-        let valsHTML = '';
-
-        if (attr.type === 'color') {
-            attr.values.forEach(v => {
-                const chk = selected.includes(String(v.id)) ? 'checked' : '';
-                valsHTML += `
-                    <label class="cursor-pointer" title="${v.label || v.value}">
-                        <input type="checkbox" name="variants[${i}][attribute_values][]"
-                               value="${v.id}" ${chk} class="sr-only peer">
-                        <span class="inline-flex w-8 h-8 rounded-full border-2 border-transparent
-                                     peer-checked:border-indigo-400 peer-checked:scale-110
-                                     hover:scale-105 transition-all"
-                              style="background:${v.color_hex || '#888'}"></span>
-                    </label>`;
-            });
-        } else {
-            attr.values.forEach(v => {
-                const chk = selected.includes(String(v.id)) ? 'checked' : '';
-                valsHTML += `
-                    <label class="cursor-pointer">
-                        <input type="checkbox" name="variants[${i}][attribute_values][]"
-                               value="${v.id}" ${chk} class="sr-only peer">
-                        <span class="inline-block px-3 py-1.5 text-xs font-semibold rounded-lg
-                                     border border-white/10 bg-white/5 text-zinc-400
-                                     peer-checked:bg-indigo-500/20 peer-checked:border-indigo-400/60
-                                     peer-checked:text-white transition-all select-none">
-                            ${v.label || v.value}
-                        </span>
-                    </label>`;
+    function handleMultiImages(input) {
+        const container = document.getElementById('multi-preview');
+        container.innerHTML = ''; 
+        if (input.files) {
+            Array.from(input.files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const html = `
+                        <div class="preview-item aspect-ratio-1 rounded-2xl overflow-hidden border border-white/5 relative group animation-slideIn">
+                            <img src="${e.target.result}" class="w-full h-full object-cover">
+                            <div class="remove-img absolute top-2 right-2 bg-rose-600/80 text-white rounded-lg p-1.5 cursor-pointer opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100" onclick="this.parentElement.remove()">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round"/></svg>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', html);
+                }
+                reader.readAsDataURL(file);
             });
         }
+    }
 
-        attrHTML += `
-            <div>
-                <p class="text-[10px] font-bold uppercase tracking-widest mb-2"
-                   style="color:rgba(255,255,255,0.4)">${attr.name}</p>
-                <div class="flex flex-wrap gap-2">${valsHTML}</div>
-            </div>`;
-    });
+    function addVariantRow() {
+        const container = document.getElementById('variants-container');
+        const emptyState = document.getElementById('variants-empty');
+        if (emptyState) emptyState.style.display = 'none';
 
-    return `
-    <div class="variant-card bg-zinc-900/50 border border-white/5 p-5 rounded-2xl mb-4 relative" data-idx="${i}">
-        <div class="flex items-center justify-between mb-4">
-            <span class="text-xs font-bold text-zinc-500 flex items-center gap-2">
-                <span class="drag-handle cursor-move opacity-30 hover:opacity-100">⠿</span>
-                متغير #${i + 1}
-            </span>
-            <button type="button" onclick="removeVariantRow(this)"
-                    class="text-zinc-500 hover:text-rose-400 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
+        const i = window.variantIndex++;
+        const row = document.createElement('div');
+        row.className = "variant-card p-6 rounded-2xl bg-black/10 border border-white/[0.02] relative hover:border-indigo-500/20 transition-all";
+        row.innerHTML = buildVariantRowHTML(i);
+        container.appendChild(row);
+    }
 
-        ${attrs.length > 0 ? `
-        <div class="grid grid-cols-1 gap-6 mb-6">
-            ${attrHTML}
-        </div>` : ''}
+    function buildVariantRowHTML(i) {
+        let attrHTML = '';
+        window.ATTRIBUTES.forEach(attr => {
+            let options = '';
+            attr.values.forEach(v => {
+                const isColor = attr.type === 'color';
+                options += `
+                    <label class="cursor-pointer group">
+                        <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" class="sr-only peer">
+                        <span class="${isColor ? 'w-9 h-9 rounded-full block border-2 border-zinc-800 peer-checked:border-zinc-200 peer-checked:scale-105 shadow-xl' : 'px-5 py-2 bg-zinc-800 rounded-xl text-xs font-bold text-zinc-400 peer-checked:bg-indigo-600 peer-checked:text-zinc-50 group-hover:bg-zinc-700'} transition-all flex items-center justify-center text-center" 
+                              style="${isColor ? 'background-color:' + v.color_hex : ''}" title="${v.label}">
+                              ${isColor ? '' : v.label}
+                        </span>
+                    </label>
+                `;
+            });
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-white/5 pt-5">
-            <div>
-                <label class="block text-[10px] font-bold text-zinc-500 uppercase mb-2">الكمية</label>
-                <input type="number" name="variants[${i}][stock_quantity]"
-                       value="${prefill.stock_quantity ?? 0}"
-                       min="0" required class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none transition-all">
+            attrHTML += `
+                <div class="mb-7 last:mb-0">
+                    <p class="text-[10px] font-black text-zinc-600 mb-3.5 uppercase tracking-widest">${attr.name}</p>
+                    <div class="flex flex-wrap gap-3">${options}</div>
+                </div>
+            `;
+        });
+
+        return `
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-white/[0.03]">
+                <div class="flex items-center gap-3.5">
+                    <span class="w-9 h-9 rounded-xl bg-black/20 text-indigo-400 flex items-center justify-center text-sm font-black mono border border-white/5">#${i + 1}</span>
+                    <h4 class="text-base font-bold text-zinc-200">تخصيص خيارات المتغير</h4>
+                </div>
+                <button type="button" onclick="this.closest('.variant-card').remove()" class="text-zinc-600 hover:text-rose-500 transition-colors p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
             </div>
-            <div>
-                <label class="block text-[10px] font-bold text-zinc-500 uppercase mb-2">تجاوز السعر</label>
-                <input type="number" step="0.01" name="variants[${i}][price_override]"
-                       value="${prefill.price_override ?? ''}"
-                       placeholder="سعر افتراضي"
-                       class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none transition-all">
+            <div class="p-5 bg-black/20 rounded-xl mb-7 border border-white/[0.02]">
+                ${attrHTML}
             </div>
-            <div>
-                <label class="block text-[10px] font-bold text-zinc-500 uppercase mb-2">SKU</label>
-                <input type="text" name="variants[${i}][sku]"
-                       value="${prefill.sku ?? ''}"
-                       placeholder="تلقائي"
-                       class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:border-indigo-500 outline-none transition-all">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div>
+                    <label class="cc-label">الكمية في المخزن</label>
+                    <input type="number" name="variants[${i}][stock_quantity]" value="0" class="cc-input py-3 text-sm">
+                </div>
+                <div>
+                    <label class="cc-label">سعر المتغير (اختياري)</label>
+                    <input type="number" step="0.01" name="variants[${i}][price_override]" class="cc-input py-3 text-sm" placeholder="يجاوز السعر الأساسي">
+                </div>
+                <div>
+                    <label class="cc-label">رمز SKU الخاص</label>
+                    <input type="text" name="variants[${i}][sku]" class="cc-input py-3 text-sm font-mono text-zinc-500" placeholder="يترك للتوليد التلقائي">
+                </div>
             </div>
-        </div>
-    </div>`;
-}
-
-function addVariantRow(prefill = {}) {
-    const container = document.getElementById('variants-container');
-    if (!container) return; // حماية لو العنصر مش موجود
-
-    const i = window.variantIndex++;
-    const empty = document.getElementById('variants-empty');
-
-    if (empty) empty.style.display = 'none';
-
-    const el = document.createElement('div');
-    el.innerHTML = buildVariantRowHTML(i, prefill);
-    const row = el.firstElementChild;
-
-    row.style.opacity = '0';
-    row.style.transform = 'translateY(10px)';
-    container.appendChild(row);
-
-    requestAnimationFrame(() => {
-        row.style.transition = 'all .3s ease-out';
-        row.style.opacity = '1';
-        row.style.transform = 'translateY(0)';
-    });
-}
+        `;
+    }
 </script>
+@endsection

@@ -314,7 +314,7 @@ body { font-family: var(--cc-sans); }
                 default                   => ['label' => 'متوفر', 'cls' => 'badge-ok'],
             };
 
-            $imgUrl = $product->getFirstMediaUrl('products')
+            $imgUrl = $product->getFirstMediaUrl('main')
                 ?: ($product->image_url ?? null);
         @endphp
 

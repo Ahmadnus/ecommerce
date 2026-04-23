@@ -82,7 +82,7 @@
                     <tr class="text-gray-400 text-xs font-bold uppercase tracking-tighter border-b border-gray-50">
                         <th class="px-8 py-5">المنتج</th>
                         <th class="px-8 py-5">التصنيف</th>
-                        <th class="px-8 py-5 text-left">السعر</th>
+                      
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -105,9 +105,7 @@
                                 {{ $p->category->first()->name ?? 'عام' }}
                             </span>
                         </td>
-                        <td class="px-8 py-5 text-left font-black text-gray-900 text-lg">
-                            <span class="text-xs font-medium text-gray-400 ml-1">ر.س</span>{{ number_format($p->price, 2) }}
-                        </td>
+                        
                     </tr>
                     @empty
                     <tr>

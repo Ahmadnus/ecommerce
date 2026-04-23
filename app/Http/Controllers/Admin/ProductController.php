@@ -81,73 +81,80 @@ class ProductController extends Controller
     // ─── Store ────────────────────────────────────────────────────────────────
     // CHANGED: accepts `product_images[]` (multiple) instead of `main_image` (single)
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name'                          => 'required|string|max:255',
-            'base_price'                    => 'required|numeric|min:0',
-            'discount_price'                => 'nullable|numeric|min:0|lt:base_price',
-            'description'                   => 'nullable|string',
-            'short_description'             => 'nullable|string|max:500',
-            'sku'                           => 'nullable|unique:products,sku',
-            'category_ids'                  => 'required|array|min:1',
-            'category_ids.*'                => 'exists:categories,id',
-            'primary_category_id'           => 'required|exists:categories,id',
+  public function store(Request $request)
+{
+    $request->validate([
+        'name'                => 'required|string|max:255',
+        'base_price'          => 'required|numeric|min:0',
+        'discount_price'      => 'nullable|numeric|min:0|lt:base_price',
+        'description'         => 'nullable|string',
+        'short_description'   => 'nullable|string|max:500',
+        'sku'                 => 'nullable|unique:products,sku',
+        'category_ids'        => 'required|array|min:1',
+        'category_ids.*'      => 'exists:categories,id',
+        'primary_category_id' => 'required|exists:categories,id',
 
-            // ── MULTI-IMAGE UPLOAD ─────────────────────────────────────────
-            'product_images'                => 'nullable|array|max:10',
-            'product_images.*'              => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
-            // ──────────────────────────────────────────────────────────────
+        // ── الصورة الأساسية (Collection: main) ──
+        'main_image'          => 'required|image|mimes:jpeg,png,jpg,webp,avif|max:5120',
 
-            'variants'                      => 'required|array|min:1',
-            'variants.*.stock_quantity'     => 'required|integer|min:0',
-            'variants.*.price_override'     => 'nullable|numeric|min:0',
-            'variants.*.sku'                => 'nullable|string|max:100',
-            'variants.*.attribute_values'   => 'nullable|array',
-            'variants.*.attribute_values.*' => 'exists:attribute_values,id',
+        // ── صور المعرض (Collection: product) ──
+        'product_images'      => 'nullable|array|max:10',
+        'product_images.*'    => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
+
+        'variants'                     => 'required|array|min:1',
+        'variants.*.stock_quantity'    => 'required|integer|min:0',
+        'variants.*.price_override'    => 'nullable|numeric|min:0',
+        'variants.*.sku'               => 'nullable|string|max:100',
+        'variants.*.attribute_values'  => 'nullable|array',
+        'variants.*.attribute_values.*'=> 'exists:attribute_values,id',
+    ]);
+
+    DB::transaction(function () use ($request) {
+        $product = Product::create([
+            'name'              => $request->name,
+            'slug'              => $this->uniqueSlug($request->name),
+            'description'       => $request->description,
+            'short_description' => $request->short_description,
+            'base_price'        => $request->base_price,
+            'discount_price'    => $request->discount_price,
+            'sku'               => $request->sku,
+            'status'            => $request->boolean('is_active', true) ? 'active' : 'draft',
+            'is_featured'       => $request->boolean('is_featured'),
         ]);
 
-        DB::transaction(function () use ($request) {
-            $product = Product::create([
-                'name'              => $request->name,
-                'slug'              => $this->uniqueSlug($request->name),
-                'description'       => $request->description,
-                'short_description' => $request->short_description,
-                'base_price'        => $request->base_price,
-                'discount_price'    => $request->discount_price,
-                'sku'               => $request->sku,
-                'status'            => $request->boolean('is_active', true) ? 'active' : 'draft',
-                'is_featured'       => $request->boolean('is_featured'),
-            ]);
+        // ربط الأقسام
+        $pivot = [];
+        foreach ($request->category_ids as $catId) {
+            $pivot[(int) $catId] = [
+                'is_primary' => (int) $catId === (int) $request->primary_category_id,
+            ];
+        }
+        $product->categories()->attach($pivot);
 
-            // Categories
-            $pivot = [];
-            foreach ($request->category_ids as $catId) {
-                $pivot[(int) $catId] = [
-                    'is_primary' => (int) $catId === (int) $request->primary_category_id,
-                ];
+        // ── 1. رفع الصورة الأساسية (Main Collection) ──
+        if ($request->hasFile('main_image')) {
+            $product->addMedia($request->file('main_image'))
+                    ->toMediaCollection('main');
+        }
+
+        // ── 2. رفع صور المنتج الإضافية (Product Collection) ──
+        if ($request->hasFile('product_images')) {
+            foreach ($request->file('product_images') as $index => $image) {
+                $product->addMedia($image)
+                        ->withCustomProperties(['order' => $index])
+                        ->toMediaCollection('products'); 
             }
-            $product->categories()->attach($pivot);
+        }
 
-            // ── Multi-image upload ─────────────────────────────────────────
-            if ($request->hasFile('product_images')) {
-                foreach ($request->file('product_images') as $index => $image) {
-                    $product->addMedia($image)
-                            ->withCustomProperties(['order' => $index])
-                            ->toMediaCollection('products');
-                }
-            }
-            // ──────────────────────────────────────────────────────────────
+        // إضافة المتغيرات (Variants)
+        foreach ($request->variants as $variantData) {
+            $this->createVariant($product, $variantData);
+        }
+    });
 
-            // Variants
-            foreach ($request->variants as $variantData) {
-                $this->createVariant($product, $variantData);
-            }
-        });
-
-        return redirect()->route('admin.products.index')
-                         ->with('success', 'تم إضافة المنتج بنجاح');
-    }
+    return redirect()->route('admin.products.index')
+                     ->with('success', 'تم إضافة المنتج بنجاح مع الصور');
+}
 
     // ─── Show ─────────────────────────────────────────────────────────────────
 
@@ -269,7 +276,7 @@ class ProductController extends Controller
             // ──────────────────────────────────────────────────────────────
 
             // Variants: delete all + recreate
-            $product->variants()->delete();
+        $product->variants()->forceDelete();
             foreach ($request->variants as $variantData) {
                 $this->createVariant($product, $variantData);
             }
