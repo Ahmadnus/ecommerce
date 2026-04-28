@@ -167,6 +167,8 @@ class SmsService
 
     public function testConnection(string $testPhone): array
     {
-        return $this->send($testPhone, 'اختبار الخدمة من لوحة التحكم — JbuyApp');
+        return $this->send($testPhone, 'اختبار الخدمة من لوحة التحكم     — JbuyApp');
     }
+
+
 }
