@@ -84,7 +84,7 @@
     };
 </script>
 
-<div class="min-h-screen bg-[#f7f6f3]" dir="rtl">
+<div class="min-h-screen" dir="rtl" style="background-color: var(--bg-color);">
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
 
     {{-- Breadcrumb --}}

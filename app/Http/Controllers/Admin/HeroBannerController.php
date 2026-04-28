@@ -15,33 +15,69 @@ class HeroBannerController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'image' => 'required|image|max:2048',
-        ]);
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'image' => 'nullable|image|max:2048',
+        'background_color' => 'nullable|string|max:20',
+        'text_color' => 'nullable|string|max:20',
+    ]);
 
-        $banner = HeroBanner::create($request->all());
+    $banner = HeroBanner::create([
+        'title' => $request->title,
+        'subtitle' => $request->subtitle,
+        'badge' => $request->badge,
+        'description' => $request->description,
+        'button_text' => $request->button_text ?? 'اكتشف الآن',
+        'button_url' => $request->button_url,
+        'sort_order' => $request->sort_order ?? 0,
+        'is_active' => true,
+        'position' => $request->position,
 
-        if ($request->hasFile('image')) {
-            $banner->addMediaFromRequest('image')->toMediaCollection('banner_image');
-        }
+        'background_color' => $request->background_color,
+        'text_color' => $request->text_color ,
+    ]);
 
-        return back()->with('success', 'تم إضافة البانر بنجاح');
+ if ($request->filled('image')) {
+    $banner->addMediaFromRequest('image')->toMediaCollection('banner_image');
+}
+
+    return back()->with('success', 'تم إضافة البانر بنجاح');
+}
+
+ public function update(Request $request, HeroBanner $heroBanner)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'background_color' => 'nullable|string|max:20',
+        'text_color' => 'nullable|string|max:20',
+    ]);
+
+    $heroBanner->update([
+        'title' => $request->title,
+        'subtitle' => $request->subtitle,
+        'badge' => $request->badge,
+        'description' => $request->description,
+
+        // ✅ الحل هون
+        'button_text' => $request->button_text ?? 'اكتشف الآن',
+        'button_url' => $request->button_url,
+
+        'sort_order' => $request->sort_order ?? 0,
+        'position' => $request->position ?? $heroBanner->position,
+
+        'is_active' => $request->has('is_active'),
+
+        'background_color' => $request->background_color ?? '#0ea5e9',
+        'text_color' => $request->text_color ?? '#ffffff',
+    ]);
+
+    if ($request->hasFile('image')) {
+        $heroBanner->addMediaFromRequest('image')->toMediaCollection('banner_image');
     }
 
-    public function update(Request $request, HeroBanner $heroBanner)
-    {
-        $heroBanner->update($request->all());
-
-        if ($request->hasFile('image')) {
-            $heroBanner->addMediaFromRequest('image')->toMediaCollection('banner_image');
-        }
-
-        return back()->with('success', 'تم التحديث بنجاح');
-    }
-
-    // حذف البانر مع صورته
+    return back()->with('success', 'تم التحديث بنجاح');
+}  // حذف البانر مع صورته
     public function destroy(HeroBanner $heroBanner)
     {
         // Spatie ستقوم تلقائياً بحذف الملفات من القرص عند حذف الموديل

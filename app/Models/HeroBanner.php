@@ -15,11 +15,19 @@ class HeroBanner extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
-    protected $fillable = [
-        'badge', 'title', 'subtitle', 'description', 
-        'button_text', 'button_url', 'sort_order', 'is_active'
-    ];
-
+   protected $fillable = [
+    'badge',
+    'title',
+    'subtitle',
+    'description',
+    'button_text',
+    'button_url',
+    'sort_order',
+    'is_active',
+    'background_color',
+    'text_color',
+    'position',
+];
     // تعريف الـ Collection للصور
     public function registerMediaCollections(): void
     {

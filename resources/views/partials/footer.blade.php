@@ -9,31 +9,36 @@
             </div>
 
             {{-- روابط ديناميكية للسوشيال ميديا --}}
-            <div>
-                <h4 class="text-white font-semibold text-sm mb-4 uppercase">تابعنا</h4>
-                <div class="flex flex-wrap gap-4">
-                    @php
-                        $socialLinks = \App\Models\SocialLink::where('is_active', true)->orderBy('sort_order')->get();
-                    @endphp
+           <div>
+    <div class="flex flex-col gap-3">
+        @php
+            $socialLinks = \App\Models\SocialLink::where('is_active', true)->orderBy('sort_order')->get();
+        @endphp
 
-                    @foreach($socialLinks as $slink)
-                        <a href="{{ $slink->url }}" target="_blank" class="flex items-center gap-2 hover:text-white transition-all group" title="{{ $slink->platform_name }}">
-                            <span class="w-8 h-8 rounded-full bg-white bg-opacity-5 flex items-center justify-center group-hover:scale-110 transition-transform" style="color: var(--brand-color)">
-                                @if($slink->icon_svg)
-                                    {!! $slink->icon_svg !!}
-                                @else
-                                    <span class="text-[10px] font-bold">{{ substr($slink->platform_name, 0, 1) }}</span>
-                                @endif
-                            </span>
-                            <span class="text-sm">{{ $slink->platform_name }}</span>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
+        @foreach($socialLinks as $slink)
+            <a href="{{ $slink->url }}" target="_blank"
+               class="flex items-center gap-3 hover:text-white transition-all group"
+               title="{{ $slink->platform_name }}">
+
+                <span class="w-8 h-8 rounded-full bg-white bg-opacity-5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    @if($slink->icon_svg)
+                        {!! $slink->icon_svg !!}
+                    @else
+                        <span class="text-[10px] font-bold">
+                            {{ substr($slink->platform_name, 0, 1) }}
+                        </span>
+                    @endif
+                </span>
+
+                <span class="text-sm">{{ $slink->platform_name }}</span>
+            </a>
+        @endforeach
+    </div>
+</div>
 
             {{-- قسم المساعدة (يمكنك تركه كما هو أو جعله ديناميكياً لاحقاً) --}}
             <div>
-                <h4 class="text-white font-semibold text-sm mb-4 uppercase">المساعدة</h4>
+             
                 <ul class="space-y-2 text-sm">
                     @foreach(\App\Models\Page::active()->ordered()->get() as $fp)
                         <li><a href="{{ route('pages.show', $fp->slug) }}" class="hover:text-white transition-colors">{{ $fp->name }}</a></li>
@@ -43,7 +48,7 @@
 
             {{-- النشرة البريدية --}}
             <div>
-                <h4 class="text-white font-semibold text-sm mb-4 uppercase">اشترك معنا</h4>
+               
                 <form class="flex gap-2">
                     <input type="email" placeholder="بريدك..." class="flex-1 bg-white bg-opacity-5 border border-white border-opacity-10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none">
                     <button class="px-4 py-2 rounded-lg text-white text-sm font-bold" style="background-color: var(--brand-color)">انضمام</button>
@@ -52,5 +57,8 @@
 <div
 style="height: 30px;"></div>
         </div>
+        <div class="mt-10 border-t border-white border-opacity-5 pt-6 text-center text-xs text-gray-500">
+    © {{ date('Y') }} جلجام. جميع الحقوق محفوظة.
+</div>
     </div>
 </footer>

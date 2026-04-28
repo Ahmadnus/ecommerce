@@ -18,7 +18,9 @@
     @if($errors->any())
     <div class="mb-6 p-4 bg-red-50 border-r-4 border-red-500 text-red-700 rounded-xl text-sm">
         <ul class="list-disc list-inside space-y-1">
-            @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
         </ul>
     </div>
     @endif
@@ -29,7 +31,7 @@
 
         <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
 
-            {{-- ── Image upload — circular preview ──────────────────── --}}
+            {{-- Image upload --}}
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-3">
                     صورة التصنيف
@@ -37,7 +39,6 @@
                 </label>
 
                 <div class="flex items-center gap-6">
-                    {{-- Circular preview --}}
                     <div class="relative flex-shrink-0">
                         <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-dashed
                                     border-gray-200 bg-gray-50 flex items-center justify-center"
@@ -115,7 +116,6 @@
                     @foreach($parentOptions->where('depth', 0) as $root)
                     <div class="border-b border-gray-100 last:border-0">
                         <label class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white transition">
-                            {{-- Circular thumbnail in parent selector --}}
                             <div class="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 bg-gray-100">
                                 <img src="{{ $root->getCategoryImageUrl('thumb') }}"
                                      class="w-full h-full object-cover" alt="">
@@ -177,6 +177,55 @@
                 </div>
             </label>
 
+            {{-- Category Banner --}}
+            <div class="border-t border-gray-100 pt-6 mt-2">
+                <h3 class="text-sm font-bold text-gray-700 mb-1 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    بانر صفحة التصنيف
+                </h3>
+                <p class="text-xs text-gray-400 mb-4">
+                    يظهر كصورة كاملة العرض أعلى صفحة التصنيف — لا يوجد نص أو أزرار.
+                </p>
+
+                <div class="space-y-3">
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">
+                            صورة البانر
+                            <span class="text-gray-400 font-normal">(1400 × 400 px مثالي)</span>
+                        </label>
+
+                        <div id="banner-preview-wrap"
+                             class="hidden mb-2 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                            <img id="banner-preview" src="" alt="معاينة البانر"
+                                 class="w-full h-32 object-cover">
+                        </div>
+
+                        <input type="file" name="banner_image" id="banner-image-input"
+                               accept="image/jpeg,image/png,image/webp,image/gif"
+                               class="block w-full text-sm text-gray-500
+                                      file:ml-4 file:py-2 file:px-5 file:rounded-xl
+                                      file:border-0 file:bg-brand/10 file:text-brand file:font-bold
+                                      hover:file:bg-brand/20 transition cursor-pointer">
+                    </div>
+
+                    <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-xl
+                                   bg-gray-50 hover:bg-white transition cursor-pointer">
+                        <input type="checkbox" name="banner_is_active" value="1"
+                               {{ old('banner_is_active') ? 'checked' : '' }}
+                               class="w-5 h-5 text-brand border-gray-300 rounded focus:ring-brand">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">تفعيل البانر</p>
+                            <p class="text-xs text-gray-400">سيظهر أعلى صفحة هذا التصنيف عند التفعيل</p>
+                        </div>
+                    </label>
+
+                </div>
+            </div>
+
         </div>
 
         <div class="flex justify-end gap-3">
@@ -219,11 +268,23 @@ function previewImg(input) {
         prev.src = e.target.result;
         prev.classList.remove('hidden');
         ph.classList.add('hidden');
-        // Give the ring a brand colour while image is selected
         document.getElementById('preview-ring')
             .classList.replace('border-dashed', 'border-solid');
     };
     reader.readAsDataURL(input.files[0]);
 }
+
+document.getElementById('banner-image-input')
+    .addEventListener('change', function () {
+        if (!this.files?.[0]) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const wrap = document.getElementById('banner-preview-wrap');
+            const img  = document.getElementById('banner-preview');
+            img.src = e.target.result;
+            wrap.classList.remove('hidden');
+        };
+        reader.readAsDataURL(this.files[0]);
+    });
 </script>
 @endpush

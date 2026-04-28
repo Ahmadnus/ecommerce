@@ -5,57 +5,118 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Cairo:wght@400;600;700;800&display=swap');
 :root {
-    --cc-bg:#0f1117; --cc-surface:#1a1d27; --cc-border:rgba(255,255,255,.07);
-    --cc-text:#e2e8f0; --cc-muted:#64748b; --cc-amber:#f59e0b;
-    --cc-emerald:#10b981; --cc-rose:#f43f5e; --cc-brand:var(--brand-color,#6366f1);
-    --cc-mono:'JetBrains Mono',monospace; --cc-sans:'Cairo',sans-serif;
+    --cc-bg:#ffffff;
+    --cc-surface:#ffffff;
+    --cc-border:#e5e7eb;
+    --cc-border-strong:#d1d5db;
+    --cc-text:#000000;
+    --cc-muted:#6b7280;
+    --cc-amber:#d97706;
+    --cc-emerald:#059669;
+    --cc-rose:#dc2626;
+    --cc-brand:var(--brand-color, #000000);
+    --cc-mono:'JetBrains Mono',monospace;
+    --cc-sans:'Cairo',sans-serif;
 }
-body { font-family:var(--cc-sans); }
-.cc-page { background:var(--cc-bg); min-height:100vh; }
-.cc-card { background:var(--cc-surface); border:1px solid var(--cc-border); border-radius:16px; }
-.cc-label { display:block; font-size:11px; font-weight:700; text-transform:uppercase;
-    letter-spacing:.06em; margin-bottom:6px; color:var(--cc-muted); }
+body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
+.cc-page { background:#ffffff; min-height:100vh; }
+.cc-card {
+    background:#ffffff;
+    border:1px solid var(--cc-border);
+    border-radius:12px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.06);
+}
+.cc-label {
+    display:block;
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-bottom:6px;
+    color:#374151;
+}
 .cc-input {
-    background:rgba(255,255,255,.05); border:1px solid var(--cc-border);
-    border-radius:10px; color:var(--cc-text); padding:10px 14px; font-size:13px;
-    outline:none; transition:border-color .15s, background .15s; width:100%;
+    background:#ffffff;
+    border:1px solid #d1d5db;
+    border-radius:8px;
+    color:#000000;
+    padding:10px 14px;
+    font-size:13px;
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+    width:100%;
     font-family:var(--cc-sans);
 }
-.cc-input:focus { border-color:var(--cc-brand); background:rgba(255,255,255,.07); }
-.cc-input::placeholder { color:var(--cc-muted); }
+.cc-input:focus {
+    border-color:#000000;
+    box-shadow:0 0 0 3px rgba(0,0,0,0.06);
+}
+.cc-input::placeholder { color:#9ca3af; }
 .cc-input.mono { font-family:var(--cc-mono); }
 .cc-input.has-error { border-color:var(--cc-rose); }
-.cc-btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px;
-    border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none;
-    transition:all .15s; font-family:var(--cc-sans); }
-.cc-btn-primary { background:var(--cc-brand); color:#fff; }
-.cc-btn-primary:hover { filter:brightness(1.1); }
-.cc-btn-ghost { background:rgba(255,255,255,.06); border:1px solid var(--cc-border); color:var(--cc-text); }
-.cc-btn-ghost:hover { background:rgba(255,255,255,.1); }
-.cc-btn-danger { background:rgba(244,63,94,.12); border:1px solid rgba(244,63,94,.3); color:#f43f5e; }
-.cc-btn-sm { padding:6px 12px; font-size:11.5px; border-radius:8px; }
+.cc-btn {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:10px 20px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    border:none;
+    transition:all .15s;
+    font-family:var(--cc-sans);
+}
+.cc-btn-primary {
+    background:#000000;
+    color:#ffffff;
+}
+.cc-btn-primary:hover { background:#1f2937; }
+.cc-btn-ghost {
+    background:#ffffff;
+    border:1px solid #d1d5db;
+    color:#000000;
+}
+.cc-btn-ghost:hover { background:#f9fafb; }
+.cc-btn-danger {
+    background:#fff5f5;
+    border:1px solid #fecaca;
+    color:#dc2626;
+}
+.cc-btn-danger:hover { background:#fee2e2; }
+.cc-btn-sm { padding:6px 12px; font-size:11.5px; border-radius:6px; }
 .section-num {
-    width:26px; height:26px; border-radius:8px;
-    background:rgba(255,255,255,.08); color:var(--cc-text);
-    font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center;
+    width:26px;
+    height:26px;
+    border-radius:6px;
+    background:#000000;
+    color:#ffffff;
+    font-size:11px;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     flex-shrink:0;
 }
 .variant-card {
-    background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.07);
-    border-radius:12px; padding:16px; transition:border-color .15s;
+    background:#fafafa;
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    padding:16px;
+    transition:border-color .15s;
 }
-.variant-card:hover { border-color:rgba(255,255,255,.14); }
+.variant-card:hover { border-color:#9ca3af; }
 </style>
 @endpush
 
 @section('admin-content')
-<div class="cc-page p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto" dir="rtl">
+<div class="cc-page p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto" dir="rtl" style="background:#ffffff;">
 
     {{-- Back --}}
     <div class="mb-6 flex items-center justify-between">
         <a href="{{ route('admin.products.show', $product) }}"
            class="flex items-center gap-2 text-sm transition-colors"
-           style="color:var(--cc-muted)">
+           style="color:#6b7280;">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -76,19 +137,19 @@ body { font-family:var(--cc-sans); }
         </form>
     </div>
 
-    <h1 class="text-xl font-black text-white mb-8 flex items-center gap-3">
-        <span class="w-8 h-8 rounded-xl text-sm font-black flex items-center justify-center"
-              style="background:rgba(245,158,11,.2); color:var(--cc-amber)">✎</span>
+    <h1 class="text-xl font-black mb-8 flex items-center gap-3" style="color:#000000;">
+        <span class="w-8 h-8 rounded-lg text-sm font-black flex items-center justify-center"
+              style="background:#fef3c7; color:#d97706;">✎</span>
         تعديل: {{ Str::limit($product->name, 40) }}
     </h1>
 
     @if($errors->any())
-    <div class="mb-6 cc-card p-4 border-rose-500/30">
-        <p class="text-rose-400 text-sm font-bold mb-2">يوجد أخطاء:</p>
+    <div class="mb-6 cc-card p-4" style="border-color:#fecaca; background:#fff5f5;">
+        <p class="text-sm font-bold mb-2" style="color:#dc2626;">يوجد أخطاء:</p>
         <ul class="space-y-1">
             @foreach($errors->all() as $e)
-            <li class="text-rose-300 text-xs flex items-center gap-2">
-                <span class="w-1 h-1 rounded-full bg-rose-400 flex-shrink-0"></span>{{ $e }}
+            <li class="text-xs flex items-center gap-2" style="color:#b91c1c;">
+                <span class="w-1 h-1 rounded-full flex-shrink-0" style="background:#dc2626;"></span>{{ $e }}
             </li>
             @endforeach
         </ul>
@@ -102,19 +163,19 @@ body { font-family:var(--cc-sans); }
 
         {{-- ══ SECTION 1: Basic Info ══════════════════════════════════ --}}
         <div class="cc-card p-6">
-            <h2 class="text-sm font-bold text-white mb-5 flex items-center gap-2">
+            <h2 class="text-sm font-bold mb-5 flex items-center gap-2" style="color:#000000;">
                 <span class="section-num">١</span>
                 معلومات المنتج
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div class="sm:col-span-2">
-                    <label class="cc-label">اسم المنتج <span class="text-rose-400">*</span></label>
+                    <label class="cc-label">اسم المنتج <span style="color:#dc2626;">*</span></label>
                     <input type="text" name="name"
                            value="{{ old('name', $product->name) }}" required
                            class="cc-input @error('name') has-error @enderror">
                 </div>
                 <div>
-                    <label class="cc-label">السعر الأساسي <span class="text-rose-400">*</span></label>
+                    <label class="cc-label">السعر الأساسي <span style="color:#dc2626;">*</span></label>
                     <input type="number" step="0.01" min="0" name="base_price"
                            value="{{ old('base_price', $product->base_price) }}" required
                            class="cc-input mono @error('base_price') has-error @enderror">
@@ -144,18 +205,18 @@ body { font-family:var(--cc-sans); }
                 </div>
                 <div class="sm:col-span-2 flex flex-wrap gap-3">
                     <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"
-                           style="background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07)">
+                           style="background:#f9fafb; border:1px solid #e5e7eb;">
                         <input type="checkbox" name="is_active" value="1"
                                {{ old('is_active', $product->status === 'active') ? 'checked' : '' }}
-                               class="w-4 h-4 accent-emerald-500">
-                        <span class="text-sm font-semibold text-white">تفعيل المنتج</span>
+                               class="w-4 h-4 accent-emerald-600">
+                        <span class="text-sm font-semibold" style="color:#000000;">تفعيل المنتج</span>
                     </label>
                     <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"
-                           style="background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.07)">
+                           style="background:#f9fafb; border:1px solid #e5e7eb;">
                         <input type="checkbox" name="is_featured" value="1"
                                {{ old('is_featured', $product->is_featured) ? 'checked' : '' }}
-                               class="w-4 h-4 accent-amber-400">
-                        <span class="text-sm font-semibold text-white">منتج مميز ⭐</span>
+                               class="w-4 h-4 accent-amber-500">
+                        <span class="text-sm font-semibold" style="color:#000000;">منتج مميز ⭐</span>
                     </label>
                 </div>
             </div>
@@ -163,47 +224,47 @@ body { font-family:var(--cc-sans); }
 
         {{-- ══ SECTION 2: Categories ══════════════════════════════════ --}}
         <div class="cc-card p-6">
-            <h2 class="text-sm font-bold text-white mb-5 flex items-center gap-2">
+            <h2 class="text-sm font-bold mb-5 flex items-center gap-2" style="color:#000000;">
                 <span class="section-num">٢</span>
                 التصنيفات
             </h2>
-            <div class="rounded-xl overflow-hidden border" style="border-color:var(--cc-border)">
+            <div class="rounded-xl overflow-hidden border" style="border-color:#e5e7eb;">
                 <div class="grid grid-cols-[1fr_auto] px-4 py-2 text-[10px] font-bold uppercase tracking-widest border-b"
-                     style="color:var(--cc-muted); border-color:var(--cc-border); background:rgba(255,255,255,.02)">
+                     style="color:#6b7280; border-color:#e5e7eb; background:#f9fafb;">
                     <span>التصنيف</span><span>أساسي</span>
                 </div>
                 @foreach($categories as $root)
                 <div class="grid grid-cols-[1fr_auto] items-center border-b"
-                     style="border-color:var(--cc-border)">
-                    <label class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition">
+                     style="border-color:#f3f4f6;">
+                    <label class="flex items-center gap-3 px-4 py-3 cursor-pointer transition" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
                         <input type="checkbox" name="category_ids[]" value="{{ $root->id }}"
                                {{ in_array($root->id, $selectedCatIds) ? 'checked' : '' }}
-                               class="w-4 h-4 accent-indigo-400 rounded">
-                        <span class="font-bold text-sm text-white">{{ $root->name }}</span>
-                        <span class="text-[10px] mono ms-auto" style="color:var(--cc-muted)">{{ $root->slug }}</span>
+                               class="w-4 h-4 accent-gray-800 rounded">
+                        <span class="font-bold text-sm" style="color:#000000;">{{ $root->name }}</span>
+                        <span class="text-[10px] mono ms-auto" style="color:#9ca3af; font-family:'JetBrains Mono',monospace;">{{ $root->slug }}</span>
                     </label>
                     <div class="px-4">
                         <input type="radio" name="primary_category_id" value="{{ $root->id }}"
                                {{ $primaryCatId == $root->id ? 'checked' : '' }}
-                               class="w-4 h-4 accent-indigo-400">
+                               class="w-4 h-4 accent-gray-800">
                     </div>
                 </div>
                 @foreach($root->allActiveChildren as $sub)
                 <div class="grid grid-cols-[1fr_auto] items-center border-b ps-5"
-                     style="border-color:var(--cc-border); background:rgba(0,0,0,.1)">
-                    <label class="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition">
+                     style="border-color:#f3f4f6; background:#fafafa;">
+                    <label class="flex items-center gap-3 px-4 py-2.5 cursor-pointer transition" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                         <input type="checkbox" name="category_ids[]" value="{{ $sub->id }}"
                                {{ in_array($sub->id, $selectedCatIds) ? 'checked' : '' }}
-                               class="w-4 h-4 accent-indigo-400 rounded">
-                        <svg class="w-3 h-3 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="w-4 h-4 accent-gray-800 rounded">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#d1d5db;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
-                        <span class="text-sm text-white">{{ $sub->name }}</span>
+                        <span class="text-sm" style="color:#111827;">{{ $sub->name }}</span>
                     </label>
                     <div class="px-4">
                         <input type="radio" name="primary_category_id" value="{{ $sub->id }}"
                                {{ $primaryCatId == $sub->id ? 'checked' : '' }}
-                               class="w-4 h-4 accent-indigo-400">
+                               class="w-4 h-4 accent-gray-800">
                     </div>
                 </div>
                 @endforeach
@@ -211,75 +272,74 @@ body { font-family:var(--cc-sans); }
             </div>
         </div>
 
-        {{-- ══ SECTION 3: Image ═══════════════════════════════════════ --}}
-       {{-- ══ SECTION 3: Images (Main & Gallery) ════════════════════════════════ --}}
-<div class="cc-card p-6">
-    <h2 class="text-sm font-bold text-white mb-6 flex items-center gap-2">
-        <span class="section-num">٣</span>
-        إدارة الصور
-    </h2>
+        {{-- ══ SECTION 3: Images (Main & Gallery) ════════════════════════════════ --}}
+        <div class="cc-card p-6">
+            <h2 class="text-sm font-bold mb-6 flex items-center gap-2" style="color:#000000;">
+                <span class="section-num">٣</span>
+                إدارة الصور
+            </h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {{-- A. الصورة الأساسية (Collection: main) --}}
-        <div class="space-y-4">
-            <label class="cc-label">الصورة الأساسية (Main Image)</label>
-            <div class="relative group w-full aspect-video rounded-2xl overflow-hidden bg-white/5 border border-dashed border-white/10 flex items-center justify-center">
-                @php $mainImg = $product->getFirstMediaUrl('main') ?: asset('images/placeholder.jpg'); @endphp
-                <img id="main-preview" src="{{ $mainImg }}" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                    <label class="cc-btn cc-btn-primary cc-btn-sm cursor-pointer">
-                        تغيير الصورة
-                        <input type="file" name="main_image" accept="image/*" class="hidden" onchange="previewMain(this)">
-                    </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {{-- A. الصورة الأساسية (Collection: main) --}}
+                <div class="space-y-4">
+                    <label class="cc-label">الصورة الأساسية (Main Image)</label>
+                    <div class="relative group w-full aspect-video rounded-xl overflow-hidden flex items-center justify-center" style="background:#f3f4f6; border:2px dashed #d1d5db;">
+                        @php $mainImg = $product->getFirstMediaUrl('main') ?: asset('images/placeholder.jpg'); @endphp
+                        <img id="main-preview" src="{{ $mainImg }}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition flex items-center justify-center" style="background:rgba(0,0,0,0.45);">
+                            <label class="cc-btn cc-btn-primary cc-btn-sm cursor-pointer">
+                                تغيير الصورة
+                                <input type="file" name="main_image" accept="image/*" class="hidden" onchange="previewMain(this)">
+                            </label>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-center" style="color:#9ca3af;">سيتم استبدال الصورة القديمة في حال رفع صورة جديدة</p>
+                </div>
+
+                {{-- B. معرض الصور (Collection: products) --}}
+                <div class="space-y-4">
+                    <label class="cc-label">صور المعرض (Gallery)</label>
+                    
+                    {{-- الصور الموجودة حالياً --}}
+                    <div class="grid grid-cols-4 gap-2" id="existing-gallery">
+                        @foreach($product->getMedia('products') as $media)
+                            <div class="relative aspect-square rounded-lg overflow-hidden group" id="media-{{ $media->id }}" style="border:1px solid #e5e7eb;">
+                                <img src="{{ $media->getUrl() }}" class="w-full h-full object-cover">
+                                <button type="button" onclick="markForDeletion({{ $media->id }})" 
+                                        class="absolute top-1 right-1 w-6 h-6 text-white rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg" style="background:#dc2626;">
+                                    ✕
+                                </button>
+                                <input type="hidden" 
+                                       name="delete_media_ids[]" 
+                                       value="{{ $media->id }}" 
+                                       id="delete-input-{{ $media->id }}" 
+                                       disabled>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    {{-- رفع صور جديدة --}}
+                    <div class="pt-4" style="border-top:1px solid #f3f4f6;">
+                        <label class="cc-btn cc-btn-ghost w-full justify-center" style="border-style:dashed; cursor:pointer;">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            إضافة صور للمعرض
+                            <input type="file" name="product_images[]" multiple accept="image/*" class="hidden" onchange="previewGallery(this)">
+                        </label>
+                        <div id="new-gallery-preview" class="grid grid-cols-4 gap-2 mt-3"></div>
+                    </div>
                 </div>
             </div>
-            <p class="text-[10px] text-center" style="color:var(--cc-muted)">سيتم استبدال الصورة القديمة في حال رفع صورة جديدة</p>
         </div>
 
-        {{-- B. معرض الصور (Collection: products) --}}
-        <div class="space-y-4">
-            <label class="cc-label">صور المعرض (Gallery)</label>
-            
-            {{-- الصور الموجودة حالياً --}}
-            <div class="grid grid-cols-4 gap-2" id="existing-gallery">
-                @foreach($product->getMedia('products') as $media)
-                    <div class="relative aspect-square rounded-lg overflow-hidden border border-white/5 group" id="media-{{ $media->id }}">
-                        <img src="{{ $media->getUrl() }}" class="w-full h-full object-cover">
-                        <button type="button" onclick="markForDeletion({{ $media->id }})" 
-                                class="absolute top-1 right-1 w-6 h-6 bg-rose-500 text-white rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg">
-                            ✕
-                        </button>
-                        {{-- الحقل المخفي الذي سيُرسل للـ Controller --}}
-                    <input type="hidden" 
-       name="delete_media_ids[]" 
-       value="{{ $media->id }}" 
-       id="delete-input-{{ $media->id }}" 
-       disabled>
-                    </div>
-                @endforeach
-            </div>
-
-            {{-- رفع صور جديدة --}}
-            <div class="pt-4 border-t border-white/5">
-                <label class="cc-btn cc-btn-ghost w-full justify-center border-dashed">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    إضافة صور للمعرض
-                    <input type="file" name="product_images[]" multiple accept="image/*" class="hidden" onchange="previewGallery(this)">
-                </label>
-                <div id="new-gallery-preview" class="grid grid-cols-4 gap-2 mt-3"></div>
-            </div>
-        </div>
-    </div>
-</div>
         {{-- ══ SECTION 4: Variants ════════════════════════════════════ --}}
         <div class="cc-card p-6">
             <div class="flex items-center justify-between mb-5">
-                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                <h2 class="text-sm font-bold flex items-center gap-2" style="color:#000000;">
                     <span class="section-num">٤</span>
                     المتغيرات
-                    <span class="text-amber-400 text-[10px] font-normal">
+                    <span class="text-[10px] font-normal" style="color:#d97706;">
                         (سيتم حذف المتغيرات الحالية وإعادة إنشائها)
                     </span>
                 </h2>
@@ -315,7 +375,7 @@ body { font-family:var(--cc-sans); }
             <div id="variants-container" class="space-y-3"></div>
 
             <div id="variants-empty" class="hidden text-center py-10 rounded-xl border border-dashed"
-                 style="border-color:rgba(255,255,255,.08); color:var(--cc-muted)">
+                 style="border-color:#e5e7eb; color:#9ca3af;">
                 لا توجد متغيرات — اضغط "إضافة متغير"
             </div>
         </div>
@@ -358,7 +418,7 @@ function buildVariantRowHTML(i, prefill = {}) {
                 const chk = selected.includes(String(v.id)) ? 'checked' : '';
                 valsHTML += `<label class="cursor-pointer" title="${v.label||v.value}">
                     <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" ${chk} class="sr-only peer">
-                    <span class="inline-flex w-8 h-8 rounded-full border-2 border-transparent peer-checked:border-indigo-400 peer-checked:scale-110 hover:scale-105 transition-all" style="background:${v.color_hex||'#888'}"></span>
+                    <span class="inline-flex w-8 h-8 rounded-full border-2 border-transparent peer-checked:border-gray-900 peer-checked:scale-110 hover:scale-105 transition-all" style="background:${v.color_hex||'#888'}"></span>
                 </label>`;
             });
         } else {
@@ -366,19 +426,19 @@ function buildVariantRowHTML(i, prefill = {}) {
                 const chk = selected.includes(String(v.id)) ? 'checked' : '';
                 valsHTML += `<label class="cursor-pointer">
                     <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" ${chk} class="sr-only peer">
-                    <span class="inline-block px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/10 bg-white/5 text-zinc-400 peer-checked:bg-indigo-500/20 peer-checked:border-indigo-400/60 peer-checked:text-white transition-all select-none">${v.label||v.value}</span>
+                    <span class="inline-block px-3 py-1.5 text-xs font-semibold rounded-lg transition-all select-none" style="border:1px solid #e5e7eb; background:#f9fafb; color:#374151;" onmouseover="this.style.borderColor='#000'" onmouseout="this.style.borderColor='#e5e7eb'">${v.label||v.value}</span>
                 </label>`;
             });
         }
-        attrHTML += `<div><p class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color:var(--cc-muted)">${attr.name}</p><div class="flex flex-wrap gap-2">${valsHTML}</div></div>`;
+        attrHTML += `<div><p class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color:#6b7280;">${attr.name}</p><div class="flex flex-wrap gap-2">${valsHTML}</div></div>`;
     });
     return `<div class="variant-card" data-idx="${i}">
         <div class="flex items-center justify-between mb-4">
-            <span class="text-xs font-bold text-zinc-500">متغير #${i+1}</span>
+            <span class="text-xs font-bold" style="color:#6b7280;">متغير #${i+1}</span>
             <button type="button" onclick="removeVariantRow(this)" class="cc-btn cc-btn-danger cc-btn-sm">✕</button>
         </div>
         ${attrs.length ? `<div class="grid grid-cols-1 sm:grid-cols-${Math.min(attrs.length,3)} gap-4 mb-4">${attrHTML}</div>` : ''}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t pt-4" style="border-color:rgba(255,255,255,.07)">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t pt-4" style="border-color:#f3f4f6;">
             <div>
                 <label class="cc-label">الكمية *</label>
                 <input type="number" name="variants[${i}][stock_quantity]" value="${prefill.stock_quantity??0}" min="0" required class="cc-input mono">
@@ -446,16 +506,17 @@ function previewMain(input) {
 // 2. معاينة صور المعرض الجديدة قبل الرفع
 function previewGallery(input) {
     const container = document.getElementById('new-gallery-preview');
-    container.innerHTML = ''; // مسح المعاينة السابقة
+    container.innerHTML = '';
     if (input.files) {
         Array.from(input.files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const div = document.createElement('div');
-                div.className = "relative aspect-square rounded-lg overflow-hidden border border-emerald-500/30 shadow-inner";
+                div.className = "relative aspect-square rounded-lg overflow-hidden";
+                div.style.border = "1px solid #6ee7b7";
                 div.innerHTML = `
                     <img src="${e.target.result}" class="w-full h-full object-cover">
-                    <div class="absolute top-0 left-0 bg-emerald-500 text-[8px] px-1 text-white font-bold">NEW</div>
+                    <div class="absolute top-0 left-0 text-[8px] px-1 font-bold" style="background:#059669; color:#ffffff;">NEW</div>
                 `;
                 container.appendChild(div);
             };
@@ -469,38 +530,16 @@ function markForDeletion(mediaId) {
     const wrapper = document.getElementById('media-' + mediaId);
     const input = document.getElementById('delete-input-' + mediaId);
     
-    if (input.value === "") {
-        // تفعيل الحذف
-        input.value = mediaId; 
-        wrapper.style.opacity = "0.3";
-        wrapper.style.filter = "grayscale(1)";
-        wrapper.style.border = "2px solid #f43f5e";
-    } else {
-        // تراجع عن الحذف
-        input.value = "";
-        wrapper.style.opacity = "1";
-        wrapper.style.filter = "none";
-        wrapper.style.border = "1px solid rgba(255,255,255,.05)";
-    }
-}
-function markForDeletion(mediaId) {
-    const wrapper = document.getElementById('media-' + mediaId);
-    const input = document.getElementById('delete-input-' + mediaId);
-    
-    // إذا كان الحقل معطلاً (يعني لا نريد الحذف حالياً)
     if (input.disabled) {
-        input.disabled = false; // نفعله لكي يُرسل الـ ID للسيرفر ويتم الحذف
+        input.disabled = false;
         wrapper.style.opacity = "0.3";
         wrapper.style.filter = "grayscale(1)";
-        wrapper.style.border = "2px solid #f43f5e";
+        wrapper.style.border = "2px solid #dc2626";
     } else {
-        // التراجع عن الحذف
-        input.disabled = true; // نعطله مرة أخرى لكي يتجاهله السيرفر
+        input.disabled = true;
         wrapper.style.opacity = "1";
         wrapper.style.filter = "none";
-        wrapper.style.border = "1px solid rgba(255,255,255,.05)";
+        wrapper.style.border = "1px solid #e5e7eb";
     }
 }
-// كود المتغيرات (Variants) الذي كان عندك سابقاً يبقى كما هو دون تغيير...
-
 </script>

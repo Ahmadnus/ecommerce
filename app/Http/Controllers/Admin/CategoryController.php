@@ -23,8 +23,8 @@ class CategoryController extends Controller
 
     public function create(Request $request)
     {
-        $parentOptions       = Category::active()
-            ->with('media')                             // thumbnails in the parent selector
+        $parentOptions = Category::active()
+            ->with('media') // thumbnails in the parent selector
             ->orderBy('depth')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -38,13 +38,22 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
-            'slug'        => 'nullable|string|unique:categories,slug',
-            'parent_id'   => 'nullable|exists:categories,id',
-            'description' => 'nullable|string',
-            'sort_order'  => 'nullable|integer|min:0',
-            'is_active'   => 'nullable|boolean',
-            'image'       => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'name'                    => 'required|string|max:255',
+            'slug'                    => 'nullable|string|unique:categories,slug',
+            'parent_id'               => 'nullable|exists:categories,id',
+            'description'             => 'nullable|string',
+            'sort_order'              => 'nullable|integer|min:0',
+            'is_active'               => 'nullable|boolean',
+            'image'                   => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+
+            'banner_title'            => 'nullable|string|max:255',
+            'banner_subtitle'         => 'nullable|string|max:255',
+            'banner_button_text'      => 'nullable|string|max:100',
+            'banner_button_url'       => 'nullable|string|max:500',
+            'banner_background_color'  => 'nullable|string|max:20',
+            'banner_text_color'        => 'nullable|string|max:20',
+            'banner_is_active'         => 'nullable|boolean',
+            'banner_image'             => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
         ], [
             'name.required' => 'اسم التصنيف مطلوب',
             'image.max'     => 'حجم الصورة يجب أن لا يتجاوز 4 ميجابايت',
@@ -54,18 +63,28 @@ class CategoryController extends Controller
             $data['slug'] = Str::slug($data['name']);
         }
 
-        $data['is_active']  = $request->boolean('is_active', true);
-        $data['sort_order'] = $data['sort_order'] ?? 0;
+        $data['is_active']        = $request->boolean('is_active', true);
+        $data['banner_is_active'] = $request->boolean('banner_is_active', false);
+        $data['sort_order']       = $data['sort_order'] ?? 0;
 
         $category = Category::create($data);
 
-        // ── Spatie: upload to 'category_images' collection ───────────────────
+        // ── Spatie: upload category image ───────────────────────────────────
         if ($request->hasFile('image')) {
             $category
                 ->addMediaFromRequest('image')
                 ->usingName($category->name)
                 ->usingFileName(Str::slug($category->name) . '.' . $request->file('image')->extension())
                 ->toMediaCollection('category_images');
+        }
+
+        // ── Spatie: upload category banner image ───────────────────────────
+        if ($request->hasFile('banner_image')) {
+            $category
+                ->addMediaFromRequest('banner_image')
+                ->usingName($category->name . ' Banner')
+                ->usingFileName(Str::slug($category->name) . '-banner.' . $request->file('banner_image')->extension())
+                ->toMediaCollection('category_banner');
         }
 
         return redirect()
@@ -91,25 +110,38 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $data = $request->validate([
-            'name'         => 'required|max:255',
-            'slug'         => 'nullable|unique:categories,slug,' . $category->id,
-            'description'  => 'nullable|string',
-            'parent_id'    => 'nullable|exists:categories,id',
-            'sort_order'   => 'nullable|integer|min:0',
-            'is_active'    => 'nullable|boolean',
-            'image'        => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
-            'remove_image' => 'nullable|boolean',
+            'name'                    => 'required|string|max:255',
+            'slug'                    => 'nullable|string|unique:categories,slug,' . $category->id,
+            'description'             => 'nullable|string',
+            'parent_id'               => 'nullable|exists:categories,id',
+            'sort_order'              => 'nullable|integer|min:0',
+            'is_active'               => 'nullable|boolean',
+            'image'                   => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'remove_image'            => 'nullable|boolean',
+
+            'banner_title'            => 'nullable|string|max:255',
+            'banner_subtitle'         => 'nullable|string|max:255',
+            'banner_button_text'      => 'nullable|string|max:100',
+            'banner_button_url'       => 'nullable|string|max:500',
+            'banner_background_color'  => 'nullable|string|max:20',
+            'banner_text_color'        => 'nullable|string|max:20',
+            'banner_is_active'         => 'nullable|boolean',
+            'banner_image'             => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'remove_banner_image'      => 'nullable|boolean',
         ]);
 
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }
-        $data['is_active']  = $request->boolean('is_active', true);
-        $data['sort_order'] = $data['sort_order'] ?? 0;
+
+        $data['is_active']        = $request->boolean('is_active', true);
+        $data['sort_order']       = $data['sort_order'] ?? 0;
+        $data['banner_is_active'] = $request->boolean('banner_is_active', false);
 
         // Prevent circular parent assignment
         if (!empty($data['parent_id'])) {
             $descendants = $category->getAllDescendants()->pluck('id');
+
             if ($descendants->contains($data['parent_id']) || $data['parent_id'] == $category->id) {
                 return back()->withErrors(['parent_id' => 'لا يمكن تعيين تصنيف فرعي كأب.']);
             }
@@ -120,18 +152,32 @@ class CategoryController extends Controller
         // ── Handle image removal ─────────────────────────────────────────────
         if ($request->boolean('remove_image')) {
             $category->clearMediaCollection('category_images');
-            $category->clearMediaCollection('categories');   // legacy
+            $category->clearMediaCollection('categories'); // legacy
         }
 
-        // ── Replace/add image ────────────────────────────────────────────────
+        // ── Replace/add category image ──────────────────────────────────────
         if ($request->hasFile('image')) {
-            // clearMediaCollection ensures singleFile — only one image per category
             $category->clearMediaCollection('category_images');
             $category
                 ->addMediaFromRequest('image')
                 ->usingName($category->name)
                 ->usingFileName(Str::slug($category->name) . '.' . $request->file('image')->extension())
                 ->toMediaCollection('category_images');
+        }
+
+        // ── Handle banner removal ────────────────────────────────────────────
+        if ($request->boolean('remove_banner_image')) {
+            $category->clearMediaCollection('category_banner');
+        }
+
+        // ── Replace/add banner image ─────────────────────────────────────────
+        if ($request->hasFile('banner_image')) {
+            $category->clearMediaCollection('category_banner');
+            $category
+                ->addMediaFromRequest('banner_image')
+                ->usingName($category->name . ' Banner')
+                ->usingFileName(Str::slug($category->name) . '-banner.' . $request->file('banner_image')->extension())
+                ->toMediaCollection('category_banner');
         }
 
         return redirect()
@@ -143,6 +189,7 @@ class CategoryController extends Controller
     {
         // Spatie automatically deletes media files when the model is deleted
         $category->delete();
+
         return redirect()
             ->route('admin.categories.index')
             ->with('success', 'تم حذف التصنيف');

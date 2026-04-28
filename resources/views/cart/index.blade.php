@@ -77,7 +77,7 @@
     $cv   = fn(float $jod): string => number_format(round($jod * $rate, 2), 2);
 @endphp
 
-<div class="min-h-screen bg-[#f7f6f3]" dir="rtl">
+<div class="min-h-screen" dir="rtl" style="background-color: var(--bg-color);"> <!-- نفس لون الموقع -->
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
 
     {{-- Header ──────────────────────────────────────────────────────────── --}}

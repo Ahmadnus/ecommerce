@@ -220,6 +220,45 @@
         padding-bottom: 8px !important;
         margin-top: -8px !important;
     }
+    .cat-banner {
+    border-radius: 20px; overflow: hidden; position: relative;
+    margin-bottom: 20px;
+}
+.cat-banner-inner {
+    display: flex; align-items: center; gap: 24px;
+    padding: 36px 28px;
+    position: relative; z-index: 10;
+}
+@media(min-width: 768px) {
+    .cat-banner-inner { padding: 48px 56px; gap: 40px; }
+}
+.cat-banner-img {
+    width: 120px; height: 120px; flex-shrink: 0;
+    border-radius: 16px; object-fit: cover;
+    box-shadow: 0 12px 32px rgba(0,0,0,.25);
+    animation: heroFloat 6s ease-in-out infinite;
+}
+@media(min-width: 640px) { .cat-banner-img { width: 160px; height: 160px; } }
+@media(min-width: 768px) { .cat-banner-img { width: 200px; height: 200px; } }
+.cat-banner-img-wrap {
+    width: 100%;
+    max-height: 320px;
+    overflow: hidden;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    background: #f3f4f6;
+}
+.cat-banner-img-wrap img {
+    width: 100%;
+    height: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    display: block;
+}
+@media (max-width: 640px) {
+    .cat-banner-img-wrap { max-height: 160px; border-radius: 14px; }
+    .cat-banner-img-wrap img { max-height: 160px; }
+}
 </style>
 @endpush
 
@@ -295,46 +334,68 @@
     @php
         $banners = \App\Models\HeroBanner::where('is_active', true)->orderBy('sort_order')->get();
     @endphp
-    @foreach($banners as $banner)
-    <div class="hero-banner mt-4 mb-5 reveal" style="--i:{{ $loop->index }}">
-        <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12">
-            <div class="flex-1 text-right">
-                @if($banner->badge)
-                <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
-                      style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.18)">
-                    {{ $banner->badge }}
-                </span>
-                @endif
-                <h2 class="font-display text-2xl md:text-4xl font-bold text-white leading-tight mb-3">
-                    {{ $banner->title }}
-                    @if($banner->subtitle)
-                    <br>
-                    <span class="text-transparent bg-clip-text"
-                          style="background:linear-gradient(90deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
-                        {{ $banner->subtitle }}
-                    </span>
+@foreach($banners as $banner)
+    @if($banner->position === 'top')
+
+        @php
+            $image = $banner->getFirstMediaUrl('banner_image');
+            $hasImage = !empty($image);
+        @endphp
+
+        <div class="hero-banner mt-4 mb-5 reveal"
+             style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
+
+            <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
+                        {{ $hasImage ? '' : 'justify-center text-center' }}">
+
+                {{-- النص --}}
+                <div class="{{ $hasImage ? 'flex-1 text-right' : 'max-w-xl mx-auto text-center' }}">
+
+                    @if($banner->badge)
+                        <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
+                              style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
+                            {{ $banner->badge }}
+                        </span>
                     @endif
-                </h2>
-                <p class="text-gray-400 text-sm mb-6 leading-relaxed max-w-sm hidden sm:block">
-                    {{ $banner->description }}
-                </p>
-                <a href="{{ $banner->button_url ?? '#' }}"
-                   class="inline-flex items-center gap-2 bg-white text-gray-900 font-black text-sm px-6 py-3 rounded-xl hover:bg-gray-50 transition-colors shadow-xl active:scale-95">
-                    {{ $banner->button_text }}
-                    <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </a>
-            </div>
-            <div class="w-32 sm:w-40 md:w-52 flex-shrink-0 relative">
-                <div class="absolute inset-0 rounded-2xl opacity-30"
-                     style="background:radial-gradient(circle,var(--brand-color) 0%,transparent 70%);transform:scale(1.3)"></div>
-                <img src="{{ $banner->getFirstMediaUrl('banner_image') }}" alt="{{ $banner->title }}"
-                     class="hero-img relative z-10 w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+
+                    <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
+                        style="color: {{ $banner->text_color ?? '#fff' }};">
+                        {{ $banner->title }}
+
+                        @if($banner->subtitle)
+                            <br>
+                            <span style="color: {{ $banner->text_color ?? '#fff' }};">
+                                {{ $banner->subtitle }}
+                            </span>
+                        @endif
+                    </h2>
+
+                    <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
+                       style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
+                        {{ $banner->description }}
+                    </p>
+
+                    <a href="{{ $banner->button_url ?? '#' }}"
+                       class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
+                       style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
+                        {{ $banner->button_text }}
+                    </a>
+
+                </div>
+
+                {{-- الصورة --}}
+                @if($hasImage)
+                    <div class="w-32 sm:w-40 md:w-52 flex-shrink-0 relative">
+                        <img src="{{ $image }}"
+                             class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+                    </div>
+                @endif
+
             </div>
         </div>
-    </div>
-    @endforeach
+
+    @endif
+@endforeach
     @endif
 
     {{-- ── Category grid ────────────────────────────────────────────────────── --}}
@@ -353,9 +414,9 @@
     {{-- ── Toolbar: search + sort ──────────────────────────────────────────── --}}
     <div class="flex items-center justify-between mb-4 gap-3 mt-4">
         <div>
-            @if($currentCategory)
-            <h1 class="font-display text-lg md:text-2xl font-bold text-gray-900">{{ $currentCategory->name }}</h1>
-            @endif
+           @if($currentCategory && !$currentCategory->shouldShowBanner())
+<h1 class="font-display text-lg md:text-2xl font-bold text-gray-900">{{ $currentCategory->name }}</h1>
+@endif
             <p class="text-xs text-gray-400 {{ $currentCategory ? 'mt-0.5' : '' }}">
                 {{ $products->total() }} منتج
                 @if(request('search'))
@@ -506,10 +567,18 @@
             </button>
         </div>
     </div>
-
+{{-- ── Category Banner ─────────────────────────────────────────────────── --}}
+@if($currentCategory && $currentCategory->shouldShowBanner())
+<div class="cat-banner-img-wrap reveal">
+    <img src="{{ $currentCategory->getBannerImageUrl() }}"
+         alt="{{ $currentCategory->name }}"
+         loading="eager">
+</div>
+@endif
     {{-- ── Breadcrumb ───────────────────────────────────────────────────────── --}}
     @if($currentCategory)
     <nav class="flex items-center gap-1 text-xs text-gray-400 mb-5 flex-wrap">
+        
         <a href="{{ route('products.index') }}" class="hover:text-gray-700 transition-colors">المتجر</a>
         @foreach($currentCategory->getAncestors() as $ancestor)
             <span class="text-gray-300">/</span>
@@ -609,7 +678,68 @@
     </section>
     @endif
     @endforeach
+@foreach($banners as $banner)
+    @if($banner->position === 'after_featured')
 
+        @php
+            $image = $banner->getFirstMediaUrl('banner_image');
+            $hasImage = !empty($image);
+        @endphp
+
+        <div class="hero-banner mt-4 mb-5 reveal"
+             style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
+
+            <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
+                        {{ $hasImage ? '' : 'justify-center text-center' }}">
+
+                {{-- النص --}}
+                <div class="{{ $hasImage ? 'flex-1 text-right' : 'max-w-xl mx-auto text-center' }}">
+
+                    @if($banner->badge)
+                        <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
+                              style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
+                            {{ $banner->badge }}
+                        </span>
+                    @endif
+
+                    <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
+                        style="color: {{ $banner->text_color ?? '#fff' }};">
+                        {{ $banner->title }}
+
+                        @if($banner->subtitle)
+                            <br>
+                            <span style="color: {{ $banner->text_color ?? '#fff' }};">
+                                {{ $banner->subtitle }}
+                            </span>
+                        @endif
+                    </h2>
+
+                    <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
+                       style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
+                        {{ $banner->description }}
+                    </p>
+
+                    <a href="{{ $banner->button_url ?? '#' }}"
+                       class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
+                       style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
+                        {{ $banner->button_text }}
+                    </a>
+
+                </div>
+
+                {{-- الصورة --}}
+                @if($hasImage)
+                    <div class="w-32 sm:w-40 md:w-52 flex-shrink-0 relative">
+                        <img src="{{ $image }}"
+                             class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+                    </div>
+                @endif
+
+            </div>
+        </div>
+
+    @endif
+@endforeach
     <div class="flex items-center gap-3 mb-5">
         <div class="h-px bg-gray-200 flex-1"></div>
         <span class="text-xs font-bold text-gray-500 flex-shrink-0">جميع المنتجات</span>

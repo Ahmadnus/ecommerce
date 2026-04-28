@@ -29,12 +29,14 @@ class Category extends Model implements HasMedia
         'path',
         'sort_order',
         'is_active',
+        'banner_is_active',
     ];
 
     protected $casts = [
-        'is_active'  => 'boolean',
-        'depth'      => 'integer',
-        'sort_order' => 'integer',
+        'is_active'         => 'boolean',
+        'depth'             => 'integer',
+        'sort_order'        => 'integer',
+        'banner_is_active'  => 'boolean',
     ];
 
     // ─── Spatie Media Library ─────────────────────────────────────────────────
@@ -50,33 +52,66 @@ class Category extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('category_images')
-             ->singleFile()                   // only one image per category
-             ->acceptsMimeTypes([
-                 'image/jpeg',
-                 'image/png',
-                 'image/webp',
-                 'image/gif',
-             ]);
+            ->singleFile()
+            ->acceptsMimeTypes([
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+                'image/gif',
+            ]);
 
         // Keep the legacy "categories" collection name working
         // so existing uploads don't break.
         $this->addMediaCollection('categories')
-             ->singleFile();
+            ->singleFile();
+
+        // Category banner image collection
+        $this->addMediaCollection('category_banner')
+            ->singleFile()
+            ->acceptsMimeTypes([
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+                'image/gif',
+            ]);
     }
 
     public function registerMediaConversions(?Media $media = null): void
     {
         // 200×200 — circular UI in storefront
         $this->addMediaConversion('thumb')
-             ->fit(Fit::Crop, 200, 200)
-             ->nonQueued()       // generate synchronously (swap to ->queued() in production)
-             ->performOnCollections('category_images', 'categories');
+            ->fit(Fit::Crop, 200, 200)
+            ->nonQueued()
+            ->performOnCollections('category_images', 'categories');
 
         // 400×400 — admin previews and larger displays
         $this->addMediaConversion('card')
-             ->fit(Fit::Crop, 400, 400)
-             ->nonQueued()
-             ->performOnCollections('category_images', 'categories');
+            ->fit(Fit::Crop, 400, 400)
+            ->nonQueued()
+            ->performOnCollections('category_images', 'categories');
+
+        // 1400×400 — banner image
+        $this->addMediaConversion('banner')
+            ->fit(Fit::Crop, 1400, 400)
+            ->nonQueued()
+            ->performOnCollections('category_banner');
+    }
+
+    /**
+     * Returns the category banner image URL, or empty string if none uploaded.
+     * Uses the 'category_banner' Spatie media collection.
+     */
+    public function getBannerImageUrl(string $conversion = 'banner'): string
+    {
+        return $this->getFirstMediaUrl('category_banner', $conversion);
+    }
+
+    /**
+     * True when an active banner image exists and should be shown.
+     */
+    public function shouldShowBanner(): bool
+    {
+        return $this->banner_is_active && !empty($this->getBannerImageUrl());
     }
 
     // ─── Image URL accessor ───────────────────────────────────────────────────
@@ -133,13 +168,13 @@ class Category extends Model implements HasMedia
      */
     private function generatePlaceholderUrl(): string
     {
-        $initial  = mb_substr($this->name ?? '?', 0, 1);
-        $colours  = [
+        $initial = mb_substr($this->name ?? '?', 0, 1);
+        $colours = [
             '#f97316', '#ec4899', '#8b5cf6', '#06b6d4',
             '#10b981', '#f59e0b', '#6366f1', '#ef4444',
         ];
-        $bg       = $colours[crc32($this->name ?? '') % count($colours)];
-        $svg      = rawurlencode(
+        $bg = $colours[crc32($this->name ?? '') % count($colours)];
+        $svg = rawurlencode(
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">'
             . '<circle cx="100" cy="100" r="100" fill="' . $bg . '"/>'
             . '<text x="100" y="115" text-anchor="middle" font-size="90" '
@@ -179,8 +214,8 @@ class Category extends Model implements HasMedia
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id')
-                    ->orderBy('sort_order')
-                    ->orderBy('name');
+            ->orderBy('sort_order')
+            ->orderBy('name');
     }
 
     public function activeChildren(): HasMany
@@ -201,8 +236,8 @@ class Category extends Model implements HasMedia
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'category_product')
-                    ->withPivot('is_primary')
-                    ->withTimestamps();
+            ->withPivot('is_primary')
+            ->withTimestamps();
     }
 
     // ─── Path & breadcrumb helpers ────────────────────────────────────────────
@@ -210,9 +245,9 @@ class Category extends Model implements HasMedia
     public function getAllDescendants(): Collection
     {
         return self::where('path', 'like', $this->path . '/%')
-                   ->orderBy('depth')
-                   ->orderBy('sort_order')
-                   ->get();
+            ->orderBy('depth')
+            ->orderBy('sort_order')
+            ->get();
     }
 
     public function getAncestors(): Collection
@@ -222,8 +257,8 @@ class Category extends Model implements HasMedia
         }
 
         $ids = collect(explode('/', $this->path))
-            ->map(fn(string $id) => (int) $id)
-            ->filter(fn(int $id) => $id !== $this->id)
+            ->map(fn (string $id) => (int) $id)
+            ->filter(fn (int $id) => $id !== $this->id)
             ->values();
 
         return self::whereIn('id', $ids)->orderBy('depth')->get();
@@ -236,18 +271,36 @@ class Category extends Model implements HasMedia
 
     public function rebuildPath(): void
     {
-        $parentPath  = $this->parent?->path ?? '';
-        $this->path  = $parentPath ? "{$parentPath}/{$this->id}" : (string) $this->id;
+        $parentPath = $this->parent?->path ?? '';
+        $this->path = $parentPath ? "{$parentPath}/{$this->id}" : (string) $this->id;
         $this->depth = $this->parent ? $this->parent->depth + 1 : 0;
         $this->saveQuietly();
     }
 
-    public function isRoot(): bool  { return $this->parent_id === null; }
-    public function isLeaf(): bool  { return !$this->children()->exists(); }
+    public function isRoot(): bool
+    {
+        return $this->parent_id === null;
+    }
+
+    public function isLeaf(): bool
+    {
+        return !$this->children()->exists();
+    }
 
     // ─── Scopes ───────────────────────────────────────────────────────────────
 
-    public function scopeActive($query): mixed  { return $query->where('is_active', true); }
-    public function scopeRoots($query): mixed   { return $query->whereNull('parent_id'); }
-    public function scopeAtDepth($query, int $depth): mixed { return $query->where('depth', $depth); }
+    public function scopeActive($query): mixed
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeRoots($query): mixed
+    {
+        return $query->whereNull('parent_id');
+    }
+
+    public function scopeAtDepth($query, int $depth): mixed
+    {
+        return $query->where('depth', $depth);
+    }
 }

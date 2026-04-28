@@ -18,23 +18,23 @@
     @if($errors->any())
     <div class="mb-6 p-4 bg-red-50 border-r-4 border-red-500 text-red-700 rounded-xl text-sm">
         <ul class="list-disc list-inside space-y-1">
-            @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
         </ul>
     </div>
     @endif
 
-    {{-- الفورم الأساسي للتعديل --}}
-    <form action="{{ route('admin.categories.update', $category->id) }}" 
+    <form action="{{ route('admin.categories.update', $category->id) }}"
           method="POST"
-          id="main-edit-form"
-          enctype="multipart/form-data" 
+          enctype="multipart/form-data"
           class="space-y-6">
         @csrf
         @method('PUT')
 
         <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
 
-            {{-- ── صورة التصنيف ── --}}
+            {{-- Image upload --}}
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-3">
                     صورة التصنيف
@@ -43,7 +43,8 @@
 
                 <div class="flex items-start gap-6">
                     <div class="flex flex-col items-center gap-1 flex-shrink-0">
-                        <div class="w-20 h-20 rounded-full overflow-hidden ring-2 ring-offset-2 ring-[var(--brand-color,#0ea5e9)] bg-gray-100" id="preview-ring">
+                        <div class="w-20 h-20 rounded-full overflow-hidden ring-2 ring-offset-2 ring-[var(--brand-color,#0ea5e9)] bg-gray-100"
+                             id="preview-ring">
                             <img id="img-preview"
                                  src="{{ $category->getCategoryImageUrl('thumb') }}"
                                  alt="{{ $category->name }}"
@@ -53,7 +54,8 @@
 
                         @if($category->hasImage())
                         <label class="flex items-center gap-1 cursor-pointer mt-1">
-                            <input type="checkbox" name="remove_image" value="1" class="w-3 h-3 text-red-500 border-gray-300 rounded">
+                            <input type="checkbox" name="remove_image" value="1"
+                                   class="w-3 h-3 text-red-500 border-gray-300 rounded">
                             <span class="text-[10px] text-red-500 font-semibold">حذف الصورة</span>
                         </label>
                         @endif
@@ -123,12 +125,85 @@
                 <input type="checkbox" name="is_active" value="1" {{ old('is_active', $category->is_active) ? 'checked' : '' }} class="w-5 h-5 text-brand border-gray-300 rounded focus:ring-brand">
                 <span class="text-sm font-semibold text-gray-800">تفعيل التصنيف</span>
             </label>
+
+            {{-- Category Banner --}}
+            <div class="border-t border-gray-100 pt-6 mt-2">
+                <h3 class="text-sm font-bold text-gray-700 mb-1 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    بانر صفحة التصنيف
+                </h3>
+                <p class="text-xs text-gray-400 mb-4">
+                    يظهر كصورة كاملة العرض أعلى صفحة التصنيف — لا يوجد نص أو أزرار.
+                </p>
+
+                <div class="space-y-3">
+
+                    @php $currentBannerUrl = $category->getBannerImageUrl(); @endphp
+                    @if($currentBannerUrl)
+                    <div class="relative rounded-xl overflow-hidden border border-gray-200 group">
+                        <img src="{{ $currentBannerUrl }}"
+                             alt="البانر الحالي"
+                             class="w-full h-32 object-cover">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20
+                                    transition-colors flex items-center justify-center">
+                            <span class="opacity-0 group-hover:opacity-100 transition-opacity
+                                         text-white text-xs font-bold bg-black/50
+                                         px-3 py-1 rounded-full">
+                                البانر الحالي
+                            </span>
+                        </div>
+                    </div>
+
+                    <label class="flex items-center gap-2 text-xs font-semibold
+                                   text-red-500 cursor-pointer w-fit">
+                        <input type="checkbox" name="remove_banner_image" value="1"
+                               class="w-4 h-4 text-red-500 border-gray-300 rounded
+                                      focus:ring-red-400">
+                        حذف البانر الحالي
+                    </label>
+                    @endif
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">
+                            {{ $currentBannerUrl ? 'استبدال البانر' : 'رفع صورة البانر' }}
+                            <span class="text-gray-400 font-normal">(1400 × 400 px مثالي)</span>
+                        </label>
+
+                        <div id="banner-preview-wrap"
+                             class="hidden mb-2 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                            <img id="banner-preview" src="" alt="معاينة"
+                                 class="w-full h-32 object-cover">
+                        </div>
+
+                        <input type="file" name="banner_image" id="banner-image-input"
+                               accept="image/jpeg,image/png,image/webp,image/gif"
+                               class="block w-full text-sm text-gray-500
+                                      file:ml-4 file:py-2 file:px-5 file:rounded-xl
+                                      file:border-0 file:bg-brand/10 file:text-brand file:font-bold
+                                      hover:file:bg-brand/20 transition cursor-pointer">
+                    </div>
+
+                    <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-xl
+                                   bg-gray-50 hover:bg-white transition cursor-pointer">
+                        <input type="checkbox" name="banner_is_active" value="1"
+                               {{ old('banner_is_active', $category->banner_is_active) ? 'checked' : '' }}
+                               class="w-5 h-5 text-brand border-gray-300 rounded focus:ring-brand">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">تفعيل البانر</p>
+                            <p class="text-xs text-gray-400">سيظهر أعلى صفحة هذا التصنيف عند التفعيل</p>
+                        </div>
+                    </label>
+
+                </div>
+            </div>
+
         </div>
 
-        {{-- الأزرار داخل الفورم الأساسي --}}
         <div class="flex justify-between items-center">
-            {{-- زر الحذف: سنقوم بربطه بفورم خارجي --}}
-            <button type="button" 
+            <button type="button"
                     onclick="if(confirm('حذف تصنيف \'{{ addslashes($category->name) }}\'؟ سيتم حذف كل التصنيفات الفرعية.')) document.getElementById('delete-category-form').submit();"
                     class="flex items-center gap-2 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 px-4 py-2.5 rounded-xl transition font-semibold">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,10 +221,54 @@
         </div>
     </form>
 
-    {{-- فورم الحذف المنفصل (خارج الفورم الأساسي) --}}
     <form id="delete-category-form" action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" class="hidden">
         @csrf
         @method('DELETE')
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+let slugManual = false;
+
+function autoSlug(val) {
+    if (slugManual) return;
+    document.getElementById('slug-input').value = val
+        .toLowerCase().trim()
+        .replace(/[\s_]+/g, '-')
+        .replace(/[^\u0621-\u064Aa-z0-9-]/g, '')
+        .replace(/-+/g, '-');
+}
+document.getElementById('slug-input')
+    .addEventListener('input', () => slugManual = true);
+
+function previewImg(input) {
+    if (!input.files?.[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const prev = document.getElementById('img-preview');
+        const ph   = document.getElementById('img-placeholder');
+        prev.src = e.target.result;
+        prev.classList.remove('hidden');
+        ph.classList.add('hidden');
+        document.getElementById('preview-ring')
+            .classList.replace('border-dashed', 'border-solid');
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+document.getElementById('banner-image-input')
+    .addEventListener('change', function () {
+        if (!this.files?.[0]) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const wrap = document.getElementById('banner-preview-wrap');
+            const img  = document.getElementById('banner-preview');
+            img.src = e.target.result;
+            wrap.classList.remove('hidden');
+        };
+        reader.readAsDataURL(this.files[0]);
+    });
+</script>
+@endpush
