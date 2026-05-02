@@ -1,4 +1,10 @@
 @extends('layouts.app')
+
+@php
+    $isRtl  = app()->getLocale() === 'ar';
+    $locale = app()->getLocale();
+@endphp
+
 @section('title', $product->name)
 
 @push('head')
@@ -127,17 +133,21 @@
 @if($floatingLink)
     <x-floating-button :number="$floatingLink->whatsapp_number" />
 @endif
-    @yield('content')
+
 @include('partials.bottombar')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" dir="rtl">
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    {{-- Breadcrumb ──────────────────────────────────────────────────────── --}}
+    {{-- Breadcrumb --}}
     <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-8 flex-wrap">
-        <a href="{{ route('products.index') }}" class="hover:text-gray-800 transition-colors">المتجر</a>
+        <a href="{{ route('products.index') }}" class="hover:text-gray-800 transition-colors">
+            {{ __('app.shop_breadcrumb') }}
+        </a>
 
         @foreach($product->categories->first()?->getAncestors() ?? collect() as $ancestor)
-        <svg class="w-3.5 h-3.5 rotate-180 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-3.5 h-3.5 flex-shrink-0 {{ $isRtl ? 'rotate-180' : '' }}"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
         <a href="{{ route('products.index', ['category' => $ancestor->slug]) }}"
@@ -145,14 +155,18 @@
         @endforeach
 
         @if($product->categories->first())
-        <svg class="w-3.5 h-3.5 rotate-180 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-3.5 h-3.5 flex-shrink-0 {{ $isRtl ? 'rotate-180' : '' }}"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
         <a href="{{ route('products.index', ['category' => $product->categories->first()->slug]) }}"
-           class="hover:text-gray-800 transition-colors">{{ $product->categories->first()->name }}</a>
+           class="hover:text-gray-800 transition-colors">
+            {{ $product->categories->first()->name }}
+        </a>
         @endif
 
-        <svg class="w-3.5 h-3.5 rotate-180 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-3.5 h-3.5 flex-shrink-0 {{ $isRtl ? 'rotate-180' : '' }}"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
         <span class="text-gray-900 font-medium">{{ Str::limit($product->name, 40) }}</span>
@@ -161,9 +175,8 @@
     {{-- ═══ PRODUCT LAYOUT ════════════════════════════════════════════════ --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-20">
 
-        {{-- ── Gallery ────────────────────────────────────────────────── --}}
+        {{-- ── Gallery ─────────────────────────────────────────────────── --}}
         <div>
-            {{-- Main image: aspect-square + object-cover, same as index cards --}}
             <div class="aspect-square rounded-2xl overflow-hidden bg-gray-100
                         border border-gray-100 main-img-wrap mb-3 relative">
                 <div class="shimmer absolute inset-0 z-0" id="main-img-shimmer"></div>
@@ -179,7 +192,6 @@
                      onload="document.getElementById('main-img-shimmer').style.display='none'">
             </div>
 
-            {{-- Thumbnails --}}
             @php
                 $allImages = collect();
                 foreach ($product->getMedia('products') as $m) { $allImages->push($m->getUrl()); }
@@ -205,7 +217,7 @@
             @endif
         </div>
 
-        {{-- ── Product Info ────────────────────────────────────────────── --}}
+        {{-- ── Product Info ─────────────────────────────────────────────── --}}
         <div class="flex flex-col">
 
             {{-- Category + badges --}}
@@ -220,13 +232,13 @@
 
                 @if($product->is_on_sale)
                 <span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                    {{ $product->discount_percentage }}% خصم
+                    {{ __('app.discount_badge', ['percent' => $product->discount_percentage]) }}
                 </span>
                 @endif
 
                 @if($product->is_featured)
                 <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                    ⭐ مميز
+                    {{ __('app.featured_badge_full') }}
                 </span>
                 @endif
             </div>
@@ -235,11 +247,11 @@
                 {{ $product->name }}
             </h1>
 
-            {{-- Price — identical logic & classes to index card --}}
+            {{-- Price --}}
             <div class="flex flex-col mb-5" id="price-wrapper">
                 @if($product->is_on_sale)
                 <span class="text-xs text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded w-fit mb-2">
-                    تخفيض
+                    {{ __('app.sale_label') }}
                 </span>
                 <div class="flex items-end gap-3 flex-wrap">
                     <span id="price-current"
@@ -255,7 +267,7 @@
                         $savings = round(($product->base_price - $product->discount_price) * $rate, 2);
                     @endphp
                     <span class="text-sm text-red-500 font-semibold mb-1">
-                        وفّر {{ number_format($savings, 2) }} {{ $sym }}
+                        {{ __('app.savings', ['amount' => number_format($savings, 2), 'symbol' => $sym]) }}
                     </span>
                 </div>
                 @else
@@ -271,11 +283,13 @@
                 @if($product->in_stock)
                 <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0"></div>
                 <span class="text-sm text-emerald-700 font-medium">
-                    متوفر ({{ $product->total_stock }} قطعة)
+                    {{ __('app.in_stock', ['qty' => $product->total_stock]) }}
                 </span>
                 @else
                 <div class="w-2.5 h-2.5 rounded-full bg-red-400 flex-shrink-0"></div>
-                <span class="text-sm text-red-600 font-medium">نفد المخزون</span>
+                <span class="text-sm text-red-600 font-medium">
+                    {{ __('app.out_of_stock_full') }}
+                </span>
                 @endif
             </div>
 
@@ -285,14 +299,10 @@
             </p>
             @endif
 
-      
+            {{-- Variants --}}
             @if($product->variants->isNotEmpty())
 
             @php
-                /*
-                 * Pre-encode in a @php block to avoid Blade parser issues
-                 * when arrow functions appear inside {!! !!} tags.
-                 */
                 $variantsJson = json_encode(
                     $product->variants->map(function ($v) {
                         return [
@@ -307,10 +317,6 @@
                     })->values()->all()
                 );
 
-                /*
-                 * Build the array of attribute IDs that MUST be selected.
-                 * Drives client-side validation — fully dynamic.
-                 */
                 $requiredAttrIds = collect($variantAttributes)
                     ->map(fn($values) => $values->first()->attribute_id)
                     ->values()
@@ -320,7 +326,7 @@
             <script>
                 window.VARIANTS        = {!! $variantsJson !!};
                 window.BASE_PRICE      = {{ (float) $product->effective_price }};
-                window.SEL_AVS         = {};                     // { attrId: avId }
+                window.SEL_AVS         = {};
                 window.REQUIRED_ATTRS  = {!! json_encode($requiredAttrIds) !!};
                 window.CURRENCY_RATE   = {{ (float) ($activeCurrency->exchange_rate ?? 1) }};
                 window.CURRENCY_SYMBOL = '{{ $activeCurrency->symbol ?? 'د.أ' }}';
@@ -332,15 +338,12 @@
                     $attrId  = $values->first()->attribute_id;
                     $isColor = $values->first()->attribute->type === 'color';
                 @endphp
-
-         
                 <div class="attr-block" data-attr-id="{{ $attrId }}" id="attr-block-{{ $attrId }}">
 
                     <p class="attr-label text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
                         {{ $attrName }}
                         <span class="text-red-400 text-xs">*</span>
-                        <span id="sel-label-{{ $attrId }}"
-                              class="font-normal text-gray-400 text-xs"></span>
+                        <span id="sel-label-{{ $attrId }}" class="font-normal text-gray-400 text-xs"></span>
                     </p>
 
                     <div class="attr-options flex flex-wrap gap-2">
@@ -375,30 +378,30 @@
                                   d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
                                   clip-rule="evenodd"/>
                         </svg>
-                        يرجى اختيار {{ $attrName }}
+                        {{-- Baked in at render time; attrName is already locale-aware (Phase 2) --}}
+                        {{ __('app.attr_required', ['attr' => $attrName]) }}
                     </p>
                 </div>
                 @endforeach
             </div>
 
-            {{-- Global validation banner (shown when CTA tapped without full selection) --}}
+            {{-- Global validation banner --}}
             <div id="cart-error-banner" role="alert">
                 <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd"
                           d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
                           clip-rule="evenodd"/>
                 </svg>
-                <span id="cart-error-text">يرجى اختيار جميع الخصائص المطلوبة</span>
+                <span id="cart-error-text">{{ __('app.cart_error_missing') }}</span>
             </div>
 
             <p id="variant-sku" class="text-xs text-gray-400 mt-2 mb-4 font-mono"></p>
 
             @endif {{-- /variants --}}
 
-            {{-- ── Qty + CTA ───────────────────────────────────────────── --}}
+            {{-- Qty + CTA --}}
             @if($product->in_stock)
             <div class="flex items-center gap-3 mb-6 mt-2">
-                {{-- Qty stepper --}}
                 <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden flex-shrink-0">
                     <button type="button" onclick="adjustQty(-1)"
                             class="w-10 h-12 flex items-center justify-center text-gray-600
@@ -412,7 +415,6 @@
                                    hover:bg-gray-50 transition-colors text-xl select-none">+</button>
                 </div>
 
-                {{-- Add to cart --}}
                 <button id="add-to-cart-btn"
                         type="button"
                         onclick="addToCart()"
@@ -424,27 +426,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
-                    أضف إلى السلة
+                    {{ __('app.add_to_cart') }}
                 </button>
             </div>
             @else
             <div class="bg-gray-100 text-gray-500 text-center py-4 rounded-xl mb-6 font-medium text-sm">
-                هذا المنتج غير متوفر حالياً
+                {{ __('app.product_unavailable') }}
             </div>
             @endif
 
-            {{-- ════════════════════════════════════════════════════════════
-                 DYNAMIC SITE FEATURES
-                 ─────────────────────────────────────────────────────────
-                 Replaces the old static 3-column trust-badge block.
-                 Data comes from the `site_features` table via SiteFeature model.
-                 Layout stays grid-cols-3 — matching the previous static version.
-                 Admin can add/remove/reorder badges from the dashboard.
-            ════════════════════════════════════════════════════════════ --}}
-            @php
-                $siteFeatures = \App\Models\SiteFeature::active()->get();
-            @endphp
-
+            {{-- Site features (dynamic, DB-driven) --}}
+            @php $siteFeatures = \App\Models\SiteFeature::active()->get(); @endphp
             @if($siteFeatures->isNotEmpty())
             <div class="features-grid mt-1">
                 @foreach($siteFeatures as $feat)
@@ -461,18 +453,20 @@
 
             @if($product->sku)
             <p class="text-xs text-gray-400 mt-4">
-                كود المنتج: <span class="font-mono">{{ $product->sku }}</span>
+                {{ __('app.product_sku', ['sku' => $product->sku]) }}
             </p>
             @endif
         </div>
     </div>
 
-    {{-- Related products ─────────────────────────────────────────────────── --}}
+    {{-- Related products --}}
     @if($related->isNotEmpty())
     <section>
         <div class="flex items-center gap-2 mb-6">
             <span class="w-1 h-5 rounded-full" style="background:var(--brand-color,#0ea5e9)"></span>
-            <h2 class="font-display text-2xl font-bold text-gray-900">قد يعجبك أيضاً</h2>
+            <h2 class="font-display text-2xl font-bold text-gray-900">
+                {{ __('app.you_may_also_like') }}
+            </h2>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             @foreach($related as $rel)
@@ -488,7 +482,7 @@
                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                          loading="lazy">
                 </div>
-                <div class="p-3">
+                <div class="p-3 {{ $isRtl ? 'text-right' : 'text-left' }}">
                     <p class="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-1">
                         {{ $rel->name }}
                     </p>
@@ -506,58 +500,66 @@
         </div>
     </section>
     @endif
-<script>
-console.log("TEST");
-function selectOption(){console.log('ok');}
-function addToCart(){console.log('ok');}
-function adjustQty(){console.log('ok');}
-</script>
+
 </div>
 @endsection
+
 @push('scripts')
 <script>
-var MAX_QTY = {{ (int) $product->total_stock }};
+/*
+ * All locale strings baked in at server render time.
+ * JS never needs to know the current locale — it just reads I18N.
+ */
+var I18N = {
+    inStock:           "{{ __('app.stock_in_js') }}",
+    outOfStock:        "{{ __('app.stock_out_js') }}",
+    cartError:         "{{ __('app.cart_error_missing') }}",
+    cartErrorCount:    "{{ addslashes(__('app.cart_error_missing_count', ['count' => ':count'])) }}",
+    optionUnavailable: "{{ __('app.option_unavailable') }}",
+    errorTitle:        "{{ __('app.error_title') }}",
+    warningTitle:      "{{ __('app.warning_title') }}",
+    serverError:       "{{ __('app.server_error') }}",
+    cartSuccess:       "{{ __('app.cart_success') }}",
+    addingToCart:      "{{ __('app.adding_to_cart') }}",
+    addToCart:         "{{ __('app.add_to_cart') }}",
+    variantSkuPrefix:  "{{ __('app.variant_sku_prefix') }}",
+};
+
+var MAX_QTY      = {{ (int) $product->total_stock }};
 var selectedVariant = null;
 
 window.REQUIRED_ATTRS = (window.REQUIRED_ATTRS || []).map(String);
 window.SEL_AVS = {};
 
-/* ───────────── Qty ───────────── */
+/* ── Qty ────────────────────────────────────────────────────────── */
 function adjustQty(delta) {
-    var input = document.getElementById('qty-input');
+    var input  = document.getElementById('qty-input');
     var maxQty = selectedVariant ? selectedVariant.stock : MAX_QTY;
-
     var current = parseInt(input.value || 1);
     input.value = Math.max(1, Math.min(maxQty, current + delta));
 }
 
-/* ───────────── Gallery ───────────── */
+/* ── Gallery ────────────────────────────────────────────────────── */
 function switchImage(src, btn) {
     var main = document.getElementById('main-image');
-
     main.style.opacity = '0';
     setTimeout(function () {
         main.src = src;
         main.style.opacity = '1';
     }, 120);
-
     document.querySelectorAll('.thumb-btn').forEach(function (b) {
-        b.style.borderColor = (b === btn)
-            ? 'var(--brand-color,#0ea5e9)'
-            : 'transparent';
+        b.style.borderColor = (b === btn) ? 'var(--brand-color,#0ea5e9)' : 'transparent';
     });
 }
 
-/* ───────────── Select Option ───────────── */
+/* ── Select option ──────────────────────────────────────────────── */
 function selectOption(btn) {
     var attrId = String(btn.dataset.attr);
-    var avId = Number(btn.dataset.av);
+    var avId   = Number(btn.dataset.av);
 
     btn.closest('[data-attr-id]')
         .querySelectorAll('[data-attr="' + attrId + '"]')
-        .forEach(function (b) {
-            b.classList.remove('selected');
-        });
+        .forEach(function (b) { b.classList.remove('selected'); });
 
     btn.classList.add('selected');
 
@@ -565,12 +567,11 @@ function selectOption(btn) {
     if (labelEl) labelEl.textContent = '— ' + btn.dataset.label;
 
     window.SEL_AVS[attrId] = avId;
-
     clearAttrError(attrId);
     resolveVariant();
 }
 
-/* ───────────── Resolve Variant ───────────── */
+/* ── Resolve variant ────────────────────────────────────────────── */
 function resolveVariant() {
     var selectedIds = Object.values(window.SEL_AVS).map(Number);
     if (!selectedIds.length) return;
@@ -584,52 +585,53 @@ function resolveVariant() {
 
     selectedVariant = match;
 
+    /* Price */
     var priceEl = document.getElementById('price-current');
     if (priceEl) {
-        var raw = match ? match.price : window.BASE_PRICE;
+        var raw       = match ? match.price : window.BASE_PRICE;
         var converted = Math.round(raw * (window.CURRENCY_RATE || 1) * 100) / 100;
-
         priceEl.textContent =
             new Intl.NumberFormat('en-US', {
                 minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(converted) +
-            ' ' + (window.CURRENCY_SYMBOL || 'د.أ');
+                maximumFractionDigits: 2,
+            }).format(converted) + ' ' + (window.CURRENCY_SYMBOL || '');
     }
 
+    /* Stock badge — uses I18N object, no hardcoded Arabic */
     var stockEl = document.getElementById('stock-status');
     if (stockEl && match) {
         stockEl.innerHTML = match.stock > 0
             ? '<div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>' +
-              '<span class="text-sm text-emerald-700 font-medium">متوفر (' + match.stock + ')</span>'
+              '<span class="text-sm text-emerald-700 font-medium">' +
+                  I18N.inStock + ' (' + match.stock + ')</span>'
             : '<div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>' +
-              '<span class="text-sm text-red-600 font-medium">نفد المخزون</span>';
+              '<span class="text-sm text-red-600 font-medium">' + I18N.outOfStock + '</span>';
     }
 
+    /* SKU */
     var skuEl = document.getElementById('variant-sku');
-    if (skuEl) skuEl.textContent = match ? 'كود: ' + match.sku : '';
+    if (skuEl) skuEl.textContent = match ? I18N.variantSkuPrefix + match.sku : '';
 
+    /* Qty cap */
     var qtyInput = document.getElementById('qty-input');
     if (qtyInput && match) {
-        qtyInput.max = match.stock;
+        qtyInput.max   = match.stock;
         qtyInput.value = Math.min(parseInt(qtyInput.value || 1), match.stock || 1);
     }
 
+    /* Cart button state */
     var cartBtn = document.getElementById('add-to-cart-btn');
     if (cartBtn) {
         var disabled = match && match.stock <= 0;
-
-        cartBtn.disabled = disabled;
+        cartBtn.disabled     = disabled;
         cartBtn.style.opacity = disabled ? '0.4' : '1';
-        cartBtn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+        cartBtn.style.cursor  = disabled ? 'not-allowed' : 'pointer';
     }
 
-    if (match && match.image_url) {
-        switchImage(match.image_url, null);
-    }
+    if (match && match.image_url) switchImage(match.image_url, null);
 }
 
-/* ───────────── Errors ───────────── */
+/* ── Errors ─────────────────────────────────────────────────────── */
 function clearAttrError(attrId) {
     var el = document.getElementById('attr-block-' + attrId);
     if (el) el.classList.remove('has-error');
@@ -638,16 +640,13 @@ function clearAttrError(attrId) {
 function markAttrError(attrId) {
     var el = document.getElementById('attr-block-' + attrId);
     if (!el) return;
-
     el.classList.remove('has-error');
     void el.offsetWidth;
     el.classList.add('has-error');
 }
 
 function validateSelections() {
-    var required = (window.REQUIRED_ATTRS || []).map(String);
-    if (!required.length) return true;
-
+    var required     = (window.REQUIRED_ATTRS || []).map(String);
     var missingCount = 0;
 
     required.forEach(function (attrId) {
@@ -659,13 +658,12 @@ function validateSelections() {
         }
     });
 
-    var banner = document.getElementById('cart-error-banner');
+    var banner  = document.getElementById('cart-error-banner');
     var errText = document.getElementById('cart-error-text');
 
     if (missingCount > 0) {
         if (errText) {
-            errText.textContent =
-                'يرجى اختيار جميع الخصائص المطلوبة — ' + missingCount + ' خصائص ناقصة';
+            errText.textContent = I18N.cartErrorCount.replace(':count', missingCount);
         }
         if (banner) banner.classList.add('visible');
         return false;
@@ -675,100 +673,63 @@ function validateSelections() {
     return true;
 }
 
-/* ───────────── Add to cart ───────────── */
-function validateSelections() {
-    var required = (window.REQUIRED_ATTRS || []).map(String);
-    var missingCount = 0;
-
-    required.forEach(function (attrId) {
-        if (!window.SEL_AVS[attrId]) {
-            var block = document.getElementById('attr-block-' + attrId);
-            if (block) block.classList.add('has-error');
-            missingCount++;
-        }
-    });
-
-    var banner = document.getElementById('cart-error-banner');
-    if (missingCount > 0) {
-        if (banner) banner.classList.add('visible');
-        return false;
-    }
-    if (banner) banner.classList.remove('visible');
-    return true;
-}
-
+/* ── Add to cart ────────────────────────────────────────────────── */
 function addToCart() {
-    // 1. التحقق من الاختيارات قبل الإرسال
     if (!validateSelections()) return;
 
     if (!selectedVariant || !selectedVariant.id) {
-        Swal.fire({ icon: 'error', title: 'عذراً', text: 'هذا الخيار غير متوفر حالياً' });
+        Swal.fire({ icon: 'error', title: I18N.errorTitle, text: I18N.optionUnavailable });
         return;
     }
 
-    var btn = document.getElementById('add-to-cart-btn');
-    var qty = parseInt(document.getElementById('qty-input').value) || 1;
-    
-    // حفظ المحتوى الأصلي للزر
+    var btn             = document.getElementById('add-to-cart-btn');
+    var qty             = parseInt(document.getElementById('qty-input').value) || 1;
     var originalContent = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="animate-spin">🔄</span> جاري الإضافة...';
 
-    // الإرسال للسيرفر
+    btn.disabled   = true;
+    btn.innerHTML  = '<span class="animate-spin">🔄</span> ' + I18N.addingToCart;
+
     fetch("{{ route('cart.add') }}", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': "{{ csrf_token() }}",
-            'Accept': 'application/json'
+            'Accept': 'application/json',
         },
         body: JSON.stringify({
             product_id: "{{ $product->id }}",
             variant_id: selectedVariant.id,
-            quantity: qty
-        })
+            quantity:   qty,
+        }),
     })
-    .then(async response => {
-        const data = await response.json();
+    .then(async function (response) {
+        var data = await response.json();
         if (!response.ok) {
-            // معالجة خطأ 422 بالتحديد
-            if (response.status === 422) {
-                throw new Error(data.message || "يرجى التأكد من الاختيارات");
-            }
-            throw new Error("حدث خطأ في السيرفر");
+            throw new Error(data.message || (response.status === 422 ? I18N.cartError : I18N.serverError));
         }
         return data;
     })
-   .then(data => {
-    // 1. تحديث سلة Livewire إذا كانت موجودة
-    if(window.Livewire) {
-        Livewire.dispatch('cartUpdated');
-    }
+    .then(function (data) {
+        if (window.Livewire) Livewire.dispatch('cartUpdated');
 
-    // 2. إظهار إشعار نجاح (Toast) جذاب
-    const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-    });
-
-    Toast.fire({
-        icon: 'success',
-        title: 'تمت إضافة المنتج للسلة بنجاح'
-    });
-})
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({ icon: 'warning', title: 'تنبيه', text: error.message });
+        Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: function (toast) {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            },
+        }).fire({ icon: 'success', title: I18N.cartSuccess });
     })
-    .finally(() => {
-        btn.disabled = false;
+    .catch(function (error) {
+        console.error('Error:', error);
+        Swal.fire({ icon: 'warning', title: I18N.warningTitle, text: error.message });
+    })
+    .finally(function () {
+        btn.disabled  = false;
         btn.innerHTML = originalContent;
     });
 }

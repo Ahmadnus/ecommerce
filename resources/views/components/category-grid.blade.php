@@ -1,20 +1,3 @@
-{{-- 
-    resources/views/components/category-grid.blade.php
-    ────────────────────────────────────────────────────────────────
-    Full SHEIN-style category section.
-    Renders a scrollable horizontal strip on mobile, and a
-    multi-row responsive grid on desktop.
-
-    Usage (in products/index.blade.php or any page):
-        <x-category-grid :categories="$topCategories" :current="$currentCategory" />
-
-    Props:
-        $categories   Collection   — flat list of Category models
-        $current      ?Category    — currently active category (for highlight)
-        $title        string       — optional section header  ('' = no header)
-        $showAll      bool         — prepend an "All" pill
---}}
-
 @props([
     'categories',
     'current'  => null,
@@ -22,8 +5,10 @@
     'showAll'  => true,
 ])
 
+@php $isRtl = app()->getLocale() === 'ar'; @endphp
+
 @if($categories->isNotEmpty())
-<section class="category-grid-section mb-6" dir="rtl">
+<section class="category-grid-section mb-6" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 
     @if($title)
     <div class="flex items-center justify-between mb-3 px-1">
@@ -55,7 +40,7 @@
             </div>
             <span class="text-[10px] font-semibold text-center leading-snug
                          {{ !$current ? 'text-[var(--brand-color,#0ea5e9)]' : 'text-gray-600' }}">
-                الكل
+                {{ __('app.all_categories') }}
             </span>
         </a>
         @endif
@@ -89,7 +74,7 @@
             </div>
             <span class="text-[11px] font-semibold text-center
                          {{ !$current ? 'text-[var(--brand-color,#0ea5e9)]' : 'text-gray-600' }}">
-                الكل
+                {{ __('app.all_categories') }}
             </span>
         </a>
         @endif

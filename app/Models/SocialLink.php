@@ -1,18 +1,20 @@
 <?php
 
 namespace App\Models;
-
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Model;
 
-class SocialLink extends Model
+class SocialLink extends Model implements HasMedia
 {
-protected $fillable = [
-    'platform_name', 
-    'url', 
-    'icon_svg', 
-    'sort_order', 
-    'is_active', 
-    'whatsapp_number', // إضافة هذا
-    'is_floating'      // إضافة هذا
-];
+    use InteractsWithMedia;
+
+    protected $fillable = [
+        'platform_name',
+        'url',
+        'sort_order',
+        'is_active',
+        'whatsapp_number',
+        'is_floating',
+    ];
 }

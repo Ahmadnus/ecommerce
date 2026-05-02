@@ -304,3 +304,16 @@ Route::get('/debug-send-test-sms', function (SmsService $sms) {
         ],
     ]);
 })->middleware('auth');
+
+
+Route::post('/language/switch', function (\Illuminate\Http\Request $request) {
+    $locale = $request->input('locale');
+    if (in_array($locale, ['ar', 'en'])) {
+        session(['locale' => $locale]);
+    }
+     
+    return back();
+})->name('language.switch');
+Route::get('/test-locale', function () {
+    return app()->getLocale();
+});

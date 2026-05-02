@@ -1,15 +1,11 @@
-{{--
-    resources/views/products/index.blade.php
-    ─────────────────────────────────────────────────────────────────────────────
-    Changes from previous version:
-    1. Live search bar with Alpine.js dropdown (replaces static form submission)
-    2. Product cards include a share button (Web Share API + clipboard fallback)
-    3. Home page sections driven by HomeSection model (no hardcoded blocks)
-    ─────────────────────────────────────────────────────────────────────────────
---}}
 @extends('layouts.app')
 
-@section('title', $currentCategory ? $currentCategory->name . ' — المتجر' : 'جميع المنتجات')
+@php
+    $isRtl  = app()->getLocale() === 'ar';
+    $locale = app()->getLocale();
+@endphp
+
+@section('title', $currentCategory ? $currentCategory->name . ($isRtl ? ' — المتجر' : ' — Shop') : __('app.all_products'))
 
 @push('head')
 <style>
@@ -264,13 +260,13 @@
 
 @section('content')
 
-{{-- ── Announcement banners ─────────────────────────────────────────────────── --}}
+{{-- ── Announcement banners ──────────────────────────────────────────── --}}
 @php
     $announcements = \App\Models\Announcement::where('is_active', true)
                          ->orderBy('sort_order')->get();
 @endphp
 @if($announcements->count() > 0)
-<div class="announce-bar md:hidden" dir="rtl">
+<div class="announce-bar md:hidden" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
     <div class="announce-ticker" aria-hidden="true">
         @foreach($announcements->concat($announcements) as $item)
             <span>{{ $item->content }}</span>
@@ -278,7 +274,7 @@
         @endforeach
     </div>
 </div>
-<div class="announce-bar hidden md:flex" dir="rtl">
+<div class="announce-bar hidden md:flex" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
     @foreach($announcements as $item)
         <span>{{ $item->content }}</span>
         @if(!$loop->last)<span class="announce-dot"></span>@endif
@@ -286,7 +282,7 @@
 </div>
 @endif
 
-{{-- ── Floating WhatsApp ─────────────────────────────────────────────────────── --}}
+{{-- ── Floating WhatsApp ─────────────────────────────────────────────── --}}
 @php
     $floatingLink = \App\Models\SocialLink::where('is_active',true)
                         ->where('is_floating',true)->first();
@@ -295,22 +291,35 @@
     <x-floating-button :number="$floatingLink->whatsapp_number" />
 @endif
 
-{{-- ── Sort drawer ──────────────────────────────────────────────────────────── --}}
+{{-- ── Sort drawer ───────────────────────────────────────────────────── --}}
 <div class="sort-drawer-overlay" id="sort-overlay" onclick="closeSortDrawer()">
-    <div class="sort-drawer" id="sort-drawer" dir="rtl" onclick="event.stopPropagation()">
+    <div class="sort-drawer" id="sort-drawer" dir="{{ $isRtl ? 'rtl' : 'ltr' }}" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-2">
-            <p class="font-bold text-gray-900">ترتيب حسب</p>
+            <p class="font-bold text-gray-900">{{ __('app.sort_by') }}</p>
             <button onclick="closeSortDrawer()" class="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
         </div>
-        @foreach(['featured'=>['label'=>'المميزة أولاً','icon'=>'⭐'],'price_asc'=>['label'=>'السعر: من الأقل','icon'=>'↑'],'price_desc'=>['label'=>'السعر: من الأعلى','icon'=>'↓'],'newest'=>['label'=>'الأحدث أولاً','icon'=>'🆕']] as $val => $opt)
-        @php $isChosen = request('sort','featured') === $val; @endphp
+
+        @php
+        $sortOptions = [
+            'featured'   => ['label' => __('app.sort_featured'),   'icon' => '⭐'],
+            'price_asc'  => ['label' => __('app.sort_price_asc'),  'icon' => '↑'],
+            'price_desc' => ['label' => __('app.sort_price_desc'), 'icon' => '↓'],
+            'newest'     => ['label' => __('app.sort_newest'),     'icon' => '🆕'],
+        ];
+        @endphp
+
+        @foreach($sortOptions as $val => $opt)
+        @php $isChosen = request('sort', 'featured') === $val; @endphp
         <a href="{{ request()->fullUrlWithQuery(['sort' => $val]) }}" onclick="closeSortDrawer()"
            class="sort-option {{ $isChosen ? 'chosen' : '' }}">
-            <span class="flex items-center gap-2"><span class="text-base">{{ $opt['icon'] }}</span>{{ $opt['label'] }}</span>
+            <span class="flex items-center gap-2">
+                <span class="text-base">{{ $opt['icon'] }}</span>
+                {{ $opt['label'] }}
+            </span>
             @if($isChosen)
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--brand)">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
@@ -323,119 +332,89 @@
 
 @include('partials.bottombar')
 
-{{-- ════════════════════════════════════════════════════════════════════════════
+{{-- ════════════════════════════════════════════════════════════════════
      PAGE BODY
-════════════════════════════════════════════════════════════════════════════ --}}
-<div class="bg-gray-50 pb-bar md:pb-12" dir="rtl">
+════════════════════════════════════════════════════════════════════════ --}}
+<div class="bg-gray-50 pb-bar md:pb-12" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <div class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
 
-    {{-- ── Hero banners ─────────────────────────────────────────────────────── --}}
+    {{-- ── Hero banners (top position) ─────────────────────────────── --}}
     @if(!$currentCategory)
     @php
         $banners = \App\Models\HeroBanner::where('is_active', true)->orderBy('sort_order')->get();
     @endphp
-@foreach($banners as $banner)
-    @if($banner->position === 'top')
-
+    @foreach($banners as $banner)
+        @if($banner->position === 'top')
         @php
-            $image = $banner->getFirstMediaUrl('banner_image');
+            $image    = $banner->getFirstMediaUrl('banner_image');
             $hasImage = !empty($image);
         @endphp
-
         <div class="hero-banner mt-4 mb-5 reveal"
              style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
-
             <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
                         {{ $hasImage ? '' : 'justify-center text-center' }}">
-
-                {{-- النص --}}
-                <div class="{{ $hasImage ? 'flex-1 text-right' : 'max-w-xl mx-auto text-center' }}">
-
+                <div class="{{ $hasImage ? 'flex-1 ' . ($isRtl ? 'text-right' : 'text-left') : 'max-w-xl mx-auto text-center' }}">
                     @if($banner->badge)
                         <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
                               style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
                             {{ $banner->badge }}
                         </span>
                     @endif
-
                     <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
                         style="color: {{ $banner->text_color ?? '#fff' }};">
                         {{ $banner->title }}
-
                         @if($banner->subtitle)
-                            <br>
-                            <span style="color: {{ $banner->text_color ?? '#fff' }};">
-                                {{ $banner->subtitle }}
-                            </span>
+                            <br><span style="color: {{ $banner->text_color ?? '#fff' }};">{{ $banner->subtitle }}</span>
                         @endif
                     </h2>
-
                     <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
                        style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
                         {{ $banner->description }}
                     </p>
-
                     <a href="{{ $banner->button_url ?? '#' }}"
                        class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
                        style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
                         {{ $banner->button_text }}
                     </a>
-
                 </div>
-
-                {{-- الصورة --}}
                 @if($hasImage)
                     <div class="w-32 sm:w-40 md:w-52 flex-shrink-0 relative">
-                        <img src="{{ $image }}"
-                             class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+                        <img src="{{ $image }}" class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
                     </div>
                 @endif
-
             </div>
         </div>
-
+        @endif
+    @endforeach
     @endif
-@endforeach
-    @endif
 
-    {{-- ── Category grid ────────────────────────────────────────────────────── --}}
+    {{-- ── Category grid ────────────────────────────────────────────── --}}
     @php
         $topCategories = \App\Models\Category::active()->roots()
             ->with(['allActiveChildren','media'])
             ->orderBy('sort_order')->take(20)->get();
     @endphp
-
-
-    {{-- ── Toolbar: search + sort ──────────────────────────────────────────── --}}
- <div class="relative overflow-hidden pt-2"> 
+    <div class="relative overflow-hidden pt-2">
         <x-category-grid :categories="$topCategories" :current="$currentCategory ?? null" :show-all="true" />
     </div>
 
-    {{-- ── Toolbar: search + sort ──────────────────────────────────────────── --}}
+    {{-- ── Toolbar: search + sort ───────────────────────────────────── --}}
     <div class="flex items-center justify-between mb-4 gap-3 mt-4">
         <div>
-           @if($currentCategory && !$currentCategory->shouldShowBanner())
-<h1 class="font-display text-lg md:text-2xl font-bold text-gray-900">{{ $currentCategory->name }}</h1>
-@endif
+            @if($currentCategory && !$currentCategory->shouldShowBanner())
+                <h1 class="font-display text-lg md:text-2xl font-bold text-gray-900">{{ $currentCategory->name }}</h1>
+            @endif
             <p class="text-xs text-gray-400 {{ $currentCategory ? 'mt-0.5' : '' }}">
-                {{ $products->total() }} منتج
+                {{ __('app.products_count', ['count' => $products->total()]) }}
                 @if(request('search'))
-                    لـ "<span class="text-gray-700 font-medium">{{ request('search') }}</span>"
+                    {{ __('app.search_for', ['term' => request('search')]) }}
                 @endif
             </p>
         </div>
 
         <div class="flex items-center gap-2">
 
-            {{-- ═══════════════════════════════════════════════════════════════
-                 LIVE SEARCH — Alpine.js component
-                 ─────────────────────────────────────────────────────────────
-                 • Debounce 280ms to limit API calls while typing
-                 • Min 2 chars before fetching
-                 • Keyboard: arrow keys navigate results, Enter follows link
-                 • Click outside closes dropdown
-                 • Spinner shows during fetch
-            ═══════════════════════════════════════════════════════════════ --}}
+            {{-- Live search (Alpine.js) --}}
             <div class="hidden sm:block relative"
                  x-data="liveSearch()"
                  x-init="init()"
@@ -451,14 +430,12 @@
                         @keydown.arrow-up.prevent="moveUp()"
                         @keydown.enter.prevent="followActive()"
                         @focus="query.length >= 2 && open()"
-                        placeholder="بحث..."
+                        placeholder="{{ __('app.search_placeholder_short') }}"
                         autocomplete="off"
                         class="pe-9 ps-3 py-2 text-xs border border-gray-200 rounded-xl
                                focus:ring-2 focus:border-transparent outline-none w-40 bg-white
-                               transition-all focus:w-56"
+                               transition-all focus:w-56 {{ $isRtl ? 'text-right' : 'text-left' }}"
                         style="--tw-ring-color:var(--brand-color)">
-
-                    {{-- Search icon / spinner --}}
                     <div class="absolute inset-y-0 end-0 flex items-center pe-2.5 pointer-events-none">
                         <svg x-show="!loading" class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -481,22 +458,19 @@
                      class="search-dropdown"
                      style="display:none">
 
-                    {{-- No results --}}
                     <template x-if="results.length === 0 && !loading && query.length >= 2">
                         <div class="px-4 py-6 text-center">
-                            <p class="text-sm text-gray-400 font-medium">لا توجد نتائج لـ "<span x-text="query" class="text-gray-700"></span>"</p>
+                            <p class="text-sm text-gray-400 font-medium"
+                               x-text="'{{ addslashes(__('app.no_results', ['term' => ''])) }}'.replace(':term', query)"></p>
                         </div>
                     </template>
 
-                    {{-- Result items --}}
                     <template x-for="(item, index) in results" :key="item.id">
                         <a :href="item.url"
                            class="search-result-item"
                            :class="activeIndex === index ? 'bg-gray-50' : ''"
                            @mouseenter="activeIndex = index"
                            @click="close()">
-
-                            {{-- Thumbnail --}}
                             <template x-if="item.image">
                                 <img :src="item.image" :alt="item.name" class="search-result-img">
                             </template>
@@ -507,9 +481,7 @@
                                     </svg>
                                 </div>
                             </template>
-
-                            {{-- Info --}}
-                            <div class="flex-1 min-w-0">
+                            <div class="flex-1 min-w-0 {{ $isRtl ? 'text-right' : 'text-left' }}">
                                 <p class="text-sm font-semibold text-gray-800 line-clamp-1" x-text="item.name"></p>
                                 <p x-show="item.category" class="text-[10px] text-gray-400 font-medium mt-0.5" x-text="item.category"></p>
                                 <div class="flex items-center gap-2 mt-0.5">
@@ -521,23 +493,23 @@
                                           x-text="item.original_price"></span>
                                 </div>
                             </div>
-
-                            {{-- Arrow icon --}}
-                            <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {{-- Arrow flips for LTR --}}
+                            <svg class="w-4 h-4 text-gray-300 flex-shrink-0 {{ $isRtl ? '' : 'rotate-180' }}"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                             </svg>
                         </a>
                     </template>
 
-                    {{-- "View all results" footer --}}
                     <template x-if="results.length > 0">
                         <a :href="'{{ route('products.index') }}?search=' + encodeURIComponent(query)"
                            class="flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold
                                   bg-gray-50 hover:bg-gray-100 transition-colors"
                            style="color:var(--brand-color)"
                            @click="close()">
-                            عرض جميع النتائج (<span x-text="results.length"></span>)
-                            <svg class="w-3.5 h-3.5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {{ __('app.view_all_results') }} (<span x-text="results.length"></span>)
+                            <svg class="w-3.5 h-3.5 {{ $isRtl ? 'rotate-180' : '' }}"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
                         </a>
@@ -545,41 +517,52 @@
                 </div>
             </div>
 
-            {{-- Desktop sort --}}
+            {{-- Desktop sort select --}}
             <div class="hidden sm:block">
                 <select onchange="window.location.href=this.value"
                         class="text-xs border border-gray-200 rounded-xl px-3 py-2 bg-white cursor-pointer outline-none focus:ring-2"
                         style="--tw-ring-color:var(--brand)">
-                    @foreach(['featured'=>'المميزة','price_asc'=>'السعر ↑','price_desc'=>'السعر ↓','newest'=>'الأحدث'] as $v => $l)
-                    <option value="{{ request()->fullUrlWithQuery(['sort'=>$v]) }}"
+                    @php
+                    $shortSorts = [
+                        'featured'   => __('app.sort_featured_short'),
+                        'price_asc'  => __('app.sort_price_asc_short'),
+                        'price_desc' => __('app.sort_price_desc_short'),
+                        'newest'     => __('app.sort_newest_short'),
+                    ];
+                    @endphp
+                    @foreach($shortSorts as $v => $l)
+                    <option value="{{ request()->fullUrlWithQuery(['sort' => $v]) }}"
                             {{ request('sort','featured') === $v ? 'selected' : '' }}>{{ $l }}</option>
                     @endforeach
                 </select>
             </div>
 
-            {{-- Mobile sort --}}
+            {{-- Mobile sort button --}}
             <button onclick="openSortDrawer()"
                     class="flex sm:hidden items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-600 shadow-sm active:scale-95 transition-transform">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M7 8h10m-7 4h4"/>
                 </svg>
-                ترتيب
+                {{ __('app.sort_btn') }}
             </button>
         </div>
     </div>
-{{-- ── Category Banner ─────────────────────────────────────────────────── --}}
-@if($currentCategory && $currentCategory->shouldShowBanner())
-<div class="cat-banner-img-wrap reveal">
-    <img src="{{ $currentCategory->getBannerImageUrl() }}"
-         alt="{{ $currentCategory->name }}"
-         loading="eager">
-</div>
-@endif
-    {{-- ── Breadcrumb ───────────────────────────────────────────────────────── --}}
+
+    {{-- ── Category banner image ────────────────────────────────────── --}}
+    @if($currentCategory && $currentCategory->shouldShowBanner())
+    <div class="cat-banner-img-wrap reveal">
+        <img src="{{ $currentCategory->getBannerImageUrl() }}"
+             alt="{{ $currentCategory->name }}"
+             loading="eager">
+    </div>
+    @endif
+
+    {{-- ── Breadcrumb ───────────────────────────────────────────────── --}}
     @if($currentCategory)
     <nav class="flex items-center gap-1 text-xs text-gray-400 mb-5 flex-wrap">
-        
-        <a href="{{ route('products.index') }}" class="hover:text-gray-700 transition-colors">المتجر</a>
+        <a href="{{ route('products.index') }}" class="hover:text-gray-700 transition-colors">
+            {{ __('app.store_breadcrumb') }}
+        </a>
         @foreach($currentCategory->getAncestors() as $ancestor)
             <span class="text-gray-300">/</span>
             <a href="{{ route('products.index', ['category' => $ancestor->slug]) }}"
@@ -590,16 +573,9 @@
     </nav>
     @endif
 
-    {{-- ══════════════════════════════════════════════════════════════════════
+    {{-- ══════════════════════════════════════════════════════════════
          DYNAMIC HOME SECTIONS
-         ─────────────────────────────────────────────────────────────────
-         When on the root /products page (no category filter):
-         → Loop through HomeSection records from the DB, each resolves its
-           own products. Admin controls title, type, limit, order.
-
-         When filtering by category:
-         → Show the regular paginated grid (no sections).
-    ══════════════════════════════════════════════════════════════════════ --}}
+    ══════════════════════════════════════════════════════════════════ --}}
     @if(!$currentCategory && !request('search') && !request('sort'))
 
     @foreach($homeSections as $section)
@@ -613,15 +589,13 @@
             </div>
             <a href="{{ route('products.index', ['sort' => $section->type === 'category' ? 'featured' : $section->type]) }}"
                class="text-xs font-bold hover:underline" style="color:var(--brand)">
-                عرض الكل ←
+                {{ __('app.view_all_arrow') }}
             </a>
         </div>
 
         <div class="featured-list">
             @foreach($sectionProducts as $sp)
-            @php
-                $spWishlisted = in_array($sp->id, $wishlistedIds ?? []);
-            @endphp
+            @php $spWishlisted = in_array($sp->id, $wishlistedIds ?? []); @endphp
             <div class="featured-card group"
                  onclick="window.location='{{ route('products.show', $sp->slug) }}'">
                 <div class="relative overflow-hidden bg-gray-100" style="padding-top:126%">
@@ -634,11 +608,10 @@
                     @if($sp->is_on_sale)
                     <div class="fc-ribbon">{{ $sp->discount_percentage }}% OFF</div>
                     @endif
-                    {{-- Share button on featured card --}}
                     <div class="absolute top-2 left-2 z-20" onclick="event.stopPropagation()">
                         <button type="button" class="share-btn"
                                 onclick="shareProduct('{{ route('products.show', $sp->slug) }}', '{{ addslashes($sp->name) }}')"
-                                title="مشاركة">
+                                title="{{ __('app.share_title') }}">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
@@ -650,7 +623,8 @@
                         <button type="button" class="heart-btn wishlist-btn"
                                 data-product-id="{{ $sp->id }}"
                                 data-wishlisted="{{ $spWishlisted ? 'true' : 'false' }}"
-                                onclick="toggleWishlist(this)">
+                                onclick="toggleWishlist(this)"
+                                aria-label="{{ $spWishlisted ? __('app.remove_from_wishlist') : __('app.add_to_wishlist') }}">
                             <svg data-heart="outline" class="{{ $spWishlisted ? 'hidden' : '' }}" fill="none" stroke="#888" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                             </svg>
@@ -661,7 +635,7 @@
                         @endauth
                     </div>
                 </div>
-                <div class="px-2.5 pt-2 pb-3">
+                <div class="px-2.5 pt-2 pb-3 {{ $isRtl ? 'text-right' : 'text-left' }}">
                     <p class="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-1">{{ $sp->name }}</p>
                     <div class="flex items-center gap-1.5">
                         @if($sp->is_on_sale)
@@ -678,78 +652,62 @@
     </section>
     @endif
     @endforeach
-@foreach($banners as $banner)
-    @if($banner->position === 'after_featured')
 
+    {{-- After-featured banners --}}
+    @foreach($banners as $banner)
+        @if($banner->position === 'after_featured')
         @php
-            $image = $banner->getFirstMediaUrl('banner_image');
+            $image    = $banner->getFirstMediaUrl('banner_image');
             $hasImage = !empty($image);
         @endphp
-
         <div class="hero-banner mt-4 mb-5 reveal"
              style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
-
             <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
                         {{ $hasImage ? '' : 'justify-center text-center' }}">
-
-                {{-- النص --}}
-                <div class="{{ $hasImage ? 'flex-1 text-right' : 'max-w-xl mx-auto text-center' }}">
-
+                <div class="{{ $hasImage ? 'flex-1 ' . ($isRtl ? 'text-right' : 'text-left') : 'max-w-xl mx-auto text-center' }}">
                     @if($banner->badge)
                         <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
                               style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
                             {{ $banner->badge }}
                         </span>
                     @endif
-
                     <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
                         style="color: {{ $banner->text_color ?? '#fff' }};">
                         {{ $banner->title }}
-
                         @if($banner->subtitle)
-                            <br>
-                            <span style="color: {{ $banner->text_color ?? '#fff' }};">
-                                {{ $banner->subtitle }}
-                            </span>
+                            <br><span style="color: {{ $banner->text_color ?? '#fff' }};">{{ $banner->subtitle }}</span>
                         @endif
                     </h2>
-
                     <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
                        style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
                         {{ $banner->description }}
                     </p>
-
                     <a href="{{ $banner->button_url ?? '#' }}"
                        class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
                        style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
                         {{ $banner->button_text }}
                     </a>
-
                 </div>
-
-                {{-- الصورة --}}
                 @if($hasImage)
                     <div class="w-32 sm:w-40 md:w-52 flex-shrink-0 relative">
-                        <img src="{{ $image }}"
-                             class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+                        <img src="{{ $image }}" class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
                     </div>
                 @endif
-
             </div>
         </div>
+        @endif
+    @endforeach
 
-    @endif
-@endforeach
     <div class="flex items-center gap-3 mb-5">
         <div class="h-px bg-gray-200 flex-1"></div>
-        <span class="text-xs font-bold text-gray-500 flex-shrink-0">جميع المنتجات</span>
+        <span class="text-xs font-bold text-gray-500 flex-shrink-0">{{ __('app.all_products_divider') }}</span>
         <div class="h-px bg-gray-200 flex-1"></div>
     </div>
     @endif
 
-    {{-- ══════════════════════════════════════════════════════════════════════
-         REGULAR PRODUCT GRID (filtered / search / sort view)
-    ══════════════════════════════════════════════════════════════════════ --}}
+    {{-- ══════════════════════════════════════════════════════════════
+         REGULAR PRODUCT GRID
+    ══════════════════════════════════════════════════════════════════ --}}
     @if($products->isEmpty())
     <div class="flex flex-col items-center justify-center py-24 text-center">
         <div class="w-16 h-16 bg-white rounded-2xl border border-gray-100 flex items-center justify-center mb-4 shadow-sm">
@@ -757,8 +715,10 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
         </div>
-        <p class="text-gray-500 font-semibold text-sm">لا توجد منتجات</p>
-        <a href="{{ route('products.index') }}" class="mt-3 text-xs font-bold hover:underline" style="color:var(--brand)">عرض الكل</a>
+        <p class="text-gray-500 font-semibold text-sm">{{ __('app.no_products') }}</p>
+        <a href="{{ route('products.index') }}" class="mt-3 text-xs font-bold hover:underline" style="color:var(--brand)">
+            {{ __('app.show_all') }}
+        </a>
     </div>
     @else
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
@@ -770,8 +730,7 @@
 
             <div class="relative overflow-hidden bg-gray-100" style="padding-top:130%">
                 <div class="shimmer absolute inset-0 z-0" id="sk-{{ $product->id }}"></div>
-              {{-- CORRECT: matches the collection name used in the controller --}}
-<<img src="{{ $product->getFirstMediaUrl('products') ?: asset('images/placeholder.jpg') }}"
+                <img src="{{ $product->getFirstMediaUrl('products') ?: asset('images/placeholder.jpg') }}"
                      alt="{{ $product->name }}"
                      class="pcard-img absolute inset-0 w-full h-full object-cover z-10"
                      loading="lazy"
@@ -783,17 +742,18 @@
 
                 @if($product->is_featured)
                 <span class="absolute top-0 right-0 z-10 text-amber-900 text-[9px] font-black px-2 py-0.5"
-                      style="background:var(--gold);border-bottom-left-radius:9px">مميز ⭐</span>
+                      style="background:var(--gold);border-bottom-left-radius:9px">
+                    {{ __('app.featured_badge') }}
+                </span>
                 @endif
 
-                {{-- Wishlist + Share buttons --}}
                 <div class="absolute bottom-2 left-2 z-20 flex gap-1.5" onclick="event.stopPropagation()">
                     @auth
                     <button type="button" class="heart-btn wishlist-btn"
                             data-product-id="{{ $product->id }}"
                             data-wishlisted="{{ $isWishlisted ? 'true' : 'false' }}"
                             onclick="toggleWishlist(this)"
-                            aria-label="{{ $isWishlisted ? 'إزالة من المفضلة' : 'إضافة للمفضلة' }}">
+                            aria-label="{{ $isWishlisted ? __('app.remove_from_wishlist') : __('app.add_to_wishlist') }}">
                         <svg data-heart="outline" class="{{ $isWishlisted ? 'hidden' : '' }}" fill="none" stroke="#999" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                         </svg>
@@ -803,10 +763,9 @@
                     </button>
                     @endauth
 
-                    {{-- ── SHARE BUTTON ── --}}
                     <button type="button" class="share-btn"
                             onclick="shareProduct('{{ route('products.show', $product->slug) }}', '{{ addslashes($product->name) }}')"
-                            title="مشاركة">
+                            title="{{ __('app.share_title') }}">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
@@ -816,12 +775,14 @@
 
                 @if(!$product->in_stock)
                 <div class="absolute inset-0 bg-white/55 z-10 flex items-end justify-center pb-3">
-                    <span class="bg-white/95 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full border border-gray-100 shadow-sm">نفد المخزون</span>
+                    <span class="bg-white/95 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full border border-gray-100 shadow-sm">
+                        {{ __('app.out_of_stock') }}
+                    </span>
                 </div>
                 @endif
             </div>
 
-            <div class="px-2 pt-2 pb-2.5 flex flex-col gap-1">
+            <div class="px-2 pt-2 pb-2.5 flex flex-col gap-1 {{ $isRtl ? 'text-right' : 'text-left' }}">
                 @if($product->categories->first())
                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide leading-none truncate">
                     {{ $product->categories->first()->name }}
@@ -832,7 +793,9 @@
                 </p>
                 <div class="flex flex-col">
                     @if($product->discount_price && $product->discount_price < $product->base_price)
-                    <span class="text-xs text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded w-fit mb-1">تخفيض</span>
+                    <span class="text-xs text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded w-fit mb-1">
+                        {{ __('app.sale_badge') }}
+                    </span>
                     <div class="flex items-center gap-2">
                         <x-price :amount="$product->discount_price" class="font-bold text-gray-900 text-sm" />
                         <x-price :amount="$product->base_price" class="text-xs text-gray-400 line-through" />
@@ -843,7 +806,7 @@
                 </div>
                 @if($product->variants->where('is_active',true)->count() > 1)
                 <p class="text-[10px] text-gray-400 leading-none">
-                    {{ $product->variants->where('is_active',true)->count() }} خيارات
+                    {{ __('app.variants_count', ['count' => $product->variants->where('is_active',true)->count()]) }}
                 </p>
                 @endif
             </div>
@@ -863,7 +826,7 @@
 
 @push('scripts')
 <script>
-/* ── Sort drawer ────────────────────────────────────────────────────── */
+/* ── Sort drawer ──────────────────────────────────────────────────── */
 function openSortDrawer() {
     document.getElementById('sort-overlay').classList.add('open');
     document.getElementById('sort-drawer').classList.add('open');
@@ -875,7 +838,7 @@ function closeSortDrawer() {
     document.body.style.overflow = '';
 }
 
-/* ── Scroll-reveal ──────────────────────────────────────────────────── */
+/* ── Scroll-reveal ────────────────────────────────────────────────── */
 (function () {
     var targets = document.querySelectorAll('.reveal');
     if (!targets.length) return;
@@ -890,58 +853,42 @@ function closeSortDrawer() {
     targets.forEach(function(el) { io.observe(el); });
 })();
 
-/* ── Stop card navigation on inner button clicks ────────────────────── */
 document.querySelectorAll('.pcard button, .featured-card button').forEach(function(btn) {
     btn.addEventListener('click', function(e) { e.stopPropagation(); });
 });
 
-/* ════════════════════════════════════════════════════════════════════════
-   WEB SHARE API — shareProduct()
-   ─────────────────────────────────────────────────────────────────────
-   1. Tries navigator.share() — native OS share sheet (mobile + modern desktop)
-   2. Falls back to navigator.clipboard.writeText() — copies URL to clipboard
-   3. Last resort: window.prompt() — user can manually copy
-════════════════════════════════════════════════════════════════════════ */
+/* ── Share product ────────────────────────────────────────────────── */
 function shareProduct(url, title) {
     var shareData = {
         title: title,
-        text:  title + ' — تسوق الآن',
+        text:  '{{ addslashes(__('app.share_text', ['name' => ''])) }}'.replace(':name', title),
         url:   url,
     };
 
     if (navigator.share) {
-        /* Native share sheet — Android, iOS Safari, Edge, Chrome desktop */
         navigator.share(shareData).catch(function(err) {
-            /* User cancelled — not an error worth logging */
-            if (err.name !== 'AbortError') {
-                console.warn('Share failed:', err);
-            }
+            if (err.name !== 'AbortError') console.warn('Share failed:', err);
         });
         return;
     }
 
-    /* Fallback 1: Modern clipboard API */
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(function() {
-            showShareToast('تم نسخ الرابط ✓');
+            showShareToast('{{ __('app.share_copied') }}');
         }).catch(function() {
-            /* Clipboard denied — use prompt */
             showSharePrompt(url);
         });
         return;
     }
 
-    /* Fallback 2: Legacy prompt */
     showSharePrompt(url);
 }
 
 function showShareToast(message) {
-    /* Reuse the global Cart toast if available */
     if (typeof Cart !== 'undefined' && Cart.toast) {
         Cart.toast(message, 'success');
         return;
     }
-    /* Otherwise create a quick inline toast */
     var toast = document.createElement('div');
     toast.textContent = message;
     toast.style.cssText = [
@@ -956,50 +903,34 @@ function showShareToast(message) {
 }
 
 function showSharePrompt(url) {
-    window.prompt('انسخ رابط المنتج:', url);
+    window.prompt('{{ __('app.share_prompt') }}', url);
 }
 
-/* ════════════════════════════════════════════════════════════════════════
-   ALPINE.JS — liveSearch() component
-   ─────────────────────────────────────────────────────────────────────
-   Registered as a global Alpine component via Alpine.data().
-   The init() call happens via x-init on the parent element.
-════════════════════════════════════════════════════════════════════════ */
+/* ── Alpine.js liveSearch component ──────────────────────────────── */
 document.addEventListener('alpine:init', function () {
     Alpine.data('liveSearch', function () {
         return {
-            query:       '',
-            results:     [],
-            isOpen:      false,
-            loading:     false,
-            activeIndex: -1,
-            timer:       null,
+            query: '', results: [], isOpen: false,
+            loading: false, activeIndex: -1, timer: null,
 
-            init() {
-                /* Nothing extra needed — x-model handles reactivity */
-            },
+            init() {},
 
             onInput() {
                 clearTimeout(this.timer);
                 this.activeIndex = -1;
-
                 if (this.query.length < 2) {
                     this.results = [];
                     this.isOpen  = false;
                     return;
                 }
-
-                /* Debounce: wait 280ms after the user stops typing */
                 this.timer = setTimeout(() => { this.fetch(); }, 280);
             },
 
             async fetch() {
                 this.loading = true;
                 this.isOpen  = true;
-
                 try {
-                    var url = '/api/search?q=' + encodeURIComponent(this.query);
-                    var res  = await window.fetch(url, {
+                    var res  = await window.fetch('/api/search?q=' + encodeURIComponent(this.query), {
                         headers: { 'Accept': 'application/json' },
                     });
                     var data = await res.json();
@@ -1015,12 +946,8 @@ document.addEventListener('alpine:init', function () {
             open()  { this.isOpen = true; },
             close() { this.isOpen = false; this.activeIndex = -1; },
 
-            moveDown() {
-                if (this.activeIndex < this.results.length - 1) this.activeIndex++;
-            },
-            moveUp() {
-                if (this.activeIndex > 0) this.activeIndex--;
-            },
+            moveDown() { if (this.activeIndex < this.results.length - 1) this.activeIndex++; },
+            moveUp()   { if (this.activeIndex > 0) this.activeIndex--; },
             followActive() {
                 if (this.activeIndex >= 0 && this.results[this.activeIndex]) {
                     window.location.href = this.results[this.activeIndex].url;

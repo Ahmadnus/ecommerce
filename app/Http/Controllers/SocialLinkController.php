@@ -11,14 +11,25 @@ class SocialLinkController extends Controller
     return view('admin.social_links.index', compact('links'));
 }
 
-public function store(Request $request) {
+public function store(Request $request)
+{
     $request->validate([
-        'platform_name' => 'required|string',
-        'url' => 'required|url',
-        'icon_svg' => 'nullable|string'
+        'platform_name'   => 'required|string',
+        'url'             => 'nullable|url',
+        'whatsapp_number' => 'nullable|string',
+        'icon'            => 'nullable|image|mimes:png,jpg,jpeg,webp',
     ]);
 
-    \App\Models\SocialLink::create($request->all());
+    $data = $request->all();
+    $data['is_floating'] = $request->has('is_floating') ? 1 : 0;
+
+    $link = \App\Models\SocialLink::create($data);
+
+    if ($request->hasFile('icon')) {
+        $link->addMediaFromRequest('icon')
+            ->toMediaCollection('icons');
+    }
+
     return back()->with('success', 'تمت إضافة الرابط بنجاح');
 }
 

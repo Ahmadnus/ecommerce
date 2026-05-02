@@ -16,6 +16,7 @@ class SocialLinkController extends Controller
 }
 
 public function store(Request $request) {
+    dd();
     $request->validate([
         'platform_name'   => 'required|string',
         'url'             => 'nullable|url', // جعلناه nullable لأن الواتساب قد يكتفي بالرقم

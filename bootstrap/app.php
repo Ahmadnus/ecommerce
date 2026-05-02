@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,11 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
             // الـ Middlewares الجديدة التي طلبت إضافتها
             'admin.route.only'   => \App\Http\Middleware\AdminRouteOnly::class,
             'user.route.only'    => \App\Http\Middleware\UserRouteOnly::class,
+              
         ]);
 
     // 2. تسجيل الـ ResolveCurrency ليعمل على "كل" طلبات المتجر تلقائياً
     $middleware->web(append: [
         \App\Http\Middleware\ResolveCurrency::class,
+       \App\Http\Middleware\SetLocale::class
     ]);
 
     })
