@@ -28,9 +28,14 @@
         font-weight: 700;
     }
 
-    label, span, p, input, textarea, select {
-        color: var(--text-black);
-    }
+   .cc-page label,
+.cc-page span,
+.cc-page p,
+.cc-page input,
+.cc-page textarea,
+.cc-page select {
+    color: var(--text-black);
+}
 
     .cc-card {
         background-color: var(--card-bg);
@@ -500,60 +505,73 @@
         row.innerHTML = buildVariantRowHTML(i);
         container.appendChild(row);
     }
-
     function buildVariantRowHTML(i) {
-        let attrHTML = '';
-        window.ATTRIBUTES.forEach(attr => {
-            let options = '';
-            attr.values.forEach(v => {
-                const isColor = attr.type === 'color';
-                options += `
-                    <label class="cursor-pointer group">
-                        <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" class="sr-only peer">
-                        <span class="${isColor ? 'w-9 h-9 rounded-full block border-2 peer-checked:scale-105' : 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all'} transition-all flex items-center justify-center text-center" 
-                              style="${isColor ? 'background-color:' + v.color_hex + '; border-color:#d1d5db;' : 'background:#f3f4f6; border:1px solid #e5e7eb; color:#374151;'}" title="${v.label}">
-                              ${isColor ? '' : v.label}
-                        </span>
-                    </label>
-                `;
-            });
-
-            attrHTML += `
-                <div class="mb-7 last:mb-0">
-                    <p class="text-[10px] font-black mb-3.5 uppercase tracking-widest" style="color:#6b7280;">${attr.name}</p>
-                    <div class="flex flex-wrap gap-3">${options}</div>
-                </div>
+    let attrHTML = '';
+    window.ATTRIBUTES.forEach(attr => {
+        let options = '';
+        attr.values.forEach(v => {
+            const isColor = attr.type === 'color';
+            
+            // هنا حافظنا على منطق البوردر الأسود للعنصر المختار فقط
+            options += `
+                <label class="cursor-pointer group relative">
+                    <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" class="sr-only peer">
+                    
+                    <span class="${isColor 
+                        ? 'w-9 h-9 rounded-full block border-2 peer-checked:border-black peer-checked:ring-2 peer-checked:ring-black peer-checked:ring-offset-2' 
+                        : 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all border-2 peer-checked:border-black peer-checked:bg-black peer-checked:text-white'} 
+                        transition-all flex items-center justify-center text-center" 
+                        
+                        style="${isColor 
+                            ? 'background-color:' + v.color_hex + '; border-color:#d1d5db;' 
+                            : 'background:#f3f4f6; border:1px solid #e5e7eb; color:#374151;'}" 
+                        title="${v.label}">
+                        
+                        ${isColor ? '' : v.label}
+                    </span>
+                </label>
             `;
         });
 
-        return `
-            <div class="flex justify-between items-center mb-6 pb-4" style="border-bottom:1px solid #f3f4f6;">
-                <div class="flex items-center gap-3.5">
-                    <span class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black" style="background:#000000; color:#ffffff; font-family:'JetBrains Mono',monospace;">#${i + 1}</span>
-                    <h4 class="text-base font-bold" style="color:#000000;">تخصيص خيارات المتغير</h4>
-                </div>
-                <button type="button" onclick="this.closest('.variant-card').remove()" class="transition-colors p-1" style="color:#9ca3af;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#9ca3af'">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round"/></svg>
-                </button>
-            </div>
-            <div class="p-5 rounded-xl mb-7" style="background:#ffffff; border:1px solid #f3f4f6;">
-                ${attrHTML}
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div>
-                    <label class="cc-label">الكمية في المخزن</label>
-                    <input type="number" name="variants[${i}][stock_quantity]" value="0" class="cc-input py-3 text-sm">
-                </div>
-                <div>
-                    <label class="cc-label">سعر المتغير (اختياري)</label>
-                    <input type="number" step="0.01" name="variants[${i}][price_override]" class="cc-input py-3 text-sm" placeholder="يجاوز السعر الأساسي">
-                </div>
-                <div>
-                    <label class="cc-label">رمز SKU الخاص</label>
-                    <input type="text" name="variants[${i}][sku]" class="cc-input py-3 text-sm font-mono" placeholder="يترك للتوليد التلقائي" style="font-family:'JetBrains Mono',monospace; color:#6b7280;">
-                </div>
+        attrHTML += `
+            <div class="mb-7 last:mb-0">
+                <p class="text-[10px] font-black mb-3.5 uppercase tracking-widest" style="color:#6b7280;">${attr.name}</p>
+                <div class="flex flex-wrap gap-3">${options}</div>
             </div>
         `;
-    }
+    });
+
+    // العودة لاستخدام كلاساتك الأصلية (cc-input, cc-label) لضمان عدم خراب التصميم
+    return `
+        <div class="flex justify-between items-center mb-6 pb-4" style="border-bottom:1px solid #f3f4f6;">
+            <div class="flex items-center gap-3.5">
+                <span class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black" style="background:#000000; color:#ffffff; font-family:'JetBrains Mono',monospace;">#${i + 1}</span>
+                <h4 class="text-base font-bold" style="color:#000000;">تخصيص خيارات المتغير</h4>
+            </div>
+            <button type="button" onclick="this.closest('.variant-card').remove()" class="transition-colors p-1" style="color:#9ca3af;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#9ca3af'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+
+        <div class="p-5 rounded-xl mb-7" style="background:#ffffff; border:1px solid #f3f4f6;">
+            ${attrHTML}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+                <label class="cc-label">الكمية في المخزن</label>
+                <input type="number" name="variants[${i}][stock_quantity]" value="0" class="cc-input py-3 text-sm">
+            </div>
+            <div>
+                <label class="cc-label">سعر المتغير (اختياري)</label>
+                <input type="number" step="0.01" name="variants[${i}][price_override]" class="cc-input py-3 text-sm" placeholder="يجاوز السعر الأساسي">
+            </div>
+            <div>
+                <label class="cc-label">رمز SKU الخاص</label>
+                <input type="text" name="variants[${i}][sku]" class="cc-input py-3 text-sm font-mono" placeholder="يترك للتوليد التلقائي" style="font-family:'JetBrains Mono',monospace; color:#6b7280;">
+            </div>
+        </div>
+    `;
+}
 </script>
 @endsection

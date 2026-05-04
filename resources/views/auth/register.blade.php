@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'إنشاء حساب جديد')
+@section('title', __('app.register_title'))
 
 @push('head')
 <style>
@@ -63,16 +63,16 @@
 <div class="w-full max-w-md">
 
     {{-- Logo --}}
-<div class="text-center mb-8">
-    <a href="{{ url('/') }}" class="inline-flex flex-col items-center gap-2 group">
-        <div class="flex items-center justify-center group-hover:scale-105 transition-transform">
-            <img src="{{ $logoUrl ?? asset('images/logo.png') }}" 
-                 alt="Logo"
-                 class="h-14 w-auto object-contain"> 
-                 </div>
-    </a>
-    <p class="text-gray-500 text-sm mt-2">أنشئ حسابك وابدأ التسوق الآن</p>
-</div>
+    <div class="text-center mb-8">
+        <a href="{{ url('/') }}" class="inline-flex flex-col items-center gap-2 group">
+            <div class="flex items-center justify-center group-hover:scale-105 transition-transform">
+                <img src="{{ $logoUrl ?? asset('images/logo.png') }}"
+                     alt="Logo"
+                     class="h-14 w-auto object-contain">
+            </div>
+        </a>
+        <p class="text-gray-500 text-sm mt-2">{{ __('app.register_subtitle') }}</p>
+    </div>
 
     <div class="auth-card bg-white rounded-2xl shadow-lg border border-gray-100 p-8"
          x-data="registerForm('{{ old('email') ? 'email' : 'phone' }}')">
@@ -89,8 +89,8 @@
         @endif
 
         <div class="mb-6">
-            <h1 class="font-display text-2xl font-bold text-gray-900">إنشاء حساب جديد</h1>
-            <p class="text-gray-400 text-sm mt-1">أدخل بياناتك وسيصلك رمز التحقق</p>
+            <h1 class="font-display text-2xl font-bold text-gray-900">{{ __('app.register_title') }}</h1>
+            <p class="text-gray-400 text-sm mt-1">{{ __('app.register_hint') }}</p>
         </div>
 
         <form action="{{ route('register') }}" method="POST" class="space-y-5" novalidate>
@@ -98,24 +98,24 @@
 
             {{-- ── Method selector ─────────────────────────────────────── --}}
             <div>
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2.5">طريقة التسجيل</p>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2.5">{{ __('app.register_method') }}</p>
                 <div class="flex gap-2">
                     <button type="button" class="method-tab" :class="method === 'phone' ? 'active' : ''"
                             @click="method = 'phone'">
-                        📱 رقم الهاتف
+                        📱 {{ __('app.register_phone') }}
                     </button>
                     <button type="button" class="method-tab" :class="method === 'email' ? 'active' : ''"
                             @click="method = 'email'">
-                        ✉️ البريد الإلكتروني
+                        ✉️ {{ __('app.register_email_tab') }}
                     </button>
                 </div>
             </div>
 
             {{-- Full name --}}
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5">الاسم الكامل</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">{{ __('app.register_name') }}</label>
                 <input type="text" name="name" value="{{ old('name') }}" required
-                       placeholder="محمد أحمد"
+                       placeholder="{{ __('app.register_name_placeholder') }}"
                        class="input-field w-full bg-gray-50 border @error('name') border-red-400 @else border-gray-200 @enderror
                               rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2"
                        style="--tw-ring-color:var(--brand-color,#0ea5e9)">
@@ -125,7 +125,7 @@
             {{-- ── PHONE section ───────────────────────────────────────── --}}
             <div x-show="method === 'phone'" x-transition>
                 {{-- Country select --}}
-            <div class="mb-4 hidden">
+                <div class="mb-4 hidden">
                     @include('components.country-select', [
                         'countries'   => $countries,
                         'name'        => 'country_id',
@@ -139,7 +139,7 @@
 
                 {{-- Phone input --}}
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">رقم الهاتف</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">{{ __('app.register_phone_label') }}</label>
                     @include('components.phone-input', [
                         'fieldName'      => 'phone_full',
                         'initialCountry' => 'sy',
@@ -153,7 +153,7 @@
 
             {{-- ── EMAIL section ───────────────────────────────────────── --}}
             <div x-show="method === 'email'" x-transition>
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5">البريد الإلكتروني</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">{{ __('app.register_email_label') }}</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 end-0 flex items-center pe-3.5 pointer-events-none">
                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,12 +170,12 @@
                            style="--tw-ring-color:var(--brand-color,#0ea5e9)">
                 </div>
                 @error('email')<p class="mt-1.5 text-xs text-red-500">{{ $message }}</p>@enderror
-                <p class="mt-1 text-[10px] text-gray-400">سيُرسل رمز التحقق إلى بريدك الإلكتروني</p>
+                <p class="mt-1 text-[10px] text-gray-400">{{ __('app.register_email_otp_hint') }}</p>
             </div>
 
             {{-- Password --}}
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5">كلمة المرور</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">{{ __('app.register_password') }}</label>
                 <div class="relative">
                     <input id="password" type="password" name="password" required
                            placeholder="••••••••" oninput="checkStr(this.value)"
@@ -210,7 +210,7 @@
 
             {{-- Confirm password --}}
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1.5">تأكيد كلمة المرور</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">{{ __('app.register_password_confirm') }}</label>
                 <input id="password_confirmation" type="password"
                        name="password_confirmation" required
                        placeholder="••••••••" oninput="checkMatch()"
@@ -220,27 +220,27 @@
             </div>
 
             <p class="text-xs text-gray-400 text-center leading-relaxed">
-                بإنشاء الحساب، أنت توافق على
-                <a href="#" class="hover:underline" style="color:var(--brand-color,#0ea5e9)">شروط الاستخدام</a>
-                وسياسة الخصوصية
+                {{ __('app.register_terms_prefix') }}
+                <a href="#" class="hover:underline" style="color:var(--brand-color,#0ea5e9)">{{ __('app.register_terms_link') }}</a>
+                {{ __('app.register_terms_suffix') }}
             </p>
 
             <button type="submit"
                     class="w-full py-3.5 rounded-xl text-white font-bold text-sm tracking-wide
                            hover:opacity-90 transition transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg"
                     style="background:var(--brand-color,#0ea5e9)">
-                إنشاء الحساب
-                <span x-text="method === 'email' ? '— سيصلك رمز على بريدك' : '— سيصلك رمز على هاتفك'"
+                {{ __('app.register_submit') }}
+                <span x-text="method === 'email' ? '{{ __('app.register_otp_email') }}' : '{{ __('app.register_otp_phone') }}'"
                       class="block text-[10px] font-normal opacity-70 mt-0.5"></span>
             </button>
         </form>
 
-        <div class="divider my-6 text-xs text-gray-400">أو</div>
+        <div class="divider my-6 text-xs text-gray-400">{{ __('app.or') }}</div>
 
         <p class="text-center text-sm text-gray-500">
-            لديك حساب بالفعل؟
+            {{ __('app.register_have_account') }}
             <a href="{{ route('login') }}" class="font-bold hover:underline mr-1"
-               style="color:var(--brand-color,#0ea5e9)">تسجيل الدخول</a>
+               style="color:var(--brand-color,#0ea5e9)">{{ __('app.login') }}</a>
         </p>
     </div>
 
@@ -250,7 +250,7 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
-            العودة إلى المتجر
+            {{ __('app.back_to_store') }}
         </a>
     </p>
 </div>
@@ -262,7 +262,7 @@
 document.addEventListener('alpine:init', function () {
   Alpine.data('registerForm', () => ({
     method: 'email',
-}));
+  }));
 });
 
 function togglePw(id, btn) {
@@ -285,9 +285,14 @@ function checkStr(val) {
     if (/[0-9]/.test(val))        score++;
     if (/[^A-Za-z0-9]/.test(val)) score++;
     const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
-    const labels = ['ضعيفة جداً','ضعيفة','متوسطة','قوية'];
+    const labels = [
+        '{{ __("app.pw_very_weak") }}',
+        '{{ __("app.pw_weak") }}',
+        '{{ __("app.pw_medium") }}',
+        '{{ __("app.pw_strong") }}'
+    ];
     bars.forEach((b, i) => { b.style.background = i < score ? colors[score-1] : '#e5e7eb'; });
-    label.textContent = 'قوة كلمة المرور: ' + (labels[score-1] || '');
+    label.textContent = '{{ __("app.pw_strength_prefix") }}' + (labels[score-1] || '');
     label.className   = 'text-xs ' + ['text-red-500','text-orange-500','text-yellow-500','text-green-500'][score-1] || 'text-gray-400';
 }
 
@@ -297,11 +302,11 @@ function checkMatch() {
     const msg  = document.getElementById('match-msg');
     if (!conf) { msg.classList.add('hidden'); return; }
     if (pw === conf) {
-        msg.textContent = 'كلمتا المرور متطابقتان ✓';
+        msg.textContent = '{{ __("app.passwords_match") }}';
         msg.className   = 'mt-1.5 text-xs text-green-500';
         msg.classList.remove('hidden');
     } else {
-        msg.textContent = 'كلمتا المرور غير متطابقتين';
+        msg.textContent = '{{ __("app.passwords_no_match") }}';
         msg.className   = 'mt-1.5 text-xs text-red-500';
         msg.classList.remove('hidden');
     }

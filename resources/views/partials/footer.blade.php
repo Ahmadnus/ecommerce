@@ -25,13 +25,13 @@
                            target="_blank"
                            class="flex items-center gap-3 hover:text-white transition-all group"
                            title="{{ $slink->platform_name }}">
-                            <span class="w-8 h-8 rounded-full bg-white bg-opacity-5 flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden">
-                                @if($icon)
-                                    <img src="{{ $icon }}" class="w-5 h-5 object-contain" alt="{{ $slink->platform_name }}">
-                                @else
-                                    <span class="text-[10px] font-bold">{{ mb_substr($slink->platform_name, 0, 1) }}</span>
-                                @endif
-                            </span>
+              <span class="w-12 h-12 rounded-full bg-white bg-opacity-5 flex items-center justify-center group-hover:scale-110 transition-transform">
+    @if($icon)
+     <img src="{{ $icon }}" class="w-8 h-8 object-contain" alt="{{ $slink->platform_name }}">
+    @else
+        <span class="text-base font-bold">{{ mb_substr($slink->platform_name, 0, 1) }}</span>
+    @endif
+</span>
                             <span class="text-sm">{{ $slink->platform_name }}</span>
                         </a>
                     @endforeach

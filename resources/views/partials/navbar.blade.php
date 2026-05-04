@@ -133,7 +133,11 @@
 
                 <div class="hidden md:flex items-center gap-1">
 
-                    {{-- Language switcher --}}
+                    {{-- ========================================= --}}
+                    {{-- Desktop Language switcher                  --}}
+                    {{-- Only shown when admin sets mode to 'both'  --}}
+                    {{-- ========================================= --}}
+                    @if(($locale_mode ?? 'both') === 'both')
                     <form method="POST" action="{{ route('language.switch') }}">
                         @csrf
                         <input type="hidden" name="locale" value="{{ $locale === 'ar' ? 'en' : 'ar' }}">
@@ -146,6 +150,7 @@
                             {{ $locale === 'ar' ? 'EN' : 'ع' }}
                         </button>
                     </form>
+                    @endif
 
                     @auth
                     <a href="{{ route('wishlist.index') }}"
@@ -245,7 +250,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                                 </svg>
-  {{ __('app.orders.heading') }}                            </a>
+                                {{ __('app.orders.heading') }}
+                            </a>
 
                             <form action="{{ route('logout') }}" method="POST" class="mt-1 border-t border-gray-50">
                                 @csrf
@@ -307,7 +313,11 @@
                 </a>
             @endforeach
 
-            {{-- Mobile language switcher --}}
+            {{-- ========================================= --}}
+            {{-- Mobile Language switcher                  --}}
+            {{-- Only shown when admin sets mode to 'both' --}}
+            {{-- ========================================= --}}
+            @if(($locale_mode ?? 'both') === 'both')
             <div class="pt-2 border-t border-gray-100">
                 <form method="POST" action="{{ route('language.switch') }}">
                     @csrf
@@ -322,6 +332,7 @@
                     </button>
                 </form>
             </div>
+            @endif
 
             @guest
             <div class="pt-2 flex gap-2 border-t border-gray-100">

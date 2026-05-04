@@ -26,7 +26,7 @@
    
     @stack('head')
 </head>
-<body class="text-black" style="background:#ffffff; color:#000000;">
+<body class="text-black" style="background:#ffffff;">
 
     <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: true }">
 

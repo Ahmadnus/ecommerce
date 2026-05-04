@@ -47,6 +47,7 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
     width:100%;
     font-family:var(--cc-sans);
 }
+
 .cc-input:focus {
     border-color:#000000;
     box-shadow:0 0 0 3px rgba(0,0,0,0.06);
