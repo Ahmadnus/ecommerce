@@ -167,9 +167,9 @@
                             العملات
                         </x-admin-nav-link>
 
-                        <x-admin-nav-link href="{{ route('admin.settings.sms') }}" icon="phone"
-                            :active="request()->routeIs('admin.settings.sms*')">
-                            إعدادات SMS API
+                        <x-admin-nav-link href="{{ route('admin.locale-mode') }}" icon="phone"
+                            :active="request()->is('/admin/locale-mode')">
+                       اللغة
                         </x-admin-nav-link>
 
                         <x-admin-nav-link href="{{ route('admin.settings.checkout') }}" icon="credit-card"
