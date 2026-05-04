@@ -311,9 +311,16 @@ Route::post('/language/switch', function (\Illuminate\Http\Request $request) {
     if (in_array($locale, ['ar', 'en'])) {
         session(['locale' => $locale]);
     }
-     
     return back();
 })->name('language.switch');
-Route::get('/test-locale', function () {
-    return app()->getLocale();
-});
+
+// Admin input mode switcher (NEW)
+// Stored separately from the storefront locale — admins need both languages
+// available regardless of what the storefront is displaying.
+Route::post('/admin/input-mode/switch', function (\Illuminate\Http\Request $request) {
+    $mode = $request->input('mode');
+    if (in_array($mode, ['ar', 'en', 'both'])) {
+        session(['admin_input_mode' => $mode]);
+    }
+    return back();
+})->name('admin.input-mode.switch')->middleware(['web', 'auth']);

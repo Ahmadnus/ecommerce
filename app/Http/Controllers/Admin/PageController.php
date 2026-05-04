@@ -23,27 +23,39 @@ class PageController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name'       => 'required|string|max:255',
+        $request->validate([
+            // ── Translatable ─────────────────────────────────────────────
+            'name.ar'    => 'required|string|max:255',
+            'name.en'    => 'nullable|string|max:255',
+            'content.ar' => 'required|string',
+            'content.en' => 'nullable|string',
+            // ─────────────────────────────────────────────────────────────
             'slug'       => 'nullable|string|max:255|unique:pages,slug',
-            'content'    => 'required|string',
             'sort_order' => 'nullable|integer|min:0',
             'is_active'  => 'nullable|boolean',
+        ], [
+            'name.ar.required'    => 'اسم الصفحة بالعربية مطلوب',
+            'content.ar.required' => 'محتوى الصفحة بالعربية مطلوب',
         ]);
 
-        // Auto-generate slug if left blank
-        if (empty($validated['slug'])) {
-            $validated['slug'] = Page::uniqueSlug($validated['name']);
-        }
+        $arName = $request->input('name.ar');
+        $enName = $request->input('name.en');
 
-        $validated['is_active']  = $request->boolean('is_active', true);
-        $validated['sort_order'] = $validated['sort_order'] ?? 0;
+        $slug = $request->filled('slug')
+            ? $request->slug
+            : Page::uniqueSlug($arName ?: $enName);
 
-        Page::create($validated);
+        Page::create([
+            'name'       => $request->input('name'),       // ['ar' => ..., 'en' => ...]
+            'content'    => $request->input('content'),    // ['ar' => ..., 'en' => ...]
+            'slug'       => $slug,
+            'sort_order' => $request->input('sort_order', 0),
+            'is_active'  => $request->boolean('is_active', true),
+        ]);
 
         return redirect()
             ->route('admin.pages.index')
-            ->with('success', 'تم إنشاء الصفحة "' . $validated['name'] . '" بنجاح.');
+            ->with('success', 'تم إنشاء الصفحة "' . $arName . '" بنجاح.');
     }
 
     public function edit(Page $page): View
@@ -53,22 +65,37 @@ class PageController extends Controller
 
     public function update(Request $request, Page $page): RedirectResponse
     {
-        $validated = $request->validate([
-            'name'       => 'required|string|max:255',
+        $request->validate([
+            'name.ar'    => 'required|string|max:255',
+            'name.en'    => 'nullable|string|max:255',
+            'content.ar' => 'required|string',
+            'content.en' => 'nullable|string',
             'slug'       => 'nullable|string|max:255|unique:pages,slug,' . $page->id,
-            'content'    => 'required|string',
             'sort_order' => 'nullable|integer|min:0',
             'is_active'  => 'nullable|boolean',
+        ], [
+            'name.ar.required'    => 'اسم الصفحة بالعربية مطلوب',
+            'content.ar.required' => 'محتوى الصفحة بالعربية مطلوب',
         ]);
 
-        if (empty($validated['slug'])) {
-            $validated['slug'] = Page::uniqueSlug($validated['name'], $page->id);
+        $arName = $request->input('name.ar');
+        $enName = $request->input('name.en');
+
+        // Regenerate slug only if Arabic name changed
+        $slug = $page->slug;
+        if ($arName !== $page->getTranslation('name', 'ar', false)) {
+            $slug = $request->filled('slug')
+                ? $request->slug
+                : Page::uniqueSlug($arName ?: $enName, $page->id);
         }
 
-        $validated['is_active']  = $request->boolean('is_active', true);
-        $validated['sort_order'] = $validated['sort_order'] ?? 0;
-
-        $page->update($validated);
+        $page->update([
+            'name'       => $request->input('name'),
+            'content'    => $request->input('content'),
+            'slug'       => $slug,
+            'sort_order' => $request->input('sort_order', 0),
+            'is_active'  => $request->boolean('is_active', true),
+        ]);
 
         return redirect()
             ->route('admin.pages.index')
@@ -78,6 +105,7 @@ class PageController extends Controller
     public function destroy(Page $page): RedirectResponse
     {
         $page->delete();
+
         return redirect()
             ->route('admin.pages.index')
             ->with('success', 'تم حذف الصفحة.');

@@ -165,34 +165,137 @@
             <div class="lg:col-span-8 space-y-10">
                 
                 {{-- 01: Information --}}
-                <div class="cc-card p-8 md:p-10">
-                    <div class="flex items-center gap-4 mb-10 pb-4" style="border-bottom:1px solid #f3f4f6;">
-                        <div class="section-number">01</div>
-                        <h2 class="text-2xl font-bold" style="color:#000000;">المعلومات الأساسية</h2>
-                    </div>
+{{-- Replace section 01 (المعلومات الأساسية) with this: --}}
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="md:col-span-2">
-                            <label class="cc-label">اسم المنتج</label>
-                            <input type="text" name="name" value="{{ old('name') }}" required class="cc-input" placeholder="اسم المنتج الواضح للعملاء">
-                        </div>
-                        
-                        <div>
-                            <label class="cc-label">السعر الأساسي ($)</label>
-                            <input type="number" step="0.01" name="base_price" required class="cc-input font-mono" placeholder="0.00" style="color:#059669;">
-                        </div>
+<div class="cc-card p-8 md:p-10">
+    <div class="flex items-center gap-4 mb-10 pb-4" style="border-bottom:1px solid #f3f4f6;">
+        <div class="section-number">01</div>
+        <h2 class="text-2xl font-bold" style="color:#000000;">المعلومات الأساسية</h2>
+    </div>
 
-                        <div>
-                            <label class="cc-label">سعر الخصم (اختياري)</label>
-                            <input type="number" step="0.01" name="discount_price" class="cc-input font-mono" placeholder="0.00" style="color:#6b7280;">
-                        </div>
+    {{-- ── Language tabs ─────────────────────────────────────────── --}}
+    <div class="mb-8" x-data="{ tab: 'ar' }">
 
-                        <div class="md:col-span-2">
-                            <label class="cc-label">وصف المنتج الكامل</label>
-                            <textarea name="description" rows="6" class="cc-input custom-scroll" placeholder="اكتب هنا تفاصيل ومواصفات المنتج..."></textarea>
-                        </div>
-                    </div>
-                </div>
+        {{-- Tab switcher --}}
+        <div class="flex gap-2 mb-6 border-b border-gray-100 pb-1">
+            <button type="button"
+                    @click="tab = 'ar'"
+                    :class="tab === 'ar'
+                        ? 'border-b-2 border-black text-black'
+                        : 'text-gray-400 hover:text-gray-600'"
+                    class="pb-2 px-1 text-sm font-bold transition-colors">
+                العربية 🇸🇦
+            </button>
+            <button type="button"
+                    @click="tab = 'en'"
+                    :class="tab === 'en'
+                        ? 'border-b-2 border-black text-black'
+                        : 'text-gray-400 hover:text-gray-600'"
+                    class="pb-2 px-1 text-sm font-bold transition-colors">
+                English 🇬🇧
+            </button>
+        </div>
+
+        {{-- Arabic tab --}}
+        <div x-show="tab === 'ar'" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="md:col-span-2">
+                <label class="cc-label">
+                    اسم المنتج (عربي)
+                    <span class="text-red-500 mr-0.5">*</span>
+                </label>
+                <input type="text"
+                       name="name[ar]"
+                       value="{{ old('name.ar') }}"
+                       required
+                       dir="rtl"
+                       class="cc-input"
+                       placeholder="اسم المنتج بالعربية">
+                @error('name.ar')
+                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="cc-label">وصف المنتج (عربي)</label>
+                <textarea name="description[ar]"
+                          rows="5"
+                          dir="rtl"
+                          class="cc-input custom-scroll"
+                          placeholder="تفاصيل ومواصفات المنتج بالعربية...">{{ old('description.ar') }}</textarea>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="cc-label">وصف مختصر (عربي)</label>
+                <textarea name="short_description[ar]"
+                          rows="2"
+                          dir="rtl"
+                          class="cc-input"
+                          placeholder="وصف قصير يظهر في قائمة المنتجات...">{{ old('short_description.ar') }}</textarea>
+            </div>
+        </div>
+
+        {{-- English tab --}}
+        <div x-show="tab === 'en'" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="md:col-span-2">
+                <label class="cc-label">
+                    Product Name (English)
+                </label>
+                <input type="text"
+                       name="name[en]"
+                       value="{{ old('name.en') }}"
+                       dir="ltr"
+                       class="cc-input"
+                       placeholder="Product name in English">
+                @error('name.en')
+                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="cc-label">Full Description (English)</label>
+                <textarea name="description[en]"
+                          rows="5"
+                          dir="ltr"
+                          class="cc-input custom-scroll"
+                          placeholder="Product details and specs in English...">{{ old('description.en') }}</textarea>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="cc-label">Short Description (English)</label>
+                <textarea name="short_description[en]"
+                          rows="2"
+                          dir="ltr"
+                          class="cc-input"
+                          placeholder="Short description for product listings...">{{ old('short_description.en') }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    {{-- Price fields (not translatable — stay unchanged) --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2 pt-8 border-t border-gray-50">
+        <div>
+            <label class="cc-label">السعر الأساسي ($)</label>
+            <input type="number" step="0.01" name="base_price"
+                   value="{{ old('base_price') }}"
+                   required class="cc-input font-mono"
+                   placeholder="0.00" style="color:#059669;">
+            @error('base_price')
+                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div>
+            <label class="cc-label">سعر الخصم (اختياري)</label>
+            <input type="number" step="0.01" name="discount_price"
+                   value="{{ old('discount_price') }}"
+                   class="cc-input font-mono"
+                   placeholder="0.00" style="color:#6b7280;">
+            @error('discount_price')
+                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+    </div>
+</div>
 
                 {{-- 02: Visuals --}}
                 <div class="cc-card p-8 md:p-10">
@@ -277,16 +380,21 @@
                         <label class="flex items-center justify-between p-4 rounded-xl cursor-pointer transition-colors" style="background:#f9fafb; border:1px solid #e5e7eb;" onmouseover="this.style.borderColor='#d1d5db'" onmouseout="this.style.borderColor='#e5e7eb'">
                             <span class="text-sm font-bold" style="color:#000000;">تفعيل المنتج للعملاء</span>
                             <div class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_active" value="1" checked class="sr-only peer">
-                                <div class="w-11 h-6 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" style="background:#d1d5db;" onchange="this.parentElement.previousElementSibling" class="peer-checked:bg-green-600"></div>
-                            </div>
+    <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }} class="sr-only peer">
+    <div class="w-11 h-6 bg-gray-300 rounded-full peer 
+                peer-checked:bg-green-600 
+                peer-checked:after:translate-x-full 
+                after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                after:bg-white after:rounded-full after:h-5 after:w-5 
+                after:transition-all transition-colors"></div>
+</div>
                         </label>
                         <label class="flex items-center justify-between p-4 rounded-xl cursor-pointer transition-colors" style="background:#f9fafb; border:1px solid #e5e7eb;" onmouseover="this.style.borderColor='#d1d5db'" onmouseout="this.style.borderColor='#e5e7eb'">
                             <span class="text-sm font-bold" style="color:#000000;">تمييز كمنتج مميز ⭐</span>
-                            <div class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_featured" value="1" class="sr-only peer">
-                                <div class="w-11 h-6 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" style="background:#d1d5db;"></div>
-                            </div>
+                          <div class="relative inline-flex items-center cursor-pointer">
+    <input type="checkbox" name="is_featured" value="1" class="sr-only peer" {{ old('is_featured') ? 'checked' : '' }}>
+    <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all transition-colors"></div>
+</div>
                         </label>
                     </div>
                 </div>

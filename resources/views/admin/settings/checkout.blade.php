@@ -79,19 +79,18 @@
                     </div>
                 </div>
 
-                {{-- Visual toggle (cosmetic — the hidden checkbox does the real work) --}}
-                <div x-data="{ on: {{ $guestEnabled ? 'true' : 'false' }} }"
-                     class="flex-shrink-0 pt-0.5">
+                <div x-data="{ on: {{ $guestEnabled ? 'true' : 'false' }} }" class="flex-shrink-0 pt-0.5">
                     <label class="cursor-pointer flex items-center gap-3 select-none">
-                        {{-- Hidden real checkbox submitted to Laravel --}}
-                        <input type="checkbox" name="guest_checkout_enabled" value="1"
-                               {{ $guestEnabled ? 'checked' : '' }}
-                               x-ref="chk"
+
+                        <input type="hidden" name="guest_checkout_enabled" value="0">
+
+                        <input type="checkbox"
+                               name="guest_checkout_enabled"
+                               value="1"
+                               x-model="on"
                                class="sr-only">
 
-                        {{-- Visual pill --}}
-                        <div class="toggle-track" :class="on ? 'on' : ''"
-                             @click="on = !on; $refs.chk.checked = on">
+                        <div class="toggle-track" :class="on ? 'on' : ''">
                             <div class="toggle-thumb"></div>
                         </div>
 

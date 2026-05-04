@@ -10,18 +10,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Spatie\MediaLibrary\HasMedia; // 1. استيراد الـ Interface
+use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\Translatable\HasTranslations; // ← ADD
 
 class Product extends Model implements HasMedia
 {
     use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasTranslations; // ← ADD
+
+    // ── Declare which fields are translatable ──────────────────────────────
+    public array $translatable = ['name', 'description', 'short_description'];
 
     protected $fillable = [
-        'name',
+        'name',             // json
         'slug',
-        'description',
-        'short_description',
+        'description',      // json
+        'short_description',// json
         'base_price',
         'discount_price',
         'sku',
@@ -34,26 +39,35 @@ class Product extends Model implements HasMedia
     ];
 
     protected $casts = [
-        'base_price'     => 'decimal:2',
-        'discount_price' => 'decimal:2',
-        'is_featured'    => 'boolean',
-        'sort_order'     => 'integer',
-        'images'         => 'array',
-        'meta'           => 'array',
+        'base_price'      => 'decimal:2',
+        'discount_price'  => 'decimal:2',
+        'is_featured'     => 'boolean',
+        'sort_order'      => 'integer',
+        'images'          => 'array',
+        'meta'            => 'array',
+        // Note: DO NOT cast translatable fields here —
+        // Spatie handles their JSON encoding/decoding internally.
     ];
 
-    // ─── Boot ─────────────────────────────────────────────────────────────────
-
+    // ─── Boot ─────────────────────────────────────────────────────────────
     protected static function booted(): void
     {
-        static::creating(fn(self $p): mixed => $p->slug ??= Str::slug($p->name));
+        static::creating(function (self $p): void {
+            // Slug from the Arabic name, fallback to English
+            $p->slug ??= Str::slug($p->getTranslation('name', 'ar')
+                ?: $p->getTranslation('name', 'en'));
+        });
     }
 
-    // ─── Relationships ────────────────────────────────────────────────────────
+    // ─── Relationships ────────────────────────────────────────────────────
 
-    /** All categories this product belongs to */
- 
-    /** The primary/canonical category */
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'category_product')
+                    ->withPivot('is_primary')
+                    ->withTimestamps();
+    }
+
     public function primaryCategory(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_product')
@@ -61,13 +75,11 @@ class Product extends Model implements HasMedia
                     ->wherePivot('is_primary', true);
     }
 
-    /** All variants */
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
     }
 
-    /** Active, in-stock variants */
     public function activeVariants(): HasMany
     {
         return $this->variants()
@@ -75,13 +87,23 @@ class Product extends Model implements HasMedia
                     ->where('stock_quantity', '>', 0);
     }
 
-    // ─── Accessors ────────────────────────────────────────────────────────────
+    public function attributeValues(): BelongsToMany
+    {
+        return $this->belongsToMany(AttributeValue::class, 'product_attribute_value');
+    }
 
-    /**
-     * Effective selling price.
-     * If the product has active variants, returns the lowest variant price.
-     * Otherwise returns discount_price if set, or base_price.
-     */
+    public function wishlistedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Models\User::class,
+            'wishlists',
+            'product_id',
+            'user_id'
+        )->withTimestamps();
+    }
+
+    // ─── Accessors ────────────────────────────────────────────────────────
+
     protected function effectivePrice(): Attribute
     {
         return Attribute::make(
@@ -121,10 +143,6 @@ class Product extends Model implements HasMedia
         );
     }
 
-    /**
-     * Total stock across all active variants.
-     * Falls back to checking if any variant has stock, or 1 if no variants.
-     */
     protected function totalStock(): Attribute
     {
         return Attribute::make(
@@ -141,10 +159,6 @@ class Product extends Model implements HasMedia
         );
     }
 
-    /**
-     * Full image URL — Railway storage:link compatible.
-     * Falls back to first variant image if product has no direct image.
-     */
     protected function imageUrl(): Attribute
     {
         return Attribute::make(
@@ -152,19 +166,22 @@ class Product extends Model implements HasMedia
                 if ($this->image) {
                     return Storage::url($this->image);
                 }
-
                 if ($this->relationLoaded('variants')) {
                     $variantImage = $this->variants->first()?->variant_image;
                     if ($variantImage) {
                         return Storage::url($variantImage);
                     }
                 }
-
                 return null;
             }
         );
     }
-
+public function getCategoryAttribute()
+{
+    // يبحث عن القسم المسمّى "أساسي" أولاً، وإذا لم يوجد يأخذ أول قسم مرتبط بالمنتج
+    return $this->categories->where('pivot.is_primary', true)->first() 
+           ?? $this->categories->first();
+}
     protected function imageUrls(): Attribute
     {
         return Attribute::make(
@@ -174,7 +191,7 @@ class Product extends Model implements HasMedia
         );
     }
 
-    // ─── Scopes ───────────────────────────────────────────────────────────────
+    // ─── Scopes ───────────────────────────────────────────────────────────
 
     public function scopeActive($query): mixed
     {
@@ -186,12 +203,18 @@ class Product extends Model implements HasMedia
         return $query->where('is_featured', true);
     }
 
+    /**
+     * Search across both locale columns stored in JSON.
+     * Works on MySQL 5.7+ / MariaDB 10.2+.
+     */
     public function scopeSearch($query, string $term): mixed
     {
-        return $query->where(
-            fn($q) => $q->where('name', 'like', "%{$term}%")
-                        ->orWhere('description', 'like', "%{$term}%")
-        );
+        return $query->where(function ($q) use ($term) {
+            $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(name, '$.ar')) LIKE ?", ["%{$term}%"])
+              ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(name, '$.en')) LIKE ?", ["%{$term}%"])
+              ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(description, '$.ar')) LIKE ?", ["%{$term}%"])
+              ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(description, '$.en')) LIKE ?", ["%{$term}%"]);
+        });
     }
 
     public function scopeInCategory($query, int $categoryId): mixed
@@ -201,58 +224,30 @@ class Product extends Model implements HasMedia
             fn($q) => $q->where('categories.id', $categoryId)
         );
     }
-    public function categories(): BelongsToMany
-{
-    return $this->belongsToMany(Category::class, 'category_product')
-                ->withPivot('is_primary')
-                ->withTimestamps();
-}
 
-/** إضافة علاقة "مساعدة" بالاسم الذي يبحث عنه الكود (بالمفرد) **/
-public function category()
-{
-    // هذه سترجع أول قسم مرتبطة به المنتج (كحل سريع للخطأ)
-    return $this->belongsToMany(Category::class, 'category_product')
-                ->wherePivot('is_primary', true); // القسم الأساسي فقط
-}
-public function getCategoryAttribute()
-{
-    // يبحث عن القسم المسمّى "أساسي" أولاً، وإذا لم يوجد يأخذ أول قسم مرتبط بالمنتج
-    return $this->categories->where('pivot.is_primary', true)->first() 
-           ?? $this->categories->first();
-}
-public function attributeValues(): BelongsToMany
-{
-    return $this->belongsToMany(AttributeValue::class, 'product_attribute_value');
-}
-public function wishlistedByUsers(): BelongsToMany
-{
-    return $this->belongsToMany(
-        \App\Models\User::class,
-        'wishlists',
-        'product_id',
-        'user_id'
-    )->withTimestamps();
-}
- 
+    // ─── Helpers ──────────────────────────────────────────────────────────
 
-// app/Models/Product.php
+    /** Convenience: get name in a specific locale without changing app locale */
+    public function nameIn(string $locale): string
+    {
+        return $this->getTranslation('name', $locale) ?: $this->name;
+    }
 
+    // ─── Currency helpers (unchanged) ────────────────────────────────────
 
-
- public function getPriceInCurrency(string $field = 'base_price'): float
+    public function getPriceInCurrency(string $field = 'base_price'): float
     {
         $svc  = app(\App\Services\CurrencyService::class);
         $base = (float) ($this->$field ?? 0);
         return $svc->convert($base);
     }
- 
+
     public function getEffectivePriceConvertedAttribute(): float
     {
         $field = $this->is_on_sale ? 'discount_price' : 'base_price';
         return $this->getPriceInCurrency($field);
     }
- 
+
     public function getFormattedPriceAttribute(): string
     {
         $svc = app(\App\Services\CurrencyService::class);

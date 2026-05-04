@@ -139,7 +139,7 @@
                     </span>
                 @endif
             </div>
-            {{ __('app.cart') }}
+       {{ __('app.cart.heading') }}
         </a>
 
         <a href="{{ url('/orders') }}"
@@ -148,7 +148,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round"
                       d="M9 5H7a2 2 0 00-2 2v14h14V7a2 2 0 00-2-2h-2M9 5a3 3 0 006 0M9 5a3 3 0 013-3 3 3 0 013 3"/>
             </svg>
-            {{ __('app.orders') }}
+            {{ __('app.orders.heading') }}
         </a>
 
         <a href="{{ auth()->check() ? route('myprofile.show') : route('login') }}"

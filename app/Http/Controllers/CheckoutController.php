@@ -19,8 +19,6 @@ class CheckoutController extends Controller
 {
     public function __construct(private readonly CartService $cart) {}
 
-    // ─── Helper: is guest checkout currently enabled? ─────────────────────────
-
     private function guestCheckoutEnabled(): bool
     {
         return get_otp_setting('guest_checkout_enabled', '0') === '1';
@@ -32,14 +30,12 @@ class CheckoutController extends Controller
     {
         if ($this->cart->isEmpty()) {
             return redirect()->route('cart.index')
-                             ->with('error', 'سلة التسوق فارغة.');
+                             ->with('error', __('app.cart_empty'));
         }
 
-        // If guest checkout is OFF, unauthenticated users must log in.
-        // (The middleware handles this too — this is a belt-and-suspenders check.)
         if (!$this->guestCheckoutEnabled() && !Auth::check()) {
             return redirect()->route('login')
-                             ->with('info', 'يرجى تسجيل الدخول لإتمام عملية الشراء.');
+                             ->with('info', __('app.login_required_checkout'));
         }
 
         $summary = $this->cart->getSummary();
@@ -50,9 +46,9 @@ class CheckoutController extends Controller
             ->with(['activeZones' => fn($q) => $q->orderBy('sort_order')->orderBy('name')])
             ->get();
 
-        $user            = Auth::user();           // null for guests
-        $isGuest         = !$user;
-        $guestEnabled    = $this->guestCheckoutEnabled();
+        $user         = Auth::user();
+        $isGuest      = !$user;
+        $guestEnabled = $this->guestCheckoutEnabled();
 
         return view('cart.checkout', compact(
             'summary', 'user', 'countries', 'isGuest', 'guestEnabled'
@@ -77,16 +73,14 @@ class CheckoutController extends Controller
     {
         if ($this->cart->isEmpty()) {
             return redirect()->route('cart.index')
-                             ->with('error', 'سلة التسوق فارغة.');
+                             ->with('error', __('app.cart_empty'));
         }
 
-        // Double-check permission (in case middleware was bypassed)
         if (!$this->guestCheckoutEnabled() && !Auth::check()) {
             return redirect()->route('login')
-                             ->with('info', 'يرجى تسجيل الدخول لإتمام عملية الشراء.');
+                             ->with('info', __('app.login_required_checkout'));
         }
 
-        // ── Validation ────────────────────────────────────────────────────────
         $rules = [
             'shipping_name'    => 'required|string|max:255',
             'shipping_phone'   => 'required|string|min:7|max:20',
@@ -99,21 +93,19 @@ class CheckoutController extends Controller
             'payment_method'   => 'required|in:cod',
         ];
 
-        // Guest-specific: capture email (optional but useful for receipts)
         if (!Auth::check()) {
             $rules['guest_email'] = 'nullable|email|max:255';
         }
 
         $validated = $request->validate($rules, [
-            'shipping_name.required'    => 'الاسم الكامل مطلوب.',
-            'shipping_phone.required'   => 'رقم الهاتف مطلوب لتوصيل الطلب.',
-            'shipping_address.required' => 'العنوان التفصيلي مطلوب.',
-            'shipping_city.required'    => 'المدينة مطلوبة.',
-            'country_id.required'       => 'الدولة مطلوبة.',
-            'zone_id.required'          => 'منطقة التوصيل مطلوبة.',
+            'shipping_name.required'    => __('app.validation_full_name_required'),
+            'shipping_phone.required'   => __('app.validation_phone_required'),
+            'shipping_address.required' => __('app.validation_address_required'),
+            'shipping_city.required'    => __('app.validation_city_required'),
+            'country_id.required'       => __('app.validation_country_required'),
+            'zone_id.required'          => __('app.validation_zone_required'),
         ]);
 
-        // Verify zone belongs to selected country and is active
         $zone = Zone::where('id', $validated['zone_id'])
             ->where('country_id', $validated['country_id'])
             ->where('is_active', true)
@@ -124,16 +116,13 @@ class CheckoutController extends Controller
         $total       = round($summary['subtotal'] + $deliveryFee, 2);
 
         try {
-            $order = DB::transaction(function () use ($validated, $summary, $zone, $deliveryFee, $total, $request) {
+            $order = DB::transaction(function () use ($validated, $summary, $zone, $deliveryFee, $total) {
 
-                // ── Determine user context ─────────────────────────────────
-$userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
-  $guestEmail = !$userId ? ($validated['guest_email'] ?? null) : null;
-// شوف شو بيطلع لك هون.. هل هو رقم 1، 2، 3؟ ولا رقم التليفون؟
+                $userId     = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
+                $guestEmail = !$userId ? ($validated['guest_email'] ?? null) : null;
+
                 $order = Order::create([
                     'user_id'          => $userId,
-
-                    // Guest identity stored directly on the order
                     'guest_email'      => $guestEmail,
                     'guest_session_id' => !$userId ? session()->getId() : null,
 
@@ -142,7 +131,6 @@ $userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
                     'payment_method'   => Order::PAYMENT_COD,
                     'payment_status'   => Order::PAYMENT_PENDING,
 
-                    // Zone-based shipping
                     'zone_id'          => $zone->id,
                     'shipping_area'    => $zone->name . ' (' . $zone->country->name . ')',
                     'delivery_days'    => $zone->delivery_days,
@@ -171,7 +159,6 @@ $userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
                         'total_price'        => $item['subtotal'],
                     ]);
 
-                    // Decrement stock with lock to prevent race conditions
                     if (!empty($item['variant_id'])) {
                         $variant = ProductVariant::lockForUpdate()->find($item['variant_id']);
                     } else {
@@ -180,7 +167,9 @@ $userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
                     }
 
                     if (!$variant || $variant->stock_quantity < $item['quantity']) {
-                        throw new \RuntimeException('المخزون غير كافٍ للمنتج: ' . $item['name']);
+                        throw new \RuntimeException(
+                            __('app.insufficient_stock_for_product', ['product' => $item['name']])
+                        );
                     }
 
                     $variant->decrement('stock_quantity', $item['quantity']);
@@ -193,7 +182,7 @@ $userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
 
             return redirect()
                 ->route('orders.success', $order->order_number)
-                ->with('success', 'تم إرسال طلبك بنجاح!');
+                ->with('success', __('app.order_placed_successfully'));
 
         } catch (\Exception $e) {
             return redirect()->back()
@@ -202,7 +191,7 @@ $userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
         }
     }
 
-    // ─── Zone selection (post-order, if needed) ───────────────────────────────
+    // ─── Zone selection ───────────────────────────────────────────────────────
 
     public function selectZone(): View|RedirectResponse
     {
@@ -210,7 +199,7 @@ $userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
 
         if (!$orderId) {
             return redirect()->route('products.index')
-                             ->with('error', 'انتهت الجلسة. يرجى إعادة الطلب.');
+                             ->with('error', __('app.session_expired_reorder'));
         }
 
         $order = Order::find($orderId);
@@ -220,7 +209,8 @@ $userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
             if ($order) {
                 return redirect()->route('orders.success', $order->order_number);
             }
-            return redirect()->route('products.index')->with('error', 'الطلب غير موجود.');
+            return redirect()->route('products.index')
+                             ->with('error', __('app.order_not_found'));
         }
 
         $countries = Country::active()
@@ -237,7 +227,8 @@ $userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
         $orderId = session('pending_zone_order_id');
 
         if (!$orderId) {
-            return redirect()->route('products.index')->with('error', 'انتهت الجلسة.');
+            return redirect()->route('products.index')
+                             ->with('error', __('app.session_expired'));
         }
 
         $request->validate([
@@ -253,7 +244,8 @@ $userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
         $order = Order::find($orderId);
 
         if (!$order) {
-            return redirect()->route('products.index')->with('error', 'الطلب غير موجود.');
+            return redirect()->route('products.index')
+                             ->with('error', __('app.order_not_found'));
         }
 
         $deliveryFee = (float) $zone->shipping_price;
@@ -269,6 +261,6 @@ $userId = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
 
         return redirect()
             ->route('orders.success', $order->order_number)
-            ->with('success', 'تم تأكيد طلبك بنجاح!');
+            ->with('success', __('app.order_confirmed_successfully'));
     }
 }

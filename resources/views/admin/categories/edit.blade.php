@@ -1,6 +1,5 @@
 @extends('layouts.admin')
 @section('title', 'تعديل: ' . $category->name)
-
 @section('admin-content')
 <div class="max-w-2xl mx-auto">
 
@@ -70,10 +69,19 @@
             </div>
 
             {{-- Name --}}
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">اسم التصنيف <span class="text-red-500">*</span></label>
-                <input type="text" name="name" value="{{ old('name', $category->name) }}" required
-                       class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">اسم التصنيف (AR) <span class="text-red-500">*</span></label>
+                    <input type="text" name="name[ar]" value="{{ old('name.ar', $category->getTranslation('name', 'ar')) }}" required
+                           class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">اسم التصنيف (EN) <span class="text-red-500">*</span></label>
+                    <input type="text" name="name[en]" value="{{ old('name.en', $category->getTranslation('name', 'en')) }}" required
+                           class="w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition"
+                           placeholder="Category name">
+                </div>
             </div>
 
             {{-- Slug --}}
@@ -111,9 +119,19 @@
             </div>
 
             {{-- Description & Sort Order --}}
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">الوصف</label>
-                <textarea name="description" rows="3" class="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-sm transition resize-none">{{ old('description', $category->description) }}</textarea>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">الوصف (AR)</label>
+                    <textarea name="description[ar]" rows="3"
+                              class="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-sm transition resize-none">{{ old('description.ar', $category->getTranslation('description', 'ar')) }}</textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">الوصف (EN)</label>
+                    <textarea name="description[en]" rows="3"
+                              class="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-sm transition resize-none"
+                              placeholder="English description">{{ old('description.en', $category->getTranslation('description', 'en')) }}</textarea>
+                </div>
             </div>
 
             <div>

@@ -74,16 +74,91 @@
             </div>
 
             {{-- Name --}}
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">
-                    اسم التصنيف <span class="text-red-500">*</span>
-                </label>
-                <input type="text" name="name" value="{{ old('name') }}" required
-                       oninput="autoSlug(this.value)"
-                       class="w-full border border-gray-200 rounded-xl focus:ring-2
-                              focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition"
-                       placeholder="مثال: نساء">
-            </div>
+         {{-- Replace the Name field --}}
+<div x-data="{ tab: 'ar' }">
+
+    {{-- Tab switcher --}}
+    <div class="flex gap-3 mb-4 border-b border-gray-100 pb-1">
+        <button type="button"
+                @click="tab = 'ar'"
+                :class="tab === 'ar'
+                    ? 'border-b-2 border-brand text-gray-900 font-extrabold'
+                    : 'text-gray-400 hover:text-gray-600 font-bold'"
+                class="pb-2 px-1 text-sm transition-colors">
+            العربية 🇸🇦
+        </button>
+        <button type="button"
+                @click="tab = 'en'"
+                :class="tab === 'en'
+                    ? 'border-b-2 border-brand text-gray-900 font-extrabold'
+                    : 'text-gray-400 hover:text-gray-600 font-bold'"
+                class="pb-2 px-1 text-sm transition-colors">
+            English 🇬🇧
+        </button>
+    </div>
+
+    {{-- Arabic fields --}}
+    <div x-show="tab === 'ar'" class="space-y-6">
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">
+                اسم التصنيف (عربي) <span class="text-red-500">*</span>
+            </label>
+            <input type="text"
+                   name="name[ar]"
+                   value="{{ old('name.ar') }}"
+                   required
+                   dir="rtl"
+                   oninput="autoSlug(this.value)"
+                   class="w-full border border-gray-200 rounded-xl focus:ring-2
+                          focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition"
+                   placeholder="مثال: نساء">
+            @error('name.ar')
+                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">الوصف (عربي)</label>
+            <textarea name="description[ar]"
+                      rows="3"
+                      dir="rtl"
+                      class="w-full border border-gray-200 rounded-xl focus:ring-2
+                             focus:ring-brand/30 focus:border-brand p-3 bg-gray-50
+                             text-sm transition resize-none"
+                      placeholder="وصف مختصر يظهر في صفحة التصنيف...">{{ old('description.ar') }}</textarea>
+        </div>
+    </div>
+
+    {{-- English fields --}}
+    <div x-show="tab === 'en'" class="space-y-6">
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">
+                Category Name (English)
+            </label>
+            <input type="text"
+                   name="name[en]"
+                   value="{{ old('name.en') }}"
+                   dir="ltr"
+                   class="w-full border border-gray-200 rounded-xl focus:ring-2
+                          focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition"
+                   placeholder="e.g. Women">
+            @error('name.en')
+                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Description (English)</label>
+            <textarea name="description[en]"
+                      rows="3"
+                      dir="ltr"
+                      class="w-full border border-gray-200 rounded-xl focus:ring-2
+                             focus:ring-brand/30 focus:border-brand p-3 bg-gray-50
+                             text-sm transition resize-none"
+                      placeholder="Short description shown on the category page...">{{ old('description.en') }}</textarea>
+        </div>
+    </div>
+</div>
 
             {{-- Slug --}}
             <div>

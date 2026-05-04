@@ -6,28 +6,32 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-  public function up(): void
-{
-    Schema::create('hero_banners', function (Blueprint $table) {
-        $table->id();
-        $table->string('badge')->nullable(); // عروض محدودة
-        $table->string('title'); // تشكيلة صيف 2026
-        $table->string('subtitle')->nullable(); // خصم يصل لـ 50%
-        $table->text('description')->nullable(); // آلاف المنتجات بأسعار لا تصدق
-        $table->string('button_text')->default('اكتشف الآن');
-        $table->string('button_url')->nullable();
-        $table->integer('sort_order')->default(0);
-        $table->boolean('is_active')->default(true);
-        $table->timestamps();
-    });
-}
+    public function up(): void
+    {
+        Schema::create('hero_banners', function (Blueprint $table) {
+            $table->id();
 
-    /**
-     * Reverse the migrations.
-     */
+            // ── Translatable fields → json ───────────────────────────────
+            $table->json('badge')->nullable();
+            $table->json('title');
+            $table->json('subtitle')->nullable();
+            $table->json('description')->nullable();
+            $table->json('button_text');
+            // ────────────────────────────────────────────────────────────
+
+            // Non-translatable fields
+            $table->string('button_url')->nullable();
+       
+     
+    
+            $table->integer('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+
+            $table->index(['is_active', 'sort_order']);
+        });
+    }
+
     public function down(): void
     {
         Schema::dropIfExists('hero_banners');

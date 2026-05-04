@@ -6,9 +6,17 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Spatie\Translatable\HasTranslations;
 
 class HomeSection extends Model
 {
+    use HasTranslations;
+
+    /**
+     * Spatie Translatable — fields stored as JSON with per-locale values.
+     */
+    public array $translatable = ['title'];
+
     protected $fillable = [
         'title',
         'type',
@@ -22,6 +30,7 @@ class HomeSection extends Model
         'is_active'  => 'boolean',
         'sort_order' => 'integer',
         'limit'      => 'integer',
+        // Note: do NOT cast 'title' to array here — Spatie handles it internally
     ];
 
     // ── Type constants ─────────────────────────────────────────────────────────
@@ -32,14 +41,21 @@ class HomeSection extends Model
     const TYPE_PRICE_LOW  = 'price_low';
     const TYPE_CATEGORY   = 'category';
 
-    /** Human-readable labels for the admin dropdown. */
+    /**
+     * Human-readable labels for the admin dropdown.
+     * These are UI strings — they live in lang files, not the DB.
+     * Return keys only; the view resolves labels via __().
+     */
+   /**
+     * تسميات الأنواع باللغة العربية مباشرة للوحة التحكم.
+     */
     public static function typeLabels(): array
     {
         return [
-            self::TYPE_FEATURED   => 'المنتجات المميزة',
+            self::TYPE_FEATURED   => 'منتجات مميزة',
             self::TYPE_LATEST     => 'أحدث المنتجات',
-            self::TYPE_PRICE_HIGH => 'السعر: من الأعلى للأقل',
-            self::TYPE_PRICE_LOW  => 'السعر: من الأقل للأعلى',
+            self::TYPE_PRICE_HIGH => 'الأعلى سعراً',
+            self::TYPE_PRICE_LOW  => 'الأقل سعراً',
             self::TYPE_CATEGORY   => 'تصنيف محدد',
         ];
     }
@@ -65,11 +81,6 @@ class HomeSection extends Model
 
     // ── Core method: resolve products for this section ─────────────────────────
 
-    /**
-     * Returns the Product collection for this section.
-     * All products are eager-loaded with categories + active variants
-     * so Blade templates don't trigger extra queries.
-     */
     public function resolveProducts(): EloquentCollection
     {
         $query = Product::active()

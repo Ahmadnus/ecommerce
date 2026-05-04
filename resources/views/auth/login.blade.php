@@ -1,5 +1,10 @@
 @extends('layouts.app')
-@section('title', 'تسجيل الدخول')
+
+@section('title', __('app.auth.login.page_title'))
+
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
 
 @push('head')
 <style>
@@ -41,20 +46,19 @@
 <div class="auth-bg-blob w-96 h-96 bg-sky-400 top-0 right-0 fixed"></div>
 <div class="auth-bg-blob w-72 h-72 bg-blue-300 bottom-20 left-10 fixed"></div>
 
-<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12 relative z-10" dir="rtl">
+<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12 relative z-10" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
     <div class="w-full max-w-md">
 
-        {{-- Logo --}}
-      <div class="text-center mb-8">
-    <a href="{{ url('/') }}" class="inline-flex flex-col items-center gap-2 group">
-        <div class="flex items-center justify-center group-hover:scale-105 transition-transform">
-            <img src="{{ $logoUrl ?? asset('images/logo.png') }}" 
-                 alt="Logo"
-                 class="h-14 w-auto object-contain"> 
-                 </div>
-    </a>
-    <p class="text-gray-500 text-sm mt-2">أنشئ حسابك وابدأ التسوق الآن</p>
-</div>
+        <div class="text-center mb-8">
+            <a href="{{ url('/') }}" class="inline-flex flex-col items-center gap-2 group">
+                <div class="flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <img src="{{ $logoUrl ?? asset('images/logo.png') }}" 
+                         alt="Logo"
+                         class="h-14 w-auto object-contain"> 
+                </div>
+            </a>
+            <p class="text-gray-500 text-sm mt-2">{{ __('app.auth.login.logo_subtitle') }}</p>
+        </div>
 
         <div class="auth-card bg-white rounded-2xl shadow-lg border border-gray-100 p-8"
              x-data="loginForm('{{ old('identity') ? 'email' : 'phone' }}')">
@@ -71,26 +75,24 @@
             @endif
 
             <div class="mb-6">
-                <h1 class="font-display text-2xl font-bold text-gray-900">تسجيل الدخول</h1>
-                <p class="text-gray-400 text-sm mt-1">مرحباً بك مجدداً، اختر طريقة الدخول</p>
+                <h1 class="font-display text-2xl font-bold text-gray-900">{{ __('app.auth.login.heading') }}</h1>
+                <p class="text-gray-400 text-sm mt-1">{{ __('app.auth.login.subheading') }}</p>
             </div>
 
             <form action="{{ route('login') }}" method="POST" class="space-y-5">
                 @csrf
 
-                {{-- Method selector --}}
                 <div class="flex gap-2 mb-2">
                     <button type="button" class="method-tab" :class="method === 'phone' ? 'active' : ''" @click="method = 'phone'">
-                        📱 رقم الهاتف
+                        📱 {{ __('app.auth.login.method_phone') }}
                     </button>
                     <button type="button" class="method-tab" :class="method === 'email' ? 'active' : ''" @click="method = 'email'">
-                        ✉️ البريد الإلكتروني
+                        ✉️ {{ __('app.auth.login.method_email') }}
                     </button>
                 </div>
 
-                {{-- Phone Input --}}
                 <div x-show="method === 'phone'" x-transition>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">رقم الهاتف</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">{{ __('app.auth.login.phone_label') }}</label>
                     @include('components.phone-input', [
                         'fieldName' => 'phone_full',
                         'initialCountry' => 'sy',
@@ -99,24 +101,22 @@
                     ])
                 </div>
 
-                {{-- Email Input --}}
                 <div x-show="method === 'email'" x-transition>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">البريد الإلكتروني</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">{{ __('app.auth.login.email_label') }}</label>
                     <input type="email" name="identity" value="{{ old('identity') }}"
-                           placeholder="example@mail.com" dir="ltr"
+                           placeholder="{{ __('app.auth.login.email_placeholder') }}" dir="ltr"
                            class="input-field w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-left focus:outline-none focus:ring-2"
                            style="--tw-ring-color:var(--brand-color,#0ea5e9)">
                 </div>
 
-                {{-- Password --}}
                 <div>
                     <div class="flex justify-between mb-1.5">
-                        <label class="block text-sm font-semibold text-gray-700">كلمة المرور</label>
-                        <a href="#" class="text-xs font-bold hover:underline" style="color:var(--brand-color,#0ea5e9)">نسيت الكلمة؟</a>
+                        <label class="block text-sm font-semibold text-gray-700">{{ __('app.auth.login.password_label') }}</label>
+                        <a href="#" class="text-xs font-bold hover:underline" style="color:var(--brand-color,#0ea5e9)">{{ __('app.auth.login.forgot_password') }}</a>
                     </div>
                     <div class="relative">
                         <input id="password" type="password" name="password" required
-                               placeholder="••••••••"
+                               placeholder="{{ __('app.auth.login.password_placeholder') }}"
                                class="input-field w-full bg-gray-50 border border-gray-200 rounded-xl px-4 pe-11 py-3 text-sm focus:outline-none focus:ring-2"
                                style="--tw-ring-color:var(--brand-color,#0ea5e9)">
                         <button type="button" onclick="togglePw('password')" class="pw-toggle absolute inset-y-0 end-0 flex items-center pe-3.5 text-gray-400">
@@ -126,23 +126,22 @@
                     </div>
                 </div>
 
-                {{-- Remember Me --}}
                 <label class="flex items-center gap-2 cursor-pointer group">
                     <input type="checkbox" name="remember" class="w-4 h-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500">
-                    <span class="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">تذكرني على هذا الجهاز</span>
+                    <span class="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">{{ __('app.auth.login.remember_me') }}</span>
                 </label>
 
                 <button type="submit" class="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg hover:opacity-90 transition transform hover:-translate-y-0.5"
                         style="background:var(--brand-color,#0ea5e9)">
-                    تسجيل الدخول
+                    {{ __('app.auth.login.submit') }}
                 </button>
             </form>
 
-            <div class="divider my-6 text-xs text-gray-400">أو</div>
+            <div class="divider my-6 text-xs text-gray-400">{{ __('app.auth.login.or') }}</div>
 
             <p class="text-center text-sm text-gray-500">
-                ليس لديك حساب؟
-                <a href="{{ route('register') }}" class="font-bold hover:underline mr-1" style="color:var(--brand-color,#0ea5e9)">أنشئ حساباً جديداً</a>
+                {{ __('app.auth.login.no_account') }}
+                <a href="{{ route('register') }}" class="font-bold hover:underline mr-1" style="color:var(--brand-color,#0ea5e9)">{{ __('app.auth.login.register') }}</a>
             </p>
         </div>
     </div>
@@ -153,8 +152,8 @@
 <script>
 document.addEventListener('alpine:init', () => {
    Alpine.data('loginForm', () => ({
-    method: 'email',
-}));
+        method: 'email',
+   }));
 });
 
 function togglePw(id) {
@@ -165,4 +164,6 @@ function togglePw(id) {
     document.getElementById('eye-closed-' + id).classList.toggle('hidden', isOpen);
 }
 </script>
+
+
 @endpush

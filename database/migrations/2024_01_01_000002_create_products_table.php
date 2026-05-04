@@ -8,29 +8,32 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
-             Schema::disableForeignKeyConstraints();
-            $table->id();
-            $table->string('name');
-            $table->string('slug')->unique();
-            $table->text('description')->nullable();
-            $table->text('short_description')->nullable();
-            $table->decimal('base_price', 10, 2);
-            $table->decimal('discount_price', 10, 2)->nullable();
-            $table->string('sku')->unique()->nullable();
-            $table->string('image')->nullable()->comment('storage/ relative path');
-            $table->json('images')->nullable()->comment('Array of storage/ relative paths');
-            $table->string('status')->default('active')
-                  ->comment('active | draft | archived');
-            $table->boolean('is_featured')->default(false);
-            $table->unsignedInteger('sort_order')->default(0);
-            $table->json('meta')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
+       Schema::create('products', function (Blueprint $table) {
+    Schema::disableForeignKeyConstraints();
+    $table->id();
 
-            $table->index(['status', 'is_featured']);
-            $table->index('slug');
-        });
+    // ── Translatable fields → json columns ──────────────────────────
+    $table->json('name');                          // was: string
+    $table->json('description')->nullable();       // was: text
+    $table->json('short_description')->nullable(); // was: text
+    // ────────────────────────────────────────────────────────────────
+
+    $table->string('slug')->unique();
+    $table->decimal('base_price', 10, 2);
+    $table->decimal('discount_price', 10, 2)->nullable();
+    $table->string('sku')->unique()->nullable();
+    $table->string('image')->nullable();
+    $table->json('images')->nullable();
+    $table->string('status')->default('active');
+    $table->boolean('is_featured')->default(false);
+    $table->unsignedInteger('sort_order')->default(0);
+    $table->json('meta')->nullable();
+    $table->timestamps();
+    $table->softDeletes();
+
+    $table->index(['status', 'is_featured']);
+    $table->index('slug');
+});
 
         // Many-to-many: product can appear in multiple categories
         Schema::create('category_product', function (Blueprint $table) {

@@ -163,64 +163,118 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
 
         {{-- ══ SECTION 1: Basic Info ══════════════════════════════════ --}}
         <div class="cc-card p-6">
-            <h2 class="text-sm font-bold mb-5 flex items-center gap-2" style="color:#000000;">
-                <span class="section-num">١</span>
-                معلومات المنتج
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div class="sm:col-span-2">
-                    <label class="cc-label">اسم المنتج <span style="color:#dc2626;">*</span></label>
-                    <input type="text" name="name"
-                           value="{{ old('name', $product->name) }}" required
-                           class="cc-input @error('name') has-error @enderror">
-                </div>
-                <div>
-                    <label class="cc-label">السعر الأساسي <span style="color:#dc2626;">*</span></label>
-                    <input type="number" step="0.01" min="0" name="base_price"
-                           value="{{ old('base_price', $product->base_price) }}" required
-                           class="cc-input mono @error('base_price') has-error @enderror">
-                </div>
-                <div>
-                    <label class="cc-label">سعر الخصم</label>
-                    <input type="number" step="0.01" min="0" name="discount_price"
-                           value="{{ old('discount_price', $product->discount_price) }}"
-                           class="cc-input mono @error('discount_price') has-error @enderror">
-                </div>
-                <div>
-                    <label class="cc-label">SKU المنتج</label>
-                    <input type="text" name="sku"
-                           value="{{ old('sku', $product->sku) }}"
-                           class="cc-input mono @error('sku') has-error @enderror">
-                </div>
-                <div>
-                    <label class="cc-label">وصف قصير</label>
-                    <input type="text" name="short_description"
-                           value="{{ old('short_description', $product->short_description) }}" maxlength="500"
-                           class="cc-input">
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="cc-label">الوصف التفصيلي</label>
-                    <textarea name="description" rows="3"
-                              class="cc-input">{{ old('description', $product->description) }}</textarea>
-                </div>
-                <div class="sm:col-span-2 flex flex-wrap gap-3">
-                    <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"
-                           style="background:#f9fafb; border:1px solid #e5e7eb;">
-                        <input type="checkbox" name="is_active" value="1"
-                               {{ old('is_active', $product->status === 'active') ? 'checked' : '' }}
-                               class="w-4 h-4 accent-emerald-600">
-                        <span class="text-sm font-semibold" style="color:#000000;">تفعيل المنتج</span>
-                    </label>
-                    <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"
-                           style="background:#f9fafb; border:1px solid #e5e7eb;">
-                        <input type="checkbox" name="is_featured" value="1"
-                               {{ old('is_featured', $product->is_featured) ? 'checked' : '' }}
-                               class="w-4 h-4 accent-amber-500">
-                        <span class="text-sm font-semibold" style="color:#000000;">منتج مميز ⭐</span>
-                    </label>
-                </div>
+    <h2 class="text-sm font-bold mb-5 flex items-center gap-2" style="color:#000000;">
+        <span class="section-num">١</span>
+        معلومات المنتج
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+        <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+                <label class="cc-label">اسم المنتج (AR) <span style="color:#dc2626;">*</span></label>
+                <input type="text" name="name[ar]"
+                       value="{{ old('name.ar', $product->getTranslation('name', 'ar')) }}" required
+                       class="cc-input @error('name.ar') has-error @enderror">
+                @error('name.ar')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="cc-label">اسم المنتج (EN) <span style="color:#dc2626;">*</span></label>
+                <input type="text" name="name[en]"
+                       value="{{ old('name.en', $product->getTranslation('name', 'en')) }}" required
+                       class="cc-input @error('name.en') has-error @enderror">
+                @error('name.en')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
             </div>
         </div>
+
+        <div>
+            <label class="cc-label">السعر الأساسي <span style="color:#dc2626;">*</span></label>
+            <input type="number" step="0.01" min="0" name="base_price"
+                   value="{{ old('base_price', $product->base_price) }}" required
+                   class="cc-input mono @error('base_price') has-error @enderror">
+        </div>
+
+        <div>
+            <label class="cc-label">سعر الخصم</label>
+            <input type="number" step="0.01" min="0" name="discount_price"
+                   value="{{ old('discount_price', $product->discount_price) }}"
+                   class="cc-input mono @error('discount_price') has-error @enderror">
+        </div>
+
+        <div>
+            <label class="cc-label">SKU المنتج</label>
+            <input type="text" name="sku"
+                   value="{{ old('sku', $product->sku) }}"
+                   class="cc-input mono @error('sku') has-error @enderror">
+        </div>
+
+        <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+                <label class="cc-label">وصف قصير (AR)</label>
+                <input type="text" name="short_description[ar]"
+                       value="{{ old('short_description.ar', $product->getTranslation('short_description', 'ar')) }}" maxlength="500"
+                       class="cc-input @error('short_description.ar') has-error @enderror">
+                @error('short_description.ar')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="cc-label">وصف قصير (EN)</label>
+                <input type="text" name="short_description[en]"
+                       value="{{ old('short_description.en', $product->getTranslation('short_description', 'en')) }}" maxlength="500"
+                       class="cc-input @error('short_description.en') has-error @enderror">
+                @error('short_description.en')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+                <label class="cc-label">الوصف التفصيلي (AR)</label>
+                <textarea name="description[ar]" rows="3"
+                          class="cc-input @error('description.ar') has-error @enderror">{{ old('description.ar', $product->getTranslation('description', 'ar')) }}</textarea>
+                @error('description.ar')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label class="cc-label">الوصف التفصيلي (EN)</label>
+                <textarea name="description[en]" rows="3"
+                          class="cc-input @error('description.en') has-error @enderror">{{ old('description.en', $product->getTranslation('description', 'en')) }}</textarea>
+                @error('description.en')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        <div class="sm:col-span-2 flex flex-wrap gap-3">
+            <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"
+                   style="background:#f9fafb; border:1px solid #e5e7eb;">
+                <input type="checkbox" name="is_active" value="1"
+                       {{ old('is_active', $product->status === 'active') ? 'checked' : '' }}
+                       class="w-4 h-4 accent-emerald-600">
+                <span class="text-sm font-semibold" style="color:#000000;">تفعيل المنتج</span>
+            </label>
+
+            <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"
+                   style="background:#f9fafb; border:1px solid #e5e7eb;">
+                <input type="checkbox" name="is_featured" value="1"
+                       {{ old('is_featured', $product->is_featured) ? 'checked' : '' }}
+                       class="w-4 h-4 accent-amber-500">
+                <span class="text-sm font-semibold" style="color:#000000;">منتج مميز ⭐</span>
+            </label>
+        </div>
+
+    </div>
+</div>
 
         {{-- ══ SECTION 2: Categories ══════════════════════════════════ --}}
         <div class="cc-card p-6">

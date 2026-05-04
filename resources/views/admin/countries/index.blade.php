@@ -1,6 +1,9 @@
 @extends('layouts.admin')
 @section('title', 'الدول')
 
+@extends('layouts.admin')
+@section('title', 'الدول')
+
 @section('admin-content')
 
 <div class="flex items-center justify-between mb-8">
@@ -52,10 +55,24 @@
 
                 {{-- Name --}}
                 <td class="px-6 py-4">
-                    <p class="font-semibold text-gray-900">{{ $country->name }}</p>
-                    @if($country->name_en)
-                    <p class="text-xs text-gray-400 mt-0.5">{{ $country->name_en }}</p>
-                    @endif
+                    <div class="flex items-center gap-2">
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ $country->name }}</p>
+                            @if($country->name_en)
+                                <p class="text-xs text-gray-400 mt-0.5">{{ $country->name_en }}</p>
+                            @endif
+                        </div>
+
+                        @if($country->is_system)
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-50 text-amber-600
+                                     border border-amber-200 px-2 py-0.5 rounded-full">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                            </svg>
+                            نظامية
+                        </span>
+                        @endif
+                    </div>
                 </td>
 
                 {{-- Code --}}
@@ -108,6 +125,7 @@
                             </svg>
                             المناطق
                         </a>
+
                         {{-- Edit --}}
                         <a href="{{ route('admin.countries.edit', $country) }}"
                            class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
@@ -116,17 +134,28 @@
                                       d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                             </svg>
                         </a>
+
                         {{-- Delete --}}
-                        <form action="{{ route('admin.countries.destroy', $country) }}" method="POST"
-                              onsubmit="return confirm('حذف دولة \'{{ addslashes($country->name) }}\' وكل مناطقها؟')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors">
+                        @if($country->is_system)
+                            <span class="p-2 text-gray-300 cursor-not-allowed"
+                                  title="لا يمكن حذف هذه الدولة لأنها نظامية">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
-                            </button>
-                        </form>
+                            </span>
+                        @else
+                            <form action="{{ route('admin.countries.destroy', $country) }}" method="POST"
+                                  onsubmit="return confirm('حذف دولة \'{{ addslashes($country->name) }}\' وكل مناطقها؟')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </td>
 

@@ -10,9 +10,13 @@ return new class extends Migration
     {
         Schema::create('pages', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+
+            // ── Translatable fields → json ───────────────────────────────
+            $table->json('name');
+            $table->json('content');
+            // ────────────────────────────────────────────────────────────
+
             $table->string('slug')->unique();
-            $table->longText('content');
             $table->unsignedInteger('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

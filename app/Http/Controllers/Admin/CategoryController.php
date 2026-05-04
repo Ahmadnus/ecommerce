@@ -12,10 +12,10 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::withCount('products')
-            ->with(['allChildren.products', 'media'])   // eager-load media — no N+1
+            ->with(['allChildren.products', 'media'])
             ->roots()
             ->orderBy('sort_order')
-            ->orderBy('name')
+            ->orderBy('name')   // Spatie sorts by current locale automatically
             ->get();
 
         return view('admin.categories.index', compact('categories'));
@@ -24,7 +24,7 @@ class CategoryController extends Controller
     public function create(Request $request)
     {
         $parentOptions = Category::active()
-            ->with('media') // thumbnails in the parent selector
+            ->with('media')
             ->orderBy('depth')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -37,59 +37,60 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name'                    => 'required|string|max:255',
-            'slug'                    => 'nullable|string|unique:categories,slug',
-            'parent_id'               => 'nullable|exists:categories,id',
-            'description'             => 'nullable|string',
-            'sort_order'              => 'nullable|integer|min:0',
-            'is_active'               => 'nullable|boolean',
-            'image'                   => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
-
-            'banner_title'            => 'nullable|string|max:255',
-            'banner_subtitle'         => 'nullable|string|max:255',
-            'banner_button_text'      => 'nullable|string|max:100',
-            'banner_button_url'       => 'nullable|string|max:500',
-            'banner_background_color'  => 'nullable|string|max:20',
-            'banner_text_color'        => 'nullable|string|max:20',
-            'banner_is_active'         => 'nullable|boolean',
-            'banner_image'             => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+        $request->validate([
+            // ── Translatable ────────────────────────────────────────────────
+            'name.ar'         => 'required|string|max:255',
+            'name.en'         => 'nullable|string|max:255',
+            'description.ar'  => 'nullable|string',
+            'description.en'  => 'nullable|string',
+            // ────────────────────────────────────────────────────────────────
+            'slug'            => 'nullable|string|unique:categories,slug',
+            'parent_id'       => 'nullable|exists:categories,id',
+            'sort_order'      => 'nullable|integer|min:0',
+            'is_active'       => 'nullable|boolean',
+            'image'           => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'banner_image'    => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'banner_is_active'=> 'nullable|boolean',
         ], [
-            'name.required' => 'اسم التصنيف مطلوب',
-            'image.max'     => 'حجم الصورة يجب أن لا يتجاوز 4 ميجابايت',
+            'name.ar.required' => 'اسم التصنيف بالعربية مطلوب',
+            'image.max'        => 'حجم الصورة يجب أن لا يتجاوز 4 ميجابايت',
         ]);
 
-        if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['name']);
-        }
+        $arName = $request->input('name.ar');
+        $enName = $request->input('name.en');
 
-        $data['is_active']        = $request->boolean('is_active', true);
-        $data['banner_is_active'] = $request->boolean('banner_is_active', false);
-        $data['sort_order']       = $data['sort_order'] ?? 0;
+        $category = Category::create([
+            // Pass the full array — Spatie stores it as {"ar": "...", "en": "..."}
+            'name'             => $request->input('name'),
+            'description'      => $request->input('description'),
+            'slug'             => $request->filled('slug')
+                                    ? $request->slug
+                                    : Str::slug($arName ?: $enName),
+            'parent_id'        => $request->parent_id,
+            'sort_order'       => $request->input('sort_order', 0),
+            'is_active'        => $request->boolean('is_active', true),
+            'banner_is_active' => $request->boolean('banner_is_active', false),
+        ]);
 
-        $category = Category::create($data);
-
-        // ── Spatie: upload category image ───────────────────────────────────
         if ($request->hasFile('image')) {
             $category
                 ->addMediaFromRequest('image')
-                ->usingName($category->name)
-                ->usingFileName(Str::slug($category->name) . '.' . $request->file('image')->extension())
+                ->usingName($arName ?: $enName)
+                ->usingFileName(Str::slug($arName ?: $enName) . '.' . $request->file('image')->extension())
                 ->toMediaCollection('category_images');
         }
 
-        // ── Spatie: upload category banner image ───────────────────────────
         if ($request->hasFile('banner_image')) {
             $category
                 ->addMediaFromRequest('banner_image')
-                ->usingName($category->name . ' Banner')
-                ->usingFileName(Str::slug($category->name) . '-banner.' . $request->file('banner_image')->extension())
+                ->usingName(($arName ?: $enName) . ' Banner')
+                ->usingFileName(Str::slug($arName ?: $enName) . '-banner.' . $request->file('banner_image')->extension())
                 ->toMediaCollection('category_banner');
         }
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('success', 'تم إضافة التصنيف "' . $category->name . '" بنجاح');
+            ->with('success', 'تم إضافة التصنيف "' . $arName . '" بنجاح');
     }
 
     public function edit(Category $category)
@@ -109,85 +110,89 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category)
     {
-        $data = $request->validate([
-            'name'                    => 'required|string|max:255',
-            'slug'                    => 'nullable|string|unique:categories,slug,' . $category->id,
-            'description'             => 'nullable|string',
-            'parent_id'               => 'nullable|exists:categories,id',
-            'sort_order'              => 'nullable|integer|min:0',
-            'is_active'               => 'nullable|boolean',
-            'image'                   => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
-            'remove_image'            => 'nullable|boolean',
-
-            'banner_title'            => 'nullable|string|max:255',
-            'banner_subtitle'         => 'nullable|string|max:255',
-            'banner_button_text'      => 'nullable|string|max:100',
-            'banner_button_url'       => 'nullable|string|max:500',
-            'banner_background_color'  => 'nullable|string|max:20',
-            'banner_text_color'        => 'nullable|string|max:20',
-            'banner_is_active'         => 'nullable|boolean',
-            'banner_image'             => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
-            'remove_banner_image'      => 'nullable|boolean',
+        $request->validate([
+            // ── Translatable ────────────────────────────────────────────────
+            'name.ar'         => 'required|string|max:255',
+            'name.en'         => 'nullable|string|max:255',
+            'description.ar'  => 'nullable|string',
+            'description.en'  => 'nullable|string',
+            // ────────────────────────────────────────────────────────────────
+            'slug'            => 'nullable|string|unique:categories,slug,' . $category->id,
+        
+            'parent_id'       => 'nullable|exists:categories,id',
+            'sort_order'      => 'nullable|integer|min:0',
+            'is_active'       => 'nullable|boolean',
+            'image'           => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'remove_image'    => 'nullable|boolean',
+            'banner_image'    => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'remove_banner_image' => 'nullable|boolean',
+            'banner_is_active'=> 'nullable|boolean',
         ]);
 
-        if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['name']);
-        }
-
-        $data['is_active']        = $request->boolean('is_active', true);
-        $data['sort_order']       = $data['sort_order'] ?? 0;
-        $data['banner_is_active'] = $request->boolean('banner_is_active', false);
-
-        // Prevent circular parent assignment
-        if (!empty($data['parent_id'])) {
+        // Prevent circular parent
+        if ($request->filled('parent_id')) {
             $descendants = $category->getAllDescendants()->pluck('id');
-
-            if ($descendants->contains($data['parent_id']) || $data['parent_id'] == $category->id) {
+            if ($descendants->contains($request->parent_id) || $request->parent_id == $category->id) {
                 return back()->withErrors(['parent_id' => 'لا يمكن تعيين تصنيف فرعي كأب.']);
             }
         }
 
-        $category->update($data);
+        $arName = $request->input('name.ar');
+        $enName = $request->input('name.en');
 
-        // ── Handle image removal ─────────────────────────────────────────────
+        // Regenerate slug only if Arabic name changed
+        $slug = $category->slug;
+        if ($arName !== $category->getTranslation('name', 'ar', false)) {
+            $slug = $request->filled('slug')
+                ? $request->slug
+                : Str::slug($arName ?: $enName);
+        }
+
+        $category->update([
+            'name'             => $request->input('name'),
+            'description'      => $request->input('description'),
+            'slug'             => $slug,
+            'parent_id'        => $request->parent_id,
+            'sort_order'       => $request->input('sort_order', 0),
+            'is_active'        => $request->boolean('is_active', true),
+            'banner_is_active' => $request->boolean('banner_is_active', false),
+        ]);
+
+        // ── Image handling ─────────────────────────────────────────────────
         if ($request->boolean('remove_image')) {
             $category->clearMediaCollection('category_images');
             $category->clearMediaCollection('categories'); // legacy
         }
 
-        // ── Replace/add category image ──────────────────────────────────────
         if ($request->hasFile('image')) {
             $category->clearMediaCollection('category_images');
             $category
                 ->addMediaFromRequest('image')
-                ->usingName($category->name)
-                ->usingFileName(Str::slug($category->name) . '.' . $request->file('image')->extension())
+                ->usingName($arName ?: $enName)
+                ->usingFileName(Str::slug($arName ?: $enName) . '.' . $request->file('image')->extension())
                 ->toMediaCollection('category_images');
         }
 
-        // ── Handle banner removal ────────────────────────────────────────────
         if ($request->boolean('remove_banner_image')) {
             $category->clearMediaCollection('category_banner');
         }
 
-        // ── Replace/add banner image ─────────────────────────────────────────
         if ($request->hasFile('banner_image')) {
             $category->clearMediaCollection('category_banner');
             $category
                 ->addMediaFromRequest('banner_image')
-                ->usingName($category->name . ' Banner')
-                ->usingFileName(Str::slug($category->name) . '-banner.' . $request->file('banner_image')->extension())
+                ->usingName(($arName ?: $enName) . ' Banner')
+                ->usingFileName(Str::slug($arName ?: $enName) . '-banner.' . $request->file('banner_image')->extension())
                 ->toMediaCollection('category_banner');
         }
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('success', 'تم تحديث التصنيف "' . $category->name . '" بنجاح');
+            ->with('success', 'تم تحديث التصنيف "' . $arName . '" بنجاح');
     }
 
     public function destroy(Category $category)
     {
-        // Spatie automatically deletes media files when the model is deleted
         $category->delete();
 
         return redirect()

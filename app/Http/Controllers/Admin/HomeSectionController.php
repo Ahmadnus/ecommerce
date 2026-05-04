@@ -43,16 +43,7 @@ class HomeSectionController extends Controller
         return view('admin.home-sections.create', compact('categories', 'typeLabels'));
     }
 
-    public function store(Request $request): RedirectResponse
-    {
-        $validated = $this->validateSection($request);
-
-        HomeSection::create($validated);
-
-        return redirect()
-            ->route('admin.home-sections.index')
-            ->with('success', 'تمت إضافة القسم بنجاح.');
-    }
+  
 
     public function edit(HomeSection $homeSection): View
     {
@@ -62,16 +53,53 @@ class HomeSectionController extends Controller
         return view('admin.home-sections.edit', compact('homeSection', 'categories', 'typeLabels'));
     }
 
-    public function update(Request $request, HomeSection $homeSection): RedirectResponse
-    {
-        $validated = $this->validateSection($request);
+  public function store(Request $request): RedirectResponse
+{
+    $validated = $this->validateSection($request);
 
-        $homeSection->update($validated);
+    HomeSection::create($validated);
 
-        return redirect()
-            ->route('admin.home-sections.index')
-            ->with('success', 'تم تحديث القسم بنجاح.');
+    return redirect()
+        ->route('admin.home-sections.index')
+        ->with('success', 'تم إضافة القسم بنجاح');
+}
+
+public function update(Request $request, HomeSection $homeSection): RedirectResponse
+{
+    $validated = $this->validateSection($request);
+
+    $homeSection->update($validated);
+
+    return redirect()
+        ->route('admin.home-sections.index')
+        ->with('success', 'تم تحديث القسم بنجاح');
+}
+
+
+
+private function validateSection(Request $request): array
+{
+    $validated = $request->validate([
+        'title.ar'    => 'required|string|max:120',
+        'title.en'    => 'required|string|max:120',
+        'type'        => 'required|in:' . implode(',', array_keys(HomeSection::typeLabels())),
+        'category_id' => 'nullable|exists:categories,id',
+        'limit'       => 'nullable|integer|min:1|max:50',
+        'sort_order'  => 'nullable|integer|min:0',
+        'is_active'   => 'nullable|boolean',
+    ]);
+
+    // title arrives as ['ar' => '...', 'en' => '...'] — Spatie accepts this directly
+    $validated['is_active']  = $request->boolean('is_active', true);
+    $validated['sort_order'] = $validated['sort_order'] ?? 0;
+    $validated['limit']      = $validated['limit'] ?? 10;
+
+    if ($validated['type'] !== HomeSection::TYPE_CATEGORY) {
+        $validated['category_id'] = null;
     }
+
+    return $validated;
+}
 
     public function destroy(HomeSection $homeSection): RedirectResponse
     {
@@ -99,25 +127,4 @@ class HomeSectionController extends Controller
 
     // ── Private ────────────────────────────────────────────────────────────────
 
-    private function validateSection(Request $request): array
-    {
-        $validated = $request->validate([
-            'title'       => 'required|string|max:120',
-            'type'        => 'required|in:' . implode(',', array_keys(HomeSection::typeLabels())),
-            'category_id' => 'nullable|exists:categories,id',
-            'limit'       => 'nullable|integer|min:1|max:50',
-            'sort_order'  => 'nullable|integer|min:0',
-            'is_active'   => 'nullable|boolean',
-        ]);
-
-        $validated['is_active']   = $request->boolean('is_active', true);
-        $validated['sort_order']  = $validated['sort_order'] ?? 0;
-        $validated['limit']       = $validated['limit'] ?? 10;
-        // Clear category_id if type is not 'category'
-        if ($validated['type'] !== HomeSection::TYPE_CATEGORY) {
-            $validated['category_id'] = null;
-        }
-
-        return $validated;
-    }
 }

@@ -14,14 +14,19 @@ return new class extends Migration
                   ->nullable()
                   ->constrained('categories')
                   ->nullOnDelete();
-            $table->string('name');
+
+            // ── Translatable fields → json ───────────────────────────────
+            $table->json('name');
+            $table->json('description')->nullable();
+            // ────────────────────────────────────────────────────────────
+
             $table->string('slug')->unique();
-            $table->text('description')->nullable();
             $table->string('image')->nullable();
             $table->unsignedTinyInteger('depth')->default(0);
-            $table->string('path')->nullable()->comment('Materialized path e.g. 1/3/7');
+            $table->string('path')->nullable();
             $table->unsignedInteger('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
+  
             $table->timestamps();
             $table->softDeletes();
 
@@ -30,13 +35,10 @@ return new class extends Migration
         });
     }
 
-  public function down(): void
-{
-    // تعطيل القيود لضمان المسح بنجاح مهما كانت العلاقات
-    Schema::disableForeignKeyConstraints();
-    
-    Schema::dropIfExists('categories');
-    
-    Schema::enableForeignKeyConstraints();
-}
+    public function down(): void
+    {
+        Schema::disableForeignKeyConstraints();
+        Schema::dropIfExists('categories');
+        Schema::enableForeignKeyConstraints();
+    }
 };

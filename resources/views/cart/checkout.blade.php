@@ -84,20 +84,42 @@
     };
 </script>
 
-<div class="min-h-screen" dir="rtl" style="background-color: var(--bg-color);">
+
+@php
+    $isRtl = app()->getLocale() === 'ar';
+
+    $cur  = $activeCurrency;
+    $rate = (float) $cur->exchange_rate;
+    $sym  = $cur->symbol;
+    $cv   = fn(float $jod): string => number_format(round($jod * $rate, 2), 2);
+@endphp
+
+<div class="min-h-screen" dir="{{ $isRtl ? 'rtl' : 'ltr' }}" style="background-color: var(--bg-color);">
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
 
     {{-- Breadcrumb --}}
     <div class="u1 mb-8">
         <nav class="flex items-center gap-2 text-xs text-[#9a9793] mb-3">
-            <a href="{{ route('products.index') }}" class="hover:text-[#1a1917] transition-colors">المتجر</a>
+            <a href="{{ route('products.index') }}" class="hover:text-[#1a1917] transition-colors">
+                {{ __('app.checkout.breadcrumb_store') }}
+            </a>
             <span>/</span>
-            <a href="{{ route('cart.index') }}" class="hover:text-[#1a1917] transition-colors">السلة</a>
+            <a href="{{ route('cart.index') }}" class="hover:text-[#1a1917] transition-colors">
+                {{ __('app.checkout.breadcrumb_cart') }}
+            </a>
             <span>/</span>
-            <span class="text-[#1a1917] font-medium">إتمام الطلب</span>
+            <span class="text-[#1a1917] font-medium">
+                {{ __('app.checkout.breadcrumb_checkout') }}
+            </span>
         </nav>
-        <h1 class="font-display text-2xl lg:text-3xl font-bold text-[#1a1917] tracking-tight">إتمام الطلب</h1>
-        <p class="text-xs text-[#9a9793] mt-1">الأسعار بـ {{ $cur->name }} ({{ $sym }})</p>
+
+        <h1 class="font-display text-2xl lg:text-3xl font-bold text-[#1a1917] tracking-tight">
+            {{ __('app.checkout.heading') }}
+        </h1>
+
+        <p class="text-xs text-[#9a9793] mt-1">
+            {{ __('app.checkout.prices_in', ['currency' => $cur->name, 'symbol' => $sym]) }}
+        </p>
     </div>
 
     @if($errors->any())
@@ -117,7 +139,7 @@
     </div>
     @endif
 
-    {{-- ── GUEST BANNER (shown only to guests when guest checkout is enabled) ── --}}
+    {{-- Guest banner --}}
     @if($isGuest && $guestEnabled)
     <div class="u1 guest-banner mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div class="flex items-start gap-3">
@@ -130,16 +152,19 @@
                 </svg>
             </div>
             <div>
-                <p class="text-sm font-bold text-gray-800 mb-0.5">أنت تتسوق كزائر</p>
+                <p class="text-sm font-bold text-gray-800 mb-0.5">
+                    {{ __('app.checkout.guest_title') }}
+                </p>
                 <p class="text-xs text-gray-500 leading-relaxed">
-                    يمكنك إتمام طلبك دون تسجيل حساب. أو سجّل دخولك للاستفادة من تتبع طلباتك.
+                    {{ __('app.checkout.guest_sub') }}
                 </p>
             </div>
         </div>
+
         <a href="{{ route('login') }}"
            class="flex-shrink-0 text-xs font-bold px-4 py-2 rounded-xl border-2 transition-all hover:bg-white"
            style="border-color:var(--brand-color,#0ea5e9);color:var(--brand-color,#0ea5e9)">
-            تسجيل الدخول
+            {{ __('app.checkout.login') }}
         </a>
     </div>
     @endif
@@ -149,25 +174,28 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8 items-start">
 
-        {{-- ════ LEFT COLUMN ════════════════════════════════════════════ --}}
+        {{-- LEFT COLUMN --}}
         <div class="lg:col-span-3 space-y-5">
 
-            {{-- STEP 1: Cart review --}}
+            {{-- STEP 1 --}}
             <div class="u2 bg-white rounded-2xl border border-[#ece9e4] overflow-hidden">
                 <div class="flex items-center justify-between px-5 py-4 border-b border-[#f0ede8]">
                     <div class="flex items-center gap-3">
                         <div class="step-n">١</div>
-                        <span class="font-semibold text-[#1a1917] text-sm">المنتجات المطلوبة</span>
+                        <span class="font-semibold text-[#1a1917] text-sm">
+                            {{ __('app.checkout.step1_title') }}
+                        </span>
                     </div>
                     <a href="{{ route('cart.index') }}"
                        class="text-xs font-medium text-[#9a9793] hover:text-[#1a1917] transition-colors flex items-center gap-1">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3 h-3 {{ $isRtl ? '' : 'rotate-180' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
-                        تعديل
+                        {{ __('app.checkout.edit') }}
                     </a>
                 </div>
+
                 <div class="divide-y divide-[#f7f6f3]">
                     @foreach($summary['items'] as $item)
                     <div class="cart-row flex items-center gap-4 px-5 py-4">
@@ -187,32 +215,32 @@
                 </div>
             </div>
 
-            {{-- STEP 2: Shipping & contact details --}}
+            {{-- STEP 2 --}}
             <div class="u3 bg-white rounded-2xl border border-[#ece9e4] overflow-hidden">
                 <div class="flex items-center gap-3 px-5 py-4 border-b border-[#f0ede8]">
                     <div class="step-n">٢</div>
-                    <span class="font-semibold text-[#1a1917] text-sm">بيانات الشحن والتوصيل</span>
+                    <span class="font-semibold text-[#1a1917] text-sm">
+                        {{ __('app.checkout.step2_title') }}
+                    </span>
                 </div>
-                <div class="p-5 space-y-4">
 
+                <div class="p-5 space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                        {{-- Full name --}}
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-bold text-[#6b6966] mb-2 uppercase tracking-wide">
-                                الاسم الكامل <span class="text-red-400 normal-case">*</span>
+                                {{ __('app.checkout.field_name') }} <span class="text-red-400 normal-case">{{ __('app.checkout.field_required_mark') }}</span>
                             </label>
                             <input type="text" name="shipping_name"
                                    value="{{ old('shipping_name', $user->name ?? '') }}"
-                                   required placeholder="محمد أحمد"
+                                   required placeholder="{{ __('app.checkout.field_name_ph') }}"
                                    class="field @error('shipping_name') has-error @enderror">
                             @error('shipping_name')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
 
-                        {{-- Phone --}}
                         <div class="{{ $isGuest ? '' : 'sm:col-span-2' }}">
                             <label class="block text-xs font-bold text-[#6b6966] mb-2 uppercase tracking-wide">
-                                رقم الهاتف <span class="text-red-400 normal-case">*</span>
+                                {{ __('app.checkout.field_phone') }} <span class="text-red-400 normal-case">{{ __('app.checkout.field_required_mark') }}</span>
                             </label>
                             <input type="tel" name="shipping_phone"
                                    value="{{ old('shipping_phone', $user->phone ?? '') }}"
@@ -221,48 +249,47 @@
                             @error('shipping_phone')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
 
-                        {{-- Email (guests only — optional) --}}
                         @if($isGuest)
                         <div>
                             <label class="block text-xs font-bold text-[#6b6966] mb-2 uppercase tracking-wide">
-                                البريد الإلكتروني
-                                <span class="text-[#b5b2ab] font-normal normal-case">اختياري</span>
+                                {{ __('app.checkout.field_email') }}
+                                <span class="text-[#b5b2ab] font-normal normal-case">{{ __('app.checkout.field_optional') }}</span>
                             </label>
                             <input type="email" name="guest_email"
                                    value="{{ old('guest_email') }}"
                                    placeholder="example@mail.com" dir="ltr"
                                    class="field @error('guest_email') has-error @enderror">
-                            <p class="mt-1 text-[10px] text-[#b5b2ab]">لاستقبال تأكيد الطلب</p>
+                            <p class="mt-1 text-[10px] text-[#b5b2ab]">{{ __('app.checkout.field_email_hint') }}</p>
                             @error('guest_email')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
                         @endif
 
-                        {{-- Address --}}
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-bold text-[#6b6966] mb-2 uppercase tracking-wide">
-                                العنوان التفصيلي <span class="text-red-400 normal-case">*</span>
+                                {{ __('app.checkout.field_address') }} <span class="text-red-400 normal-case">{{ __('app.checkout.field_required_mark') }}</span>
                             </label>
                             <input type="text" name="shipping_address"
                                    value="{{ old('shipping_address') }}"
-                                   required placeholder="الشارع، الحي، رقم البناء..."
+                                   required placeholder="{{ __('app.checkout.field_address_ph') }}"
                                    class="field @error('shipping_address') has-error @enderror">
                             @error('shipping_address')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
                             <label class="block text-xs font-bold text-[#6b6966] mb-2 uppercase tracking-wide">
-                                المدينة <span class="text-red-400 normal-case">*</span>
+                                {{ __('app.checkout.field_city') }} <span class="text-red-400 normal-case">{{ __('app.checkout.field_required_mark') }}</span>
                             </label>
                             <input type="text" name="shipping_city"
                                    value="{{ old('shipping_city') }}"
-                                   required placeholder="عمّان"
+                                   required placeholder="{{ __('app.checkout.field_city_ph') }}"
                                    class="field @error('shipping_city') has-error @enderror">
                             @error('shipping_city')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
 
                         <div>
                             <label class="block text-xs font-bold text-[#6b6966] mb-2 uppercase tracking-wide">
-                                الرمز البريدي <span class="text-[#b5b2ab] font-normal normal-case">اختياري</span>
+                                {{ __('app.checkout.field_zip') }}
+                                <span class="text-[#b5b2ab] font-normal normal-case">{{ __('app.checkout.field_optional') }}</span>
                             </label>
                             <input type="text" name="shipping_zip"
                                    value="{{ old('shipping_zip') }}"
@@ -270,22 +297,24 @@
                         </div>
                     </div>
 
-                    {{-- Country + Zone --}}
                     <div class="border-t border-[#f0ede8] pt-4">
                         <p class="text-xs font-bold text-[#6b6966] mb-3 uppercase tracking-wide flex items-center gap-2">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
-                            منطقة التوصيل <span class="text-red-400 normal-case">*</span>
+                            {{ __('app.checkout.delivery_zone') }}
+                            <span class="text-red-400 normal-case">{{ __('app.checkout.field_required_mark') }}</span>
                         </p>
 
                         <div class="mb-3">
-                            <label class="block text-xs font-semibold text-[#9a9793] mb-1.5">الدولة</label>
+                            <label class="block text-xs font-semibold text-[#9a9793] mb-1.5">
+                                {{ __('app.checkout.field_country') }}
+                            </label>
                             <select name="country_id" id="country-select"
                                     class="field @error('country_id') has-error @enderror"
                                     onchange="Shipping.loadZones(this.value)">
-                                <option value="">اختر الدولة...</option>
+                                <option value="">{{ __('app.checkout.country_placeholder') }}</option>
                                 @foreach($countries as $country)
                                 <option value="{{ $country->id }}"
                                         {{ old('country_id') == $country->id ? 'selected' : '' }}>
@@ -298,13 +327,15 @@
                         </div>
 
                         <div id="zone-wrapper" class="{{ old('country_id') ? '' : 'hidden' }}">
-                            <label class="block text-xs font-semibold text-[#9a9793] mb-1.5">المنطقة / المدينة</label>
+                            <label class="block text-xs font-semibold text-[#9a9793] mb-1.5">
+                                {{ __('app.checkout.field_zone') }}
+                            </label>
                             <div id="zones-loading" class="zones-loading items-center gap-2 text-sm text-[#9a9793] py-3">
                                 <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                                 </svg>
-                                جاري تحميل المناطق...
+                                {{ __('app.checkout.zones_loading') }}
                             </div>
                             <div id="zones-container" class="space-y-2"></div>
                             <input type="hidden" name="zone_id" id="zone-id-input" value="{{ old('zone_id') }}">
@@ -312,22 +343,24 @@
                         </div>
                     </div>
 
-                    {{-- Notes --}}
                     <div>
                         <label class="block text-xs font-bold text-[#6b6966] mb-2 uppercase tracking-wide">
-                            ملاحظات <span class="text-[#b5b2ab] font-normal normal-case">اختياري</span>
+                            {{ __('app.checkout.field_notes') }}
+                            <span class="text-[#b5b2ab] font-normal normal-case">{{ __('app.checkout.field_optional') }}</span>
                         </label>
                         <textarea name="notes" rows="2" class="field resize-none"
-                                  placeholder="تعليمات خاصة للتوصيل...">{{ old('notes') }}</textarea>
+                                  placeholder="{{ __('app.checkout.field_notes_ph') }}">{{ old('notes') }}</textarea>
                     </div>
                 </div>
             </div>
 
-            {{-- STEP 3: Payment --}}
+            {{-- STEP 3 --}}
             <div class="u4 bg-white rounded-2xl border border-[#ece9e4] overflow-hidden">
                 <div class="flex items-center gap-3 px-5 py-4 border-b border-[#f0ede8]">
                     <div class="step-n">٣</div>
-                    <span class="font-semibold text-[#1a1917] text-sm">طريقة الدفع</span>
+                    <span class="font-semibold text-[#1a1917] text-sm">
+                        {{ __('app.checkout.step3_title') }}
+                    </span>
                 </div>
                 <div class="p-5">
                     <label class="flex items-center gap-4 p-4 border-2 border-[#1a1917] rounded-xl cursor-pointer bg-[#faf9f7]">
@@ -339,26 +372,36 @@
                             </svg>
                         </div>
                         <div>
-                            <p class="text-sm font-bold text-[#1a1917]">الدفع عند الاستلام</p>
-                            <p class="text-xs text-[#9a9793] mt-0.5">ادفع نقداً عند وصول طلبك</p>
+                            <p class="text-sm font-bold text-[#1a1917]">
+                                {{ __('app.checkout.cod_title') }}
+                            </p>
+                            <p class="text-xs text-[#9a9793] mt-0.5">
+                                {{ __('app.checkout.cod_sub') }}
+                            </p>
                         </div>
-                        <span class="mr-auto text-[10px] font-bold bg-[#1a1917] text-white px-2 py-1 rounded-lg">متاح</span>
+                        <span class="mr-auto text-[10px] font-bold bg-[#1a1917] text-white px-2 py-1 rounded-lg">
+                            {{ __('app.checkout.cod_badge') }}
+                        </span>
                     </label>
                 </div>
             </div>
 
         </div>
 
-        {{-- ════ RIGHT COLUMN: Summary ══════════════════════════════════ --}}
+        {{-- RIGHT COLUMN --}}
         <div class="lg:col-span-2">
             <div class="u5 bg-white rounded-2xl border border-[#ece9e4] overflow-hidden sticky top-20">
                 <div class="px-5 py-4 border-b border-[#f0ede8] flex items-center justify-between">
-                    <h2 class="font-semibold text-[#1a1917] text-sm">ملخص الطلب</h2>
-                    <span class="text-[10px] text-[#b5b2ab] bg-[#f7f6f3] px-2 py-1 rounded-lg font-bold">{{ $sym }} {{ $cur->code }}</span>
+                    <h2 class="font-semibold text-[#1a1917] text-sm">
+                        {{ __('app.checkout.order_summary') }}
+                    </h2>
+                    <span class="text-[10px] text-[#b5b2ab] bg-[#f7f6f3] px-2 py-1 rounded-lg font-bold">
+                        {{ $sym }} {{ $cur->code }}
+                    </span>
                 </div>
+
                 <div class="p-5">
 
-                    {{-- Items mini --}}
                     <div class="space-y-3 mb-5">
                         @foreach($summary['items'] as $item)
                         <div class="flex items-start gap-3">
@@ -375,11 +418,12 @@
                         @endforeach
                     </div>
 
-                    {{-- Totals --}}
                     <div class="space-y-2.5 text-xs border-t border-[#f0ede8] pt-4 mb-4">
                         <div class="flex justify-between text-[#9a9793]">
-                            <span>المجموع الفرعي</span>
-                            <span class="font-semibold text-[#1a1917] tabular-nums">{{ $cv($summary['subtotal']) }} {{ $sym }}</span>
+                            <span>{{ __('app.checkout.subtotal') }}</span>
+                            <span class="font-semibold text-[#1a1917] tabular-nums">
+                                {{ $cv($summary['subtotal']) }} {{ $sym }}
+                            </span>
                         </div>
                         <div class="flex justify-between text-[#9a9793]">
                             <span class="flex items-center gap-1">
@@ -387,16 +431,22 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
-                                رسوم التوصيل
+                                {{ __('app.checkout.delivery_fee') }}
                                 <span id="summary-zone-name" class="text-[#b5b2ab]"></span>
                             </span>
-                            <span id="summary-delivery" class="font-semibold tabular-nums text-[#b5b2ab]">اختر المنطقة</span>
+                            <span id="summary-delivery" class="font-semibold tabular-nums text-[#b5b2ab]">
+                                {{ __('app.checkout.select_zone') }}
+                            </span>
                         </div>
                     </div>
 
                     <div class="flex justify-between items-center border-t border-[#f0ede8] pt-3 mb-5">
-                        <span class="text-sm font-bold text-[#1a1917]">الإجمالي</span>
-                        <span id="summary-total" class="text-xl font-bold text-[#1a1917] tabular-nums">{{ $cv($summary['subtotal']) }} {{ $sym }}</span>
+                        <span class="text-sm font-bold text-[#1a1917]">
+                            {{ __('app.checkout.grand_total') }}
+                        </span>
+                        <span id="summary-total" class="text-xl font-bold text-[#1a1917] tabular-nums">
+                            {{ $cv($summary['subtotal']) }} {{ $sym }}
+                        </span>
                     </div>
 
                     <div id="delivery-info-badge" class="hidden mb-4 flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3">
@@ -416,10 +466,11 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                         </svg>
-                        تأكيد الطلب
+                        {{ __('app.checkout.place_order') }}
                     </button>
+
                     <p class="text-center text-[10px] text-[#b5b2ab] mt-3" id="btn-hint">
-                        اختر منطقة التوصيل لتفعيل الزر
+                        {{ __('app.checkout.btn_hint') }}
                     </p>
 
                     <div class="flex items-center justify-center gap-1.5 mt-3 text-[10px] text-[#b5b2ab]">
@@ -427,14 +478,16 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                         </svg>
-                        دفع آمن ومشفر
+                        {{ __('app.checkout.secure_payment') }}
                     </div>
 
                     <div class="mt-4 flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3.5 py-3">
                         <svg class="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                         </svg>
-                        <p class="text-xs text-amber-700 font-medium leading-snug">ستدفع نقداً عند استلام طلبك</p>
+                        <p class="text-xs text-amber-700 font-medium leading-snug">
+                            {{ __('app.checkout.cod_reminder') }}
+                        </p>
                     </div>
                 </div>
             </div>

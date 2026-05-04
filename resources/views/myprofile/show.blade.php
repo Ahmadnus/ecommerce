@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'حسابي')
+@section('title', __('app.profile.page_title'))
+
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
 
 @push('head')
 <style>
@@ -8,7 +12,6 @@
         --subtle-bg: #f8fafc;
     }
 
-    /* كرت البروفايل العلوي في الهاتف */
     .mobile-profile-header {
         background: linear-gradient(to bottom, var(--brand-color) 50%, transparent 50%);
     }
@@ -20,7 +23,6 @@
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
     }
 
-    /* تحسين شكل الإدخال ليكون "App Style" */
     .app-input {
         @apply w-full px-4 py-3.5 bg-gray-50 border-transparent rounded-2xl transition-all duration-200 text-sm;
         border: 1.5px solid transparent;
@@ -31,7 +33,6 @@
         outline: none;
     }
 
-    /* أيقونات القائمة الجانبية */
     .menu-item {
         @apply flex items-center justify-between p-4 rounded-2xl transition-all active:scale-[0.98];
         background: white;
@@ -42,25 +43,21 @@
         background: color-mix(in srgb, var(--brand-color) 5%, transparent);
     }
 
-    /* إخفاء التمرير العرضي */
     body { overflow-x: hidden; }
 </style>
 @endpush
 
 @section('content')
 
-<div class="min-h-screen pb-12" dir="rtl">
+<div class="min-h-screen pb-12" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
     
-    {{-- هيدر الموبايل (يظهر بشكل جميل جداً في الأعلى) --}}
     <div class="lg:hidden h-32 w-full" style="background-color: var(--brand-color);"></div>
 
     <div class="max-w-6xl mx-auto px-4 -mt-16 lg:mt-12">
         <div class="flex flex-col lg:flex-row gap-8">
             
-            {{-- الجانب الأيمن (البروفايل والروابط) --}}
             <div class="w-full lg:w-1/3">
                 <div class="glass-card rounded-[2.5rem] p-6 text-center">
-                    {{-- الصورة الشخصية --}}
                     <div class="relative -mt-16 lg:mt-0 mb-4 inline-block">
                         <div class="w-24 h-24 lg:w-28 lg:h-28 rounded-3xl rotate-3 bg-white shadow-xl flex items-center justify-center text-3xl font-bold mx-auto border-4 border-white overflow-hidden">
                            <span class="-rotate-3 text-white w-full h-full flex items-center justify-center" style="background-color: var(--brand-color);">
@@ -73,22 +70,21 @@
                     <h2 class="text-xl font-bold text-gray-900">{{ $user->name }}</h2>
                     <p class="text-gray-400 text-sm mb-8">{{ $user->phone }}</p>
 
-                    {{-- أزرار سريعة للهاتف --}}
                     <div class="grid grid-cols-1 gap-3">
                         <a href="{{ route('orders.index') }}" class="menu-item group">
                             <div class="flex items-center gap-3">
                                 <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">📦</span>
-                                <span class="font-bold text-gray-700">طلباتي</span>
+                                <span class="font-bold text-gray-700">{{ __('app.profile.my_orders') }}</span>
                             </div>
-                            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <svg class="w-5 h-5 text-gray-300 {{ $isRtl ? '' : 'rotate-180' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </a>
 
                         <a href="{{ route('wishlist.index') }}" class="menu-item group">
                             <div class="flex items-center gap-3">
                                 <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-pink-50 text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-all">❤️</span>
-                                <span class="font-bold text-gray-700">المفضلة</span>
+                                <span class="font-bold text-gray-700">{{ __('app.profile.wishlist') }}</span>
                             </div>
-                            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <svg class="w-5 h-5 text-gray-300 {{ $isRtl ? '' : 'rotate-180' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </a>
 
                         <form action="{{ route('logout') }}" method="POST">
@@ -96,7 +92,7 @@
                             <button class="menu-item w-full group border-red-50 hover:border-red-200">
                                 <div class="flex items-center gap-3">
                                     <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-all">🚪</span>
-                                    <span class="font-bold text-gray-700">خروج</span>
+                                    <span class="font-bold text-gray-700">{{ __('app.profile.logout') }}</span>
                                 </div>
                             </button>
                         </form>
@@ -104,40 +100,37 @@
                 </div>
             </div>
 
-            {{-- الجانب الأيسر (البيانات والطلبات) --}}
             <div class="w-full lg:w-2/3 space-y-6">
                 
-                {{-- فورم البيانات --}}
                 <div class="bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-sm border border-gray-100">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-2 h-6 rounded-full" style="background-color: var(--brand-color);"></div>
-                        <h3 class="text-lg font-bold text-gray-900">المعلومات الشخصية</h3>
+                        <h3 class="text-lg font-bold text-gray-900">{{ __('app.profile.personal_info') }}</h3>
                     </div>
 
                     <form action="{{ route('myprofile.update') }}" method="POST" class="space-y-4">
                         @csrf @method('PUT')
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="text-xs font-bold text-gray-400 mr-2 mb-1 block">الاسم</label>
+                                <label class="text-xs font-bold text-gray-400 mr-2 mb-1 block">{{ __('app.profile.name') }}</label>
                                 <input type="text" name="name" value="{{ $user->name }}" class="app-input">
                             </div>
                             <div>
-                                <label class="text-xs font-bold text-gray-400 mr-2 mb-1 block">الهاتف</label>
+                                <label class="text-xs font-bold text-gray-400 mr-2 mb-1 block">{{ __('app.profile.phone') }}</label>
                                 <input type="text" name="phone" value="{{ $user->phone }}" class="app-input" dir="ltr">
                             </div>
                         </div>
                         <button type="submit" class="w-full lg:w-auto px-10 py-3.5 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all" style="background-color: var(--brand-color);">
-                            حفظ التعديلات
+                            {{ __('app.profile.save_changes') }}
                         </button>
                     </form>
                 </div>
 
-                {{-- قائمة الطلبات --}}
                 <div class="bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-sm border border-gray-100">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-6 rounded-full" style="background-color: var(--brand-color);"></div>
-                            <h3 class="text-lg font-bold text-gray-900">آخر الطلبات</h3>
+                            <h3 class="text-lg font-bold text-gray-900">{{ __('app.profile.latest_orders') }}</h3>
                         </div>
                     </div>
 
@@ -148,7 +141,9 @@
                                 <span class="text-xs font-bold text-gray-400">#{{ $order->id }}</span>
                             </div>
                             <div>
-                                <p class="text-sm font-bold text-gray-900">طلب رقم {{ $order->id }}</p>
+                                <p class="text-sm font-bold text-gray-900">
+                                    {{ __('app.profile.order_no', ['id' => $order->id]) }}
+                                </p>
                                 <p class="text-[10px] text-gray-400 font-medium">{{ $order->created_at->format('Y/m/d') }}</p>
                             </div>
                         </div>
@@ -164,11 +159,12 @@
                     
                     @empty
                     <div class="text-center py-8">
-                        <p class="text-gray-400 text-sm">لا توجد طلبات سابقة</p>
+                        <p class="text-gray-400 text-sm">{{ __('app.profile.no_orders') }}</p>
                     </div>
                     @endforelse
                 </div>
-   @include('partials.bottombar')
+
+                @include('partials.bottombar')
             </div>
         </div>
     </div>

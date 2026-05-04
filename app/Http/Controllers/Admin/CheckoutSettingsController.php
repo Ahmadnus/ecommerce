@@ -22,22 +22,21 @@ class CheckoutSettingsController extends Controller
 {
     public function show(): View
     {
-        $guestEnabled = get_otp_setting('guest_checkout_enabled', '0') === '1';
+        $guestEnabled = get_otp_setting('guest_checkout_enabled', '0') == '1';
 
         return view('admin.settings.checkout', compact('guestEnabled'));
     }
 
-    public function update(Request $request): RedirectResponse
-    {
-        // Checkbox: present = '1', absent = '0'
-        $value = $request->boolean('guest_checkout_enabled') ? '1' : '0';
+   public function update(Request $request): RedirectResponse
+{
+    $value = $request->input('guest_checkout_enabled') === '1' ? '1' : '0';
 
-        set_otp_setting('guest_checkout_enabled', $value);
+    set_otp_setting('guest_checkout_enabled', $value);
 
-        $label = $value === '1' ? 'تم تفعيل الشراء كزائر ✓' : 'تم تعطيل الشراء كزائر';
+    $label = $value === '1' ? 'تم تفعيل الشراء كزائر ✓' : 'تم تعطيل الشراء كزائر';
 
-        return redirect()
-            ->route('admin.settings.checkout')
-            ->with('success', $label);
-    }
+    return redirect()
+        ->route('admin.settings.checkout')
+        ->with('success', $label);
+}
 }

@@ -54,10 +54,11 @@
 }
 </style>
 @endpush
-
 @section('content')
 
 @php
+    $isRtl = app()->getLocale() === 'ar';
+
     $cur  = $activeCurrency;
     $rate = (float) $cur->exchange_rate;
     $sym  = $cur->symbol;
@@ -70,13 +71,13 @@
     $totalJod       = (float) ($order->total_amount ?? $subtotalJod + $deliveryFeeJod);
     $shippingArea   = $order->shipping_area ?? null;
     $deliveryDays   = $order->delivery_days  ?? null;
-    $zone           = $order->zone ?? null;          // if you eager-load the relation
+    $zone           = $order->zone ?? null;
 @endphp
 
-<div class="min-h-screen bg-[#f7f6f3]" dir="rtl">
+<div class="min-h-screen bg-[#f7f6f3]" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <div class="max-w-2xl mx-auto px-4 sm:px-6 py-12 lg:py-16">
 
-    {{-- ══ Animated check ═════════════════════════════════════════════════ --}}
+    {{-- Animated check --}}
     <div class="flex flex-col items-center text-center mb-10">
         <div class="check-circle w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mb-5 shadow-xl shadow-emerald-500/30">
             <svg class="w-9 h-9" viewBox="0 0 40 40" fill="none">
@@ -88,14 +89,14 @@
         </div>
 
         <h1 class="u1 text-2xl sm:text-3xl font-black text-[#1a1917] tracking-tight mb-2">
-            تم تأكيد طلبك! 🎉
+            {{ __('app.order_success.heading') }}
         </h1>
         <p class="u2 text-[#9a9793] text-sm max-w-sm leading-relaxed">
-            شكراً لك! سنبدأ بتجهيز طلبك فوراً وسنتواصل معك عند الشحن.
+            {{ __('app.order_success.subheading') }}
         </p>
     </div>
 
-    {{-- ══ Order number badge ═════════════════════════════════════════════ --}}
+    {{-- Order number badge --}}
     <div class="u2 flex items-center justify-center gap-3 mb-8">
         <div class="bg-white border border-[#ece9e4] rounded-2xl px-6 py-3 flex items-center gap-3 shadow-sm">
             <svg class="w-4 h-4 text-[#9a9793] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,13 +104,15 @@
                       d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
             </svg>
             <div>
-                <p class="text-[10px] text-[#9a9793] font-bold uppercase tracking-widest">رقم الطلب</p>
+                <p class="text-[10px] text-[#9a9793] font-bold uppercase tracking-widest">
+                    {{ __('app.order_success.order_number') }}
+                </p>
                 <p class="text-base font-black text-[#1a1917] tracking-tight">{{ $order->order_number }}</p>
             </div>
         </div>
     </div>
 
-    {{-- ══ Order summary card ══════════════════════════════════════════════ --}}
+    {{-- Order summary card --}}
     <div class="u3 bg-white rounded-2xl border border-[#ece9e4] overflow-hidden shadow-sm mb-6">
 
         {{-- Header --}}
@@ -120,7 +123,7 @@
                           d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
             </div>
-            <h2 class="font-semibold text-[#1a1917] text-sm">تفاصيل الفاتورة</h2>
+            <h2 class="font-semibold text-[#1a1917] text-sm">{{ __('app.order_success.invoice_details') }}</h2>
         </div>
 
         {{-- Items --}}
@@ -128,7 +131,6 @@
         <div class="divide-y divide-[#f7f6f3]">
             @foreach($order->items as $item)
             <div class="flex items-center gap-3 px-5 py-3.5">
-                {{-- Thumbnail if product has media --}}
                 @php $img = $item->product?->getFirstMediaUrl('products'); @endphp
                 @if($img)
                 <div class="w-10 h-10 rounded-xl overflow-hidden bg-[#f7f6f3] border border-[#f0ede8] flex-shrink-0">
@@ -154,25 +156,23 @@
         </div>
         @endif
 
-        {{-- Pricing breakdown ─────────────────────────────────────── --}}
+        {{-- Pricing breakdown --}}
         <div class="border-t border-[#f0ede8] px-5 py-4 space-y-2.5 text-xs">
 
-            {{-- Subtotal --}}
             <div class="flex justify-between text-[#9a9793]">
-                <span>المجموع الفرعي</span>
+                <span>{{ __('app.order_success.subtotal') }}</span>
                 <span class="font-semibold text-[#1a1917] tabular-nums">
                     {{ $cv($subtotalJod) }} {{ $sym }}
                 </span>
             </div>
 
-            {{-- Shipping fee + area name --}}
             <div class="flex justify-between text-[#9a9793]">
                 <span class="flex items-center gap-1.5 flex-wrap">
                     <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    رسوم التوصيل
+                    {{ __('app.order_success.delivery_fee') }}
                     @if($shippingArea)
                     <span class="text-[10px] font-medium px-2 py-0.5 bg-[#f7f6f3] rounded-full text-[#9a9793]">
                         {{ $shippingArea }}
@@ -181,14 +181,13 @@
                 </span>
                 <span class="font-semibold tabular-nums {{ $deliveryFeeJod == 0 ? 'text-emerald-600' : 'text-[#1a1917]' }}">
                     @if($deliveryFeeJod == 0)
-                        مجاني 🎉
+                        {{ __('app.order_success.free') }}
                     @else
                         {{ $cv($deliveryFeeJod) }} {{ $sym }}
                     @endif
                 </span>
             </div>
 
-            {{-- Delivery days --}}
             @if($deliveryDays)
             <div class="flex justify-between text-[#9a9793]">
                 <span class="flex items-center gap-1.5">
@@ -196,17 +195,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    وقت التوصيل المقدر
+                    {{ __('app.order_success.estimated_delivery') }}
                 </span>
-                <span class="font-semibold text-[#1a1917]">{{ $deliveryDays }} أيام عمل</span>
+                <span class="font-semibold text-[#1a1917]">{{ $deliveryDays }} {{ __('app.order_success.working_days') }}</span>
             </div>
             @endif
 
         </div>
 
-        {{-- Grand total ─────────────────────────────────────────────── --}}
+        {{-- Grand total --}}
         <div class="border-t border-[#f0ede8] px-5 py-4 flex justify-between items-center">
-            <span class="font-bold text-[#1a1917]">الإجمالي الكلي</span>
+            <span class="font-bold text-[#1a1917]">{{ __('app.order_success.grand_total') }}</span>
             <span class="text-2xl font-black text-[#1a1917] tabular-nums">
                 {{ $cv($totalJod) }} {{ $sym }}
             </span>
@@ -214,7 +213,7 @@
 
     </div>
 
-    {{-- ══ Shipping info card ══════════════════════════════════════════════ --}}
+    {{-- Shipping info card --}}
     <div class="u3 bg-white rounded-2xl border border-[#ece9e4] overflow-hidden shadow-sm mb-6">
         <div class="flex items-center gap-3 px-5 py-4 border-b border-[#f0ede8]">
             <div class="w-8 h-8 rounded-xl bg-[#f7f6f3] flex items-center justify-center flex-shrink-0">
@@ -223,7 +222,7 @@
                           d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
             </div>
-            <h2 class="font-semibold text-[#1a1917] text-sm">عنوان التوصيل</h2>
+            <h2 class="font-semibold text-[#1a1917] text-sm">{{ __('app.order_success.shipping_address') }}</h2>
         </div>
         <div class="px-5 py-4 space-y-1.5 text-sm">
             <p class="font-semibold text-[#1a1917]">{{ $order->shipping_name }}</p>
@@ -238,78 +237,75 @@
         </div>
     </div>
 
-    {{-- ══ Order status timeline ═══════════════════════════════════════════ --}}
+    {{-- Order status timeline --}}
     <div class="u4 bg-white rounded-2xl border border-[#ece9e4] overflow-hidden shadow-sm mb-8">
         <div class="px-5 py-4 border-b border-[#f0ede8]">
-            <h2 class="font-semibold text-[#1a1917] text-sm">مراحل الطلب</h2>
+            <h2 class="font-semibold text-[#1a1917] text-sm">{{ __('app.order_success.order_stages') }}</h2>
         </div>
         <div class="px-5 py-5 space-y-0">
 
-            {{-- Confirmed --}}
             <div class="tl-step">
                 <div class="flex flex-col items-center">
                     <div class="tl-icon bg-emerald-100 text-emerald-600">✓</div>
                     <div class="tl-line"></div>
                 </div>
                 <div class="pb-5">
-                    <p class="text-sm font-bold text-[#1a1917] leading-snug">تم تأكيد الطلب</p>
+                    <p class="text-sm font-bold text-[#1a1917] leading-snug">{{ __('app.order_success.stage_confirmed') }}</p>
                     <p class="text-xs text-[#9a9793] mt-0.5">{{ $order->created_at->format('d/m/Y — H:i') }}</p>
                 </div>
             </div>
 
-            {{-- Processing --}}
             <div class="tl-step">
                 <div class="flex flex-col items-center">
                     <div class="tl-icon bg-amber-50 text-amber-500">⚙</div>
                     <div class="tl-line"></div>
                 </div>
                 <div class="pb-5">
-                    <p class="text-sm font-bold text-[#1a1917] leading-snug">جاري التجهيز</p>
-                    <p class="text-xs text-[#9a9793] mt-0.5">يتم تجهيز طلبك الآن</p>
+                    <p class="text-sm font-bold text-[#1a1917] leading-snug">{{ __('app.order_success.stage_processing') }}</p>
+                    <p class="text-xs text-[#9a9793] mt-0.5">{{ __('app.order_success.stage_processing_sub') }}</p>
                 </div>
             </div>
 
-            {{-- Shipping --}}
             <div class="tl-step">
                 <div class="flex flex-col items-center">
                     <div class="tl-icon bg-[#f7f6f3] text-[#b5b2ab]">🚚</div>
                     <div class="tl-line"></div>
                 </div>
                 <div class="pb-5">
-                    <p class="text-sm font-bold text-[#b5b2ab] leading-snug">بالطريق إليك</p>
+                    <p class="text-sm font-bold text-[#b5b2ab] leading-snug">{{ __('app.order_success.stage_shipping') }}</p>
                     <p class="text-xs text-[#b5b2ab] mt-0.5">
-                        @if($shippingArea) إلى {{ $shippingArea }} @endif
-                        @if($deliveryDays) — خلال {{ $deliveryDays }} أيام @endif
+                        @if($shippingArea) {{ __('app.order_success.stage_shipping_to') }} {{ $shippingArea }} @endif
+                        @if($deliveryDays) — {{ __('app.order_success.stage_shipping_days', ['days' => $deliveryDays]) }} @endif
                     </p>
                 </div>
             </div>
 
-            {{-- Delivered --}}
             <div class="tl-step">
                 <div class="flex flex-col items-center">
                     <div class="tl-icon bg-[#f7f6f3] text-[#b5b2ab]">📦</div>
                 </div>
                 <div>
-                    <p class="text-sm font-bold text-[#b5b2ab] leading-snug">تم التسليم</p>
-                    <p class="text-xs text-[#b5b2ab] mt-0.5">الدفع نقداً عند الاستلام</p>
+                    <p class="text-sm font-bold text-[#b5b2ab] leading-snug">{{ __('app.order_success.stage_delivered') }}</p>
+                    <p class="text-xs text-[#b5b2ab] mt-0.5">{{ __('app.order_success.stage_delivered_sub') }}</p>
                 </div>
             </div>
 
         </div>
     </div>
 
-    {{-- ══ Actions ══════════════════════════════════════════════════════════ --}}
+    {{-- Actions --}}
     <div class="u4 flex flex-col sm:flex-row gap-3 justify-center">
         <a href="{{ route('products.index') }}"
            class="inline-flex items-center justify-center gap-2 bg-[#1a1917] hover:bg-[#2d2c2a]
                   text-white font-bold text-sm px-8 py-3.5 rounded-xl transition-colors
                   shadow-lg shadow-black/15 active:scale-[.98]">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 {{ $isRtl ? '' : 'rotate-180' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
             </svg>
-            متابعة التسوق
+            {{ __('app.order_success.continue_shopping') }}
         </a>
+
         @auth
         <a href="{{ route('orders.index') }}"
            class="inline-flex items-center justify-center gap-2 bg-white hover:bg-[#f7f6f3]
@@ -319,7 +315,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
             </svg>
-            طلباتي
+            {{ __('app.order_success.my_orders') }}
         </a>
         @endauth
     </div>
