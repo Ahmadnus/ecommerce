@@ -83,7 +83,20 @@ class CheckoutController extends Controller
 
         $rules = [
             'shipping_name'    => 'required|string|max:255',
-            'shipping_phone'   => 'required|string|min:7|max:20',
+          'shipping_phone'      => ['required', 'string', 'min:5', 'max:20',
+        function($attribute, $value, $fail) use ($request) {
+            $code = $request->input('shipping_phone_code');
+            if ($code) {
+                // Remove any leading + or the code itself if user typed it
+                $clean = ltrim($value, '+');
+                $clean = preg_replace('/^' . preg_quote($code, '/') . '/', '', $clean);
+                $clean = ltrim($clean, '0');
+                if (!preg_match('/^\d{6,14}$/', $clean)) {
+                    $fail(__('app.validation_phone_invalid_format'));
+                }
+            }
+        }
+    ],
             'shipping_address' => 'required|string|max:500',
             'shipping_city'    => 'required|string|max:100',
             'shipping_zip'     => 'nullable|string|max:20',
@@ -141,7 +154,9 @@ class CheckoutController extends Controller
                     'total_amount'     => $total,
 
                     'shipping_name'    => $validated['shipping_name'],
-                    'shipping_phone'   => $validated['shipping_phone'],
+                  'shipping_phone' => ($validated['shipping_phone_code'] ?? '')
+    ? '+' . $validated['shipping_phone_code'] . $validated['shipping_phone']
+    : $validated['shipping_phone'],
                     'shipping_address' => $validated['shipping_address'],
                     'shipping_city'    => $validated['shipping_city'],
                     'shipping_zip'     => $validated['shipping_zip'] ?? null,

@@ -516,4 +516,10 @@ return [
     'reset_submit' => 'Update Password',
     'back_to_login' => 'Back to login',
 
+    'checkout.field_phone_ph'              => 'Enter phone number',
+'checkout.phone_select_country_first'  => 'Select a country first to set the prefix',
+'checkout.phone_hint_prefix'           => 'Number starts with',
+'checkout.placing_order_text'          => 'Placing your order...',
+'validation_phone_invalid_format'      => 'Phone number is not valid for the selected country',
+
 ];

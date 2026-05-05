@@ -518,4 +518,9 @@ return [
     'reset_new_password' => 'كلمة المرور الجديدة',
     'reset_submit' => 'تحديث كلمة المرور',
     'back_to_login' => 'العودة إلى تسجيل الدخول',
+    'checkout.field_phone_ph'              => 'أدخل رقم الهاتف',
+'checkout.phone_select_country_first'  => 'اختر الدولة أولاً لتحديد المقدمة',
+'checkout.phone_hint_prefix'           => 'الرقم يبدأ بـ',
+'checkout.placing_order_text'          => 'جارٍ تأكيد الطلب...',
+'validation_phone_invalid_format'      => 'رقم الهاتف غير صالح للدولة المختارة',
 ];

@@ -82,6 +82,7 @@
         symbol:       '{{ $sym }}',
         zonesApiBase: '{{ url('/api/shipping/zones') }}',
     };
+
 </script>
 
 
@@ -238,16 +239,32 @@
                             @error('shipping_name')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
 
-                        <div class="{{ $isGuest ? '' : 'sm:col-span-2' }}">
-                            <label class="block text-xs font-bold text-[#6b6966] mb-2 uppercase tracking-wide">
-                                {{ __('app.checkout.field_phone') }} <span class="text-red-400 normal-case">{{ __('app.checkout.field_required_mark') }}</span>
-                            </label>
-                            <input type="tel" name="shipping_phone"
-                                   value="{{ old('shipping_phone', $user->phone ?? '') }}"
-                                   required placeholder="07XXXXXXXX" dir="ltr"
-                                   class="field @error('shipping_phone') has-error @enderror">
-                            @error('shipping_phone')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
-                        </div>
+                       <div class="{{ $isGuest ? '' : 'sm:col-span-2' }}">
+    <label class="block text-xs font-bold text-[#6b6966] mb-2 uppercase tracking-wide">
+        {{ __('app.checkout.field_phone') }} <span class="text-red-400 normal-case">{{ __('app.checkout.field_required_mark') }}</span>
+    </label>
+    <div class="flex gap-2 items-stretch">
+        {{-- Prefix badge --}}
+        <div id="phone-prefix-badge"
+             class="flex items-center justify-center px-3 rounded-xl border-[1.5px] border-[#e5e3df]
+                    bg-[#f7f6f3] text-sm font-bold text-[#6b6966] flex-shrink-0 min-w-[64px] text-center
+                    transition-all duration-200"
+             style="height:50px">
+            +
+        </div>
+        {{-- Hidden field for prefix storage --}}
+        <input type="hidden" name="shipping_phone_code" id="shipping-phone-code" value="">
+        {{-- Actual phone input --}}
+        <input type="tel" name="shipping_phone" id="shipping-phone-input"
+               value="{{ old('shipping_phone', isset($user) ? ltrim($user->phone ?? '', '+0') : '') }}"
+               required placeholder="{{ __('app.checkout.field_phone_ph') }}" dir="ltr"
+               class="field flex-1 @error('shipping_phone') has-error @enderror">
+    </div>
+    <p id="phone-hint" class="mt-1 text-[10px] text-[#b5b2ab]">
+        {{ __('app.checkout.phone_select_country_first') }}
+    </p>
+    @error('shipping_phone')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+</div>
 
                         @if($isGuest)
                         <div>
@@ -313,7 +330,7 @@
                             </label>
                             <select name="country_id" id="country-select"
                                     class="field @error('country_id') has-error @enderror"
-                                    onchange="Shipping.loadZones(this.value)">
+                                  onchange="Shipping.loadZones(this.value); PhoneSync.update(this.value)"
                                 <option value="">{{ __('app.checkout.country_placeholder') }}</option>
                                 @foreach($countries as $country)
                                 <option value="{{ $country->id }}"
@@ -502,6 +519,14 @@
 
 @push('scripts')
 <script>
+
+ 
+window.COUNTRY_CODES = {
+    @foreach($countries as $country)
+    "{{ $country->id }}": "{{ $country->calling_code }}",
+    @endforeach
+};
+
 /* Shipping zone loader — unchanged from your original */
 const Shipping = {
     fmt(jod) {
@@ -623,8 +648,48 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('checkout-form')?.addEventListener('submit', function () {
     const btn = document.getElementById('place-btn');
     if (btn.disabled) return false;
+    PhoneSync.prepareSubmit(); // ← add this
     btn.disabled = true;
-    btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg> جارٍ تأكيد الطلب...`;
+    btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg> {{ __("app.checkout.placing_order_text") }}`;
 });
+const PhoneSync = {
+    update(countryId) {
+        const badge    = document.getElementById('phone-prefix-badge');
+        const codeInput = document.getElementById('shipping-phone-code');
+        const phoneInput = document.getElementById('shipping-phone-input');
+        const hint     = document.getElementById('phone-hint');
+
+        if (!countryId || !window.COUNTRY_CODES[countryId]) {
+            badge.textContent = '+';
+            badge.style.borderColor = '#e5e3df';
+            badge.style.color = '#6b6966';
+            codeInput.value = '';
+            phoneInput.placeholder = '{{ __("app.checkout.field_phone_ph") }}';
+            hint.textContent = '{{ __("app.checkout.phone_select_country_first") }}';
+            return;
+        }
+
+        const code = window.COUNTRY_CODES[countryId];
+        badge.textContent = '+' + code;
+        badge.style.borderColor = 'var(--brand-color, #0ea5e9)';
+        badge.style.color = 'var(--brand-color, #0ea5e9)';
+        codeInput.value = code;
+        phoneInput.placeholder = '9xxxxxxxx';
+        phoneInput.focus();
+        hint.textContent = '{{ __("app.checkout.phone_hint_prefix") }}' + ' +' + code;
+    },
+
+    // Strip prefix from value before submit so backend gets clean number
+    prepareSubmit() {
+        const code  = document.getElementById('shipping-phone-code').value;
+        const input = document.getElementById('shipping-phone-input');
+        if (code && input.value.startsWith('+' + code)) {
+            input.value = input.value.slice(code.length + 1);
+        }
+        if (code && input.value.startsWith('0')) {
+            input.value = input.value.slice(1);
+        }
+    }
+};
 </script>
 @endpush
