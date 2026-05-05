@@ -17,30 +17,37 @@ class AttributeValueController extends Controller
 
     public function create()
     {
-        $attributes = Attribute::all();
+        $attributes = Attribute::orderBy('sort_order')->get();
         return view('admin.attribute-values.create', compact('attributes'));
     }
 
-  
-
     public function edit(AttributeValue $attributeValue)
     {
-        $attributes = Attribute::all();
+        $attributes = Attribute::orderBy('sort_order')->get();
         return view('admin.attribute-values.edit', compact('attributeValue', 'attributes'));
     }
 
-       public function store(Request $request)
+    public function store(Request $request)
     {
         $data = $request->validate([
             'attribute_id' => 'required|exists:attributes,id',
-            'value' => 'required|string',
-            'label' => 'nullable|string',
-            'color_hex' => 'nullable|string|max:7',
+            'value.ar'     => 'required|string',
+            'value.en'     => 'required|string',
+            'label.ar'     => 'nullable|string',
+            'label.en'     => 'nullable|string',
+            'color_hex'    => 'nullable|string|max:7',
+        ], [
+            'value.ar.required' => 'القيمة بالعربية مطلوبة.',
+            'value.en.required' => 'The English value is required.',
         ]);
 
-        AttributeValue::create($data);
+        AttributeValue::create([
+            'attribute_id' => $data['attribute_id'],
+            'value'        => ['ar' => $data['value']['ar'],  'en' => $data['value']['en']],
+            'label'        => ['ar' => $data['label']['ar'] ?? '', 'en' => $data['label']['en'] ?? ''],
+            'color_hex'    => $data['color_hex'] ?? null,
+        ]);
 
-        // 👇 خليها بنفس الصفحة
         return back()->with('success', 'تمت الإضافة');
     }
 
@@ -48,12 +55,22 @@ class AttributeValueController extends Controller
     {
         $data = $request->validate([
             'attribute_id' => 'required|exists:attributes,id',
-            'value' => 'required|string',
-            'label' => 'nullable|string',
-            'color_hex' => 'nullable|string|max:7',
+            'value.ar'     => 'required|string',
+            'value.en'     => 'required|string',
+            'label.ar'     => 'nullable|string',
+            'label.en'     => 'nullable|string',
+            'color_hex'    => 'nullable|string|max:7',
+        ], [
+            'value.ar.required' => 'القيمة بالعربية مطلوبة.',
+            'value.en.required' => 'The English value is required.',
         ]);
 
-        $attributeValue->update($data);
+        $attributeValue->update([
+            'attribute_id' => $data['attribute_id'],
+            'value'        => ['ar' => $data['value']['ar'],  'en' => $data['value']['en']],
+            'label'        => ['ar' => $data['label']['ar'] ?? '', 'en' => $data['label']['en'] ?? ''],
+            'color_hex'    => $data['color_hex'] ?? null,
+        ]);
 
         return back()->with('success', 'تم التعديل');
     }

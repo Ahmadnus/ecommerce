@@ -54,15 +54,9 @@
 
             {{-- Newsletter --}}
             <div>
-                <form class="flex gap-2">
-                    <input type="email"
-                           placeholder="{{ __('app.footer_email_placeholder') }}"
-                           class="flex-1 bg-white bg-opacity-5 border border-white border-opacity-10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none {{ $isRtl ? 'text-right' : 'text-left' }}">
-                    <button class="px-4 py-2 rounded-lg text-white text-sm font-bold"
-                            style="background-color: var(--brand-color)">
-                        {{ __('app.footer_subscribe') }}
-                    </button>
-                </form>
+               <a href="{{ route('contact.create') }}" class="hover:text-white transition-colors">
+    {{ __('app.contact_us') ?? 'اتصل بنا' }}
+</a>
             </div>
         </div>
 

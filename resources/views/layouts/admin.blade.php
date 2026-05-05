@@ -123,6 +123,12 @@
                                     {{ $pendingCount }}
                                 </span>
                             @endif
+
+                             <x-admin-nav-link href="{{ route('admin.contact-messages.index') }}" icon="star"
+                            :active="request()->is('/admin/contact-messages')">
+                            رسائل العملاء 
+                        </x-admin-nav-link>
+
                         </x-admin-nav-link>
 
                         <div x-show="sidebarOpen"

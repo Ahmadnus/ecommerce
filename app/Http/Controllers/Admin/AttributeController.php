@@ -25,12 +25,20 @@ class AttributeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'       => 'required|string|max:100',
-            'type'       => 'nullable|string',
+            'name.ar'    => 'required|string|max:100',
+            'name.en'    => 'required|string|max:100',
+            'type'       => 'nullable|string|in:select,color,text',
             'sort_order' => 'nullable|integer',
+        ], [
+            'name.ar.required' => 'الاسم بالعربية مطلوب.',
+            'name.en.required' => 'The English name is required.',
         ]);
 
-        Attribute::create($data);
+        Attribute::create([
+            'name'       => ['ar' => $data['name']['ar'], 'en' => $data['name']['en']],
+            'type'       => $data['type'] ?? 'select',
+            'sort_order' => $data['sort_order'] ?? 0,
+        ]);
 
         return redirect()
             ->route('admin.attributes.index')
@@ -45,12 +53,20 @@ class AttributeController extends Controller
     public function update(Request $request, Attribute $attribute)
     {
         $data = $request->validate([
-            'name'       => 'required|string|max:100',
-            'type'       => 'nullable|string',
+            'name.ar'    => 'required|string|max:100',
+            'name.en'    => 'required|string|max:100',
+            'type'       => 'nullable|string|in:select,color,text',
             'sort_order' => 'nullable|integer',
+        ], [
+            'name.ar.required' => 'الاسم بالعربية مطلوب.',
+            'name.en.required' => 'The English name is required.',
         ]);
 
-        $attribute->update($data);
+        $attribute->update([
+            'name'       => ['ar' => $data['name']['ar'], 'en' => $data['name']['en']],
+            'type'       => $data['type'] ?? $attribute->type,
+            'sort_order' => $data['sort_order'] ?? $attribute->sort_order,
+        ]);
 
         return back()->with('success', 'تم التحديث');
     }
@@ -58,7 +74,6 @@ class AttributeController extends Controller
     public function destroy(Attribute $attribute)
     {
         $attribute->delete();
-
         return back()->with('success', 'تم الحذف');
     }
 }

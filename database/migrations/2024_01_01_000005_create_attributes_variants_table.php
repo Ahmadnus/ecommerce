@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -7,11 +6,13 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-    { Schema::disableForeignKeyConstraints();
-        // ── Attribute types (Color, Size, Material …) ────────────────────────
+    {
+        Schema::disableForeignKeyConstraints();
+
+        // ── Attributes ────────────────────────────────────────────────────────
         Schema::create('attributes', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->json('name');                          // translatable
             $table->string('slug')->unique();
             $table->string('type')->default('select')
                   ->comment('select | color | image');
@@ -19,24 +20,20 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // ── Possible values per attribute (Red, XL, 42 …) ───────────────────
+        // ── Attribute Values ──────────────────────────────────────────────────
         Schema::create('attribute_values', function (Blueprint $table) {
-             Schema::disableForeignKeyConstraints();
             $table->id();
             $table->foreignId('attribute_id')->constrained()->cascadeOnDelete();
-            $table->string('value');
-            $table->string('label')->nullable()->comment('Display override');
+            $table->json('value');                         // translatable
+            $table->json('label')->nullable();             // translatable
             $table->string('color_hex', 7)->nullable();
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
-
-            $table->unique(['attribute_id', 'value']);
             $table->index('attribute_id');
         });
 
-        // ── Product Variants ─────────────────────────────────────────────────
+        // ── Product Variants ──────────────────────────────────────────────────
         Schema::create('product_variants', function (Blueprint $table) {
-             Schema::disableForeignKeyConstraints();
             $table->id();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('sku')->unique();
@@ -48,13 +45,11 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
-
             $table->index(['product_id', 'is_active']);
         });
 
-        // ── Pivot: which attribute-values compose each variant ───────────────
+        // ── Pivot ─────────────────────────────────────────────────────────────
         Schema::create('product_variant_attribute_values', function (Blueprint $table) {
-             Schema::disableForeignKeyConstraints();
             $table->foreignId('product_variant_id')
                   ->constrained('product_variants')
                   ->cascadeOnDelete();
@@ -66,14 +61,17 @@ return new class extends Migration
                 'pvav_primary'
             );
         });
+
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
-         Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('product_variant_attribute_values');
         Schema::dropIfExists('product_variants');
         Schema::dropIfExists('attribute_values');
         Schema::dropIfExists('attributes');
+        Schema::enableForeignKeyConstraints();
     }
 };

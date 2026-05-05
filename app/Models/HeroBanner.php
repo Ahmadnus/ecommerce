@@ -26,6 +26,7 @@ class HeroBanner extends Model implements HasMedia
         'background_color',
         'text_color',
         'position',
+        'layout',
         'sort_order',
         'is_active',
     ];

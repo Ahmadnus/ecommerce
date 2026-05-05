@@ -62,12 +62,22 @@ Route::get('/verify-otp', [AuthController::class, 'showVerifyForm'])->name('otp.
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('otp.verify.submit');
 
 // ── Standard user auth (blocked for logged-in admins/users) ───────────────────
-Route::middleware('user.route.only')->group(function () {
-    Route::get('/login',     [AuthController::class, 'showLogin'])->name('login');
-    Route::get('/register',  [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/login',    [AuthController::class, 'login']);
-    Route::post('/register', [AuthController::class, 'register']);
-});
+
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+
+// Existing auth routes
+Route::get('/login',    [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login',   [AuthController::class, 'login']);
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register',[AuthController::class, 'register']);
+Route::post('/logout',  [AuthController::class, 'logout'])->name('logout');
+
+// Password Reset
+Route::get('/forgot-password',  [ForgotPasswordController::class, 'showForm'])->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'send'])->name('password.email');
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm'])->name('password.reset');
+Route::post('/reset-password',        [ResetPasswordController::class, 'reset'])->name('password.update');
 
 // ── Admin-only login portal ────────────────────────────────────────────────────
 Route::middleware('admin.route.only')->group(function () {
@@ -264,7 +274,7 @@ curl_setopt_array($ch, [
 
 use App\Models\OtpSetting;
 use App\Services\SmsService;
-
+use Illuminate\Support\Facades\DB;
 
 // ── 1. Check the full resolution chain ────────────────────────────────────────
 Route::get('/debug-otp-chain', function () {
@@ -333,3 +343,17 @@ Route::get('/admin/locale-mode', [\App\Http\Controllers\Admin\LocaleModeControll
 
 Route::post('/admin/locale-mode', [\App\Http\Controllers\Admin\LocaleModeController::class, 'update'])
     ->name('admin.locale-mode.update');
+
+
+    use App\Http\Controllers\ContactController;
+use App\Http\Controllers\Admin\ContactMessageController;
+
+Route::get('/contact', [ContactController::class, 'create'])->name('contact.create');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    Route::get('/contact-messages', [ContactMessageController::class, 'index'])->name('contact-messages.index');
+    Route::get('/contact-messages/{contactMessage}', [ContactMessageController::class, 'show'])->name('contact-messages.show');
+    Route::delete('/contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
+    Route::patch('/contact-messages/{contactMessage}/read', [ContactMessageController::class, 'markRead'])->name('contact-messages.read');
+});

@@ -4,7 +4,7 @@ return [
     'footer_tagline'   => 'High-quality products, carefully curated to match your lifestyle.',
     'footer_email_placeholder' => 'Your email...',
     'footer_subscribe' => 'Subscribe',
-    'footer_copyright' => '© :year Gilgam. All rights reserved.',
+    'footer_copyright' => '© :year jiljam. All rights reserved.',
 
     // Navbar
     'shop'      => 'Shop',
@@ -441,4 +441,79 @@ return [
 'pw_strong'                 => 'Strong',
 'passwords_match'           => 'Passwords match ✓',
 'passwords_no_match'        => 'Passwords do not match',
+
+'contact_title' => 'Contact Us',
+'contact_subtitle' => 'Send us your feedback, complaints, or any issue you are facing.',
+'contact_name' => 'Name',
+'contact_email' => 'Email',
+'contact_phone' => 'Phone Number',
+'contact_subject' => 'Subject',
+'contact_message' => 'Message',
+'contact_send' => 'Send',
+'contact_us' => 'Contact Us',
+
+'auth.password_required'    => 'Password is required.',
+'auth.email_required'       => 'Email address is required.',
+'auth.email_invalid'        => 'Invalid email address.',
+'auth.email_unique'         => 'Email already registered.',
+'auth.phone_required'       => 'Phone number is required.',
+'auth.phone_invalid'        => 'Invalid phone number.',
+'auth.phone_unique'         => 'Phone number already registered.',
+'auth.too_many_attempts'    => 'Too many attempts. Please wait :seconds seconds.',
+'auth.failed'               => 'Invalid login credentials.',
+'auth.identity_missing'     => 'Please enter your phone number or email.',
+'auth.name_required'        => 'Name is required.',
+'auth.password_min'         => 'Password must be at least 8 characters.',
+'auth.password_confirmed'   => 'Password confirmation does not match.',
+'auth.register_success'     => 'Account created and logged in successfully.',
+'auth.logout_admin'         => 'Admin logged out successfully.',
+'auth.logout_user'          => 'Logged out successfully.',
+
+'auth.password_reset_success' => 'Your password has been reset successfully. You can now log in.',
+
+'auth.forgot_password_title' => 'Forgot Password',
+'auth.forgot_password_subtitle' => 'Enter your email to reset your password',
+'auth.forgot_password_heading' => 'Forgot Password?',
+'auth.forgot_password_desc' => 'We will send you a reset link to your email.',
+'auth.send_reset_link' => 'Send Reset Link',
+'auth.back_to_login' => 'Back to Login',
+
+
+    // Registration & Login Pages
+    'register_title' => 'Create New Account',
+    'register_subtitle' => 'Join us for the best car wash services',
+    'register_hint' => 'Please enter your details to create an account',
+    'register_name' => 'Full Name',
+    'register_name_placeholder' => 'Enter your full name',
+    'register_email_label' => 'Email Address',
+    'register_email_otp_hint' => 'We will send a verification code to your email',
+    'register_password' => 'Password',
+    'register_password_confirm' => 'Confirm Password',
+    'register_terms_prefix' => 'By creating an account, you agree to our',
+    'register_terms_link' => 'Terms & Conditions',
+    'register_terms_suffix' => '',
+    'register_submit' => 'Create Account',
+    'register_otp_email' => 'Verification code will be sent instantly',
+    'register_have_account' => 'Already have an account?',
+    'login' => 'Login',
+    'or' => 'OR',
+    'back_to_store' => 'Back to home',
+
+    // Password Strength (JavaScript)
+    'pw_strength_prefix' => 'Password Strength: ',
+    'pw_very_weak' => 'Very Weak',
+    'pw_weak' => 'Weak',
+    'pw_medium' => 'Medium',
+    'pw_strong' => 'Strong',
+    'passwords_match' => 'Passwords match',
+    'passwords_no_match' => 'Passwords do not match',
+
+    // Password Reset Page
+    'reset_title' => 'Reset Password',
+    'reset_subtitle' => 'Enter your new password',
+    'reset_hint' => 'Choose a strong and secure password for your account.',
+    'reset_new_password' => 'New Password',
+    'reset_submit' => 'Update Password',
+    'back_to_login' => 'Back to login',
+
 ];

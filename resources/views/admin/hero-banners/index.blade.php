@@ -8,78 +8,95 @@
          ADD FORM
     ══════════════════════════════════════════════════════ --}}
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <h3 class="text-lg font-bold mb-4">{{ __('app.add_banner') ?? 'إضافة بانر جديد' }}</h3>
+        <h3 class="text-lg font-bold mb-4">إضافة بانر جديد</h3>
 
-        <form action="{{ route('admin.hero-banners.store') }}" method="POST"
+        <form action="{{ route('admin.hero-banners.store') }}"
+              method="POST"
               enctype="multipart/form-data"
-              x-data="{ tab: 'ar' }">
+              x-data="{ tab: 'ar' }"
+              class="banner-form space-y-5">
             @csrf
 
             {{-- Language tabs --}}
             @include('admin.hero-banners._lang-tabs')
 
-            {{-- ── Arabic fields ──────────────────────────────── --}}
-            <div x-show="tab === 'ar'" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-
-                <input type="text" name="title[ar]" placeholder="العنوان الرئيسي *"
-                       value="{{ old('title.ar') }}" required dir="rtl"
-                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-                @error('title.ar')<p class="md:col-span-2 text-xs text-red-500 -mt-2">{{ $message }}</p>@enderror
-
-                <input type="text" name="subtitle[ar]" placeholder="العنوان الفرعي"
-                       value="{{ old('subtitle.ar') }}" dir="rtl"
-                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-
-                <input type="text" name="badge[ar]" placeholder="النص العلوي (Badge)"
-                       value="{{ old('badge.ar') }}" dir="rtl"
-                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-
-                <input type="text" name="button_text[ar]" placeholder="نص الزر *"
-                       value="{{ old('button_text.ar', 'اكتشف الآن') }}" required dir="rtl"
-                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-                @error('button_text.ar')<p class="md:col-span-2 text-xs text-red-500 -mt-2">{{ $message }}</p>@enderror
-
-                <div class="md:col-span-2">
-                    <textarea name="description[ar]" placeholder="وصف قصير" dir="rtl"
-                              class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">{{ old('description.ar') }}</textarea>
-                </div>
-            </div>
-
-            {{-- ── English fields ──────────────────────────────── --}}
-            <div x-show="tab === 'en'" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-
-                <input type="text" name="title[en]" placeholder="Main title"
-                       value="{{ old('title.en') }}" dir="ltr"
-                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-
-                <input type="text" name="subtitle[en]" placeholder="Subtitle"
-                       value="{{ old('subtitle.en') }}" dir="ltr"
-                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-
-                <input type="text" name="badge[en]" placeholder="Badge text"
-                       value="{{ old('badge.en') }}" dir="ltr"
-                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-
-                <input type="text" name="button_text[en]" placeholder="Button text"
-                       value="{{ old('button_text.en', 'Shop now') }}" dir="ltr"
-                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-
-                <div class="md:col-span-2">
-                    <textarea name="description[en]" placeholder="Short description" dir="ltr"
-                              class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">{{ old('description.en') }}</textarea>
-                </div>
-            </div>
-
-            {{-- ── Shared fields (not translatable) ──────────────── --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- Layout --}}
+                <div class="md:col-span-2">
+                    <label class="text-xs font-bold mb-1 block">نوع البانر</label>
+                    <select name="layout"
+                            class="banner-layout w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        <option value="text_image" {{ old('layout', 'text_image') === 'text_image' ? 'selected' : '' }}>نص + صورة</option>
+                        <option value="text_only" {{ old('layout', 'text_image') === 'text_only' ? 'selected' : '' }}>نص فقط</option>
+                        <option value="image_only" {{ old('layout', 'text_image') === 'image_only' ? 'selected' : '' }}>صورة فقط</option>
+                    </select>
+                </div>
+            </div>
 
+            {{-- Text fields --}}
+            <div class="banner-text-fields">
+                {{-- Arabic fields --}}
+                <div x-show="tab === 'ar'" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+                    <input type="text" name="title[ar]" placeholder="العنوان الرئيسي *"
+                           value="{{ old('title.ar') }}"  dir="rtl"
+                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                    @error('title.ar')<p class="md:col-span-2 text-xs text-red-500 -mt-2">{{ $message }}</p>@enderror
+
+                    <input type="text" name="subtitle[ar]" placeholder="العنوان الفرعي"
+                           value="{{ old('subtitle.ar') }}" dir="rtl"
+                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+
+                    <input type="text" name="badge[ar]" placeholder="النص العلوي (Badge)"
+                           value="{{ old('badge.ar') }}" dir="rtl"
+                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+
+                    <input type="text" name="button_text[ar]" placeholder="نص الزر *"
+                           value="{{ old('button_text.ar', 'اكتشف الآن') }}"  dir="rtl"
+                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                    @error('button_text.ar')<p class="md:col-span-2 text-xs text-red-500 -mt-2">{{ $message }}</p>@enderror
+
+                    <div class="md:col-span-2">
+                        <textarea name="description[ar]" placeholder="وصف قصير" dir="rtl"
+                                  class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">{{ old('description.ar') }}</textarea>
+                    </div>
+                </div>
+
+                {{-- English fields --}}
+                <div x-show="tab === 'en'" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+                    <input type="text" name="title[en]" placeholder="Main title"
+                           value="{{ old('title.en') }}" dir="ltr"
+                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+
+                    <input type="text" name="subtitle[en]" placeholder="Subtitle"
+                           value="{{ old('subtitle.en') }}" dir="ltr"
+                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+
+                    <input type="text" name="badge[en]" placeholder="Badge text"
+                           value="{{ old('badge.en') }}" dir="ltr"
+                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+
+                    <input type="text" name="button_text[en]" placeholder="Button text"
+                           value="{{ old('button_text.en', 'Shop now') }}" dir="ltr"
+                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+
+                    <div class="md:col-span-2">
+                        <textarea name="description[en]" placeholder="Short description" dir="ltr"
+                                  class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">{{ old('description.en') }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Shared fields --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" name="button_url" placeholder="رابط الزر"
                        value="{{ old('button_url') }}"
                        class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
 
                 <select name="position"
                         class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-                    <option value="top"            {{ old('position') === 'top'            ? 'selected' : '' }}>أعلى الصفحة</option>
+                    <option value="top"            {{ old('position') === 'top' ? 'selected' : '' }}>أعلى الصفحة</option>
                     <option value="after_featured" {{ old('position') === 'after_featured' ? 'selected' : '' }}>بعد المنتجات المميزة</option>
                     <option value="after_products" {{ old('position') === 'after_products' ? 'selected' : '' }}>بعد جميع المنتجات</option>
                 </select>
@@ -99,8 +116,8 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <input type="file" name="image"
-                           class="w-full px-4 py-2 rounded-xl border">
+                    <label class="text-xs font-bold mb-1 block">الصورة</label>
+                    <input type="file" name="image" class="w-full px-4 py-2 rounded-xl border">
                 </div>
 
                 <div class="md:col-span-2">
@@ -123,6 +140,7 @@
                     <th class="px-6 py-4">الصورة</th>
                     <th class="px-6 py-4">العنوان</th>
                     <th class="px-6 py-4">الموقع</th>
+                    <th class="px-6 py-4">نوع العرض</th>
                     <th class="px-6 py-4">الحالة</th>
                     <th class="px-6 py-4">الإجراء</th>
                 </tr>
@@ -137,7 +155,6 @@
                              alt="{{ $banner->title }}">
                     </td>
 
-                    {{-- $banner->title auto-returns current locale value --}}
                     <td class="px-6 py-4 font-bold">{{ $banner->title }}</td>
 
                     <td class="px-6 py-4">
@@ -147,6 +164,21 @@
                                 @case('after_featured') بعد المنتجات المميزة     @break
                                 @case('after_products') بعد جميع المنتجات        @break
                                 @default                {{ $banner->position }}
+                            @endswitch
+                        </span>
+                    </td>
+
+                    <td class="px-6 py-4">
+                        <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 border border-blue-100">
+                            @switch($banner->layout ?? 'text_image')
+                                @case('text_only')
+                                    نص فقط
+                                    @break
+                                @case('image_only')
+                                    صورة فقط
+                                    @break
+                                @default
+                                    نص + صورة
                             @endswitch
                         </span>
                     </td>
@@ -174,69 +206,86 @@
 
                 {{-- ── Inline edit row ──────────────────────────────── --}}
                 <tr id="edit-{{ $banner->id }}" class="hidden bg-gray-50">
-                    <td colspan="5" class="p-6">
+                    <td colspan="6" class="p-6">
                         <form action="{{ route('admin.hero-banners.update', $banner) }}"
                               method="POST"
                               enctype="multipart/form-data"
-                              x-data="{ tab: 'ar' }">
+                              x-data="{ tab: 'ar' }"
+                              class="banner-form space-y-5">
                             @csrf @method('PUT')
 
                             {{-- Language tabs --}}
                             @include('admin.hero-banners._lang-tabs')
 
-                            {{-- Arabic fields --}}
-                            <div x-show="tab === 'ar'" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <input type="text" name="title[ar]"
-                                       value="{{ $banner->getTranslation('title', 'ar') }}"
-                                       placeholder="العنوان الرئيسي *" required dir="rtl"
-                                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-
-                                <input type="text" name="subtitle[ar]"
-                                       value="{{ $banner->getTranslation('subtitle', 'ar') }}"
-                                       placeholder="العنوان الفرعي" dir="rtl"
-                                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-
-                                <input type="text" name="badge[ar]"
-                                       value="{{ $banner->getTranslation('badge', 'ar') }}"
-                                       placeholder="النص العلوي" dir="rtl"
-                                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-
-                                <input type="text" name="button_text[ar]"
-                                       value="{{ $banner->getTranslation('button_text', 'ar') }}"
-                                       placeholder="نص الزر *" required dir="rtl"
-                                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{-- Layout --}}
                                 <div class="md:col-span-2">
-                                    <textarea name="description[ar]" dir="rtl"
-                                              class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">{{ $banner->getTranslation('description', 'ar') }}</textarea>
+                                    <label class="text-xs font-bold mb-1 block">نوع البانر</label>
+                                    <select name="layout"
+                                            class="banner-layout w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                        <option value="text_image" {{ ($banner->layout ?? 'text_image') === 'text_image' ? 'selected' : '' }}>نص + صورة</option>
+                                        <option value="text_only" {{ ($banner->layout ?? 'text_image') === 'text_only' ? 'selected' : '' }}>نص فقط</option>
+                                        <option value="image_only" {{ ($banner->layout ?? 'text_image') === 'image_only' ? 'selected' : '' }}>صورة فقط</option>
+                                    </select>
                                 </div>
                             </div>
 
-                            {{-- English fields --}}
-                            <div x-show="tab === 'en'" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <input type="text" name="title[en]"
-                                       value="{{ $banner->getTranslation('title', 'en') }}"
-                                       placeholder="Main title" dir="ltr"
-                                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                            {{-- Text fields --}}
+                            <div class="banner-text-fields">
+                                {{-- Arabic fields --}}
+                                <div x-show="tab === 'ar'" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <input type="text" name="title[ar]"
+                                           value="{{ $banner->getTranslation('title', 'ar') }}"
+                                           placeholder="العنوان الرئيسي *"  dir="rtl"
+                                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
 
-                                <input type="text" name="subtitle[en]"
-                                       value="{{ $banner->getTranslation('subtitle', 'en') }}"
-                                       placeholder="Subtitle" dir="ltr"
-                                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                    <input type="text" name="subtitle[ar]"
+                                           value="{{ $banner->getTranslation('subtitle', 'ar') }}"
+                                           placeholder="العنوان الفرعي" dir="rtl"
+                                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
 
-                                <input type="text" name="badge[en]"
-                                       value="{{ $banner->getTranslation('badge', 'en') }}"
-                                       placeholder="Badge text" dir="ltr"
-                                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                    <input type="text" name="badge[ar]"
+                                           value="{{ $banner->getTranslation('badge', 'ar') }}"
+                                           placeholder="النص العلوي" dir="rtl"
+                                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
 
-                                <input type="text" name="button_text[en]"
-                                       value="{{ $banner->getTranslation('button_text', 'en') }}"
-                                       placeholder="Button text" dir="ltr"
-                                       class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                    <input type="text" name="button_text[ar]"
+                                           value="{{ $banner->getTranslation('button_text', 'ar') }}"
+                                           placeholder="نص الزر *"  dir="rtl"
+                                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
 
-                                <div class="md:col-span-2">
-                                    <textarea name="description[en]" dir="ltr"
-                                              class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">{{ $banner->getTranslation('description', 'en') }}</textarea>
+                                    <div class="md:col-span-2">
+                                        <textarea name="description[ar]" dir="rtl"
+                                                  class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">{{ $banner->getTranslation('description', 'ar') }}</textarea>
+                                    </div>
+                                </div>
+
+                                {{-- English fields --}}
+                                <div x-show="tab === 'en'" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <input type="text" name="title[en]"
+                                           value="{{ $banner->getTranslation('title', 'en') }}"
+                                           placeholder="Main title" dir="ltr"
+                                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+
+                                    <input type="text" name="subtitle[en]"
+                                           value="{{ $banner->getTranslation('subtitle', 'en') }}"
+                                           placeholder="Subtitle" dir="ltr"
+                                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+
+                                    <input type="text" name="badge[en]"
+                                           value="{{ $banner->getTranslation('badge', 'en') }}"
+                                           placeholder="Badge text" dir="ltr"
+                                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+
+                                    <input type="text" name="button_text[en]"
+                                           value="{{ $banner->getTranslation('button_text', 'en') }}"
+                                           placeholder="Button text" dir="ltr"
+                                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+
+                                    <div class="md:col-span-2">
+                                        <textarea name="description[en]" dir="ltr"
+                                                  class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">{{ $banner->getTranslation('description', 'en') }}</textarea>
+                                    </div>
                                 </div>
                             </div>
 
@@ -249,7 +298,7 @@
 
                                 <select name="position"
                                         class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-                                    <option value="top"            {{ $banner->position === 'top'            ? 'selected' : '' }}>أعلى الصفحة</option>
+                                    <option value="top"            {{ $banner->position === 'top' ? 'selected' : '' }}>أعلى الصفحة</option>
                                     <option value="after_featured" {{ $banner->position === 'after_featured' ? 'selected' : '' }}>بعد المنتجات المميزة</option>
                                     <option value="after_products" {{ $banner->position === 'after_products' ? 'selected' : '' }}>بعد جميع المنتجات</option>
                                 </select>
@@ -269,8 +318,8 @@
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <input type="file" name="image"
-                                           class="w-full px-4 py-2 rounded-xl border">
+                                    <label class="text-xs font-bold mb-1 block">الصورة</label>
+                                    <input type="file" name="image" class="w-full px-4 py-2 rounded-xl border">
                                 </div>
 
                                 <div class="md:col-span-2 flex items-center gap-3">
@@ -305,5 +354,23 @@ function toggleEdit(id) {
     const el = document.getElementById('edit-' + id);
     if (el) el.classList.toggle('hidden');
 }
+
+function syncBannerLayout(form) {
+    const layout = form.querySelector('.banner-layout');
+    const textFields = form.querySelector('.banner-text-fields');
+
+    if (!layout || !textFields) return;
+
+    const toggle = () => {
+        textFields.classList.toggle('hidden', layout.value === 'image_only');
+    };
+
+    toggle();
+    layout.addEventListener('change', toggle);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form.banner-form').forEach(syncBannerLayout);
+});
 </script>
 @endsection

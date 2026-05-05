@@ -339,54 +339,80 @@
 <div class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
 
     {{-- ── Hero banners (top position) ─────────────────────────────── --}}
-    @if(!$currentCategory)
+ @if(!$currentCategory)
     @php
         $banners = \App\Models\HeroBanner::where('is_active', true)->orderBy('sort_order')->get();
     @endphp
+
     @foreach($banners as $banner)
         @if($banner->position === 'top')
-        @php
-            $image    = $banner->getFirstMediaUrl('banner_image');
-            $hasImage = !empty($image);
-        @endphp
-        <div class="hero-banner mt-4 mb-5 reveal"
-             style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
-            <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
-                        {{ $hasImage ? '' : 'justify-center text-center' }}">
+          @php
+    $layout = $banner->layout ?? 'text_image';
+    $image = $banner->getFirstMediaUrl('banner_image');
+    $hasImage = !empty($image);
+    $isImageOnly = $layout === 'image_only';
+    $hasText = in_array($layout, ['text_image', 'text_only']);
+@endphp
+
+<div class="hero-banner mt-4 mb-5 reveal relative overflow-hidden"
+     style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
+
+    {{-- ✅ صورة فقط --}}
+    @if($isImageOnly && $hasImage)
+        <img src="{{ $image }}"
+             class="w-full h-40 sm:h-52 md:h-64 object-cover rounded-2xl">
+    @else
+
+        <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
+                    {{ $hasImage ? '' : 'justify-center text-center' }}">
+
+            {{-- ✅ النص --}}
+            @if($hasText)
                 <div class="{{ $hasImage ? 'flex-1 ' . ($isRtl ? 'text-right' : 'text-left') : 'max-w-xl mx-auto text-center' }}">
+
                     @if($banner->badge)
                         <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
                               style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
                             {{ $banner->badge }}
                         </span>
                     @endif
+
                     <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
                         style="color: {{ $banner->text_color ?? '#fff' }};">
                         {{ $banner->title }}
                         @if($banner->subtitle)
-                            <br><span style="color: {{ $banner->text_color ?? '#fff' }};">{{ $banner->subtitle }}</span>
+                            <br><span>{{ $banner->subtitle }}</span>
                         @endif
                     </h2>
+
                     <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
                        style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
                         {{ $banner->description }}
                     </p>
+
                     <a href="{{ $banner->button_url ?? '#' }}"
                        class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
                        style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
                         {{ $banner->button_text }}
                     </a>
                 </div>
-                @if($hasImage)
-                    <div class="w-32 sm:w-40 md:w-52 flex-shrink-0 relative">
-                        <img src="{{ $image }}" class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
-                    </div>
-                @endif
-            </div>
+            @endif
+
+            {{-- ✅ الصورة مع النص --}}
+            @if($hasImage && !$isImageOnly)
+                <div class="w-32 sm:w-40 md:w-52 flex-shrink-0">
+                    <img src="{{ $image }}"
+                         class="w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+                </div>
+            @endif
+
         </div>
+
+    @endif
+</div>
         @endif
     @endforeach
-    @endif
+@endif
 
     {{-- ── Category grid ────────────────────────────────────────────── --}}
     @php

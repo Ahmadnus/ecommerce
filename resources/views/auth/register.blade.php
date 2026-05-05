@@ -19,7 +19,6 @@
     .auth-card > *:nth-child(4) { animation-delay: 0.20s; }
     .auth-card > *:nth-child(5) { animation-delay: 0.25s; }
     .auth-card > *:nth-child(6) { animation-delay: 0.30s; }
-    .auth-card > *:nth-child(7) { animation-delay: 0.35s; }
 
     .pw-toggle { cursor: pointer; transition: color 0.15s; }
     .pw-toggle:hover { color: var(--brand-color, #0ea5e9); }
@@ -28,33 +27,10 @@
 
     .divider { display: flex; align-items: center; gap: 12px; }
     .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
-
-    /* Method toggle pills */
-    .method-tab {
-        flex: 1; padding: 10px 8px;
-        border-radius: 10px;
-        cursor: pointer; text-align: center;
-        font-size: 13px; font-weight: 700;
-        transition: all .18s;
-        border: 1.5px solid #e5e7eb;
-        background: #f9fafb; color: #64748b;
-    }
-    .method-tab.active {
-        border-color: var(--brand-color, #0ea5e9);
-        background: color-mix(in srgb, var(--brand-color, #0ea5e9) 8%, #fff);
-        color: var(--brand-color, #0ea5e9);
-    }
-    .method-tab:hover:not(.active) {
-        border-color: var(--brand-color, #0ea5e9);
-        color: var(--brand-color, #0ea5e9);
-    }
 </style>
 @endpush
 
 @section('content')
-
-{{-- Inject countries JSON for country-select component --}}
-@include('partials.country-select-data', ['countries' => $countries])
 
 <div class="auth-bg-blob w-96 h-96 bg-sky-400 top-0 left-0 fixed"></div>
 <div class="auth-bg-blob w-72 h-72 bg-blue-300 bottom-20 right-10 fixed"></div>
@@ -74,8 +50,7 @@
         <p class="text-gray-500 text-sm mt-2">{{ __('app.register_subtitle') }}</p>
     </div>
 
-    <div class="auth-card bg-white rounded-2xl shadow-lg border border-gray-100 p-8"
-         x-data="registerForm('{{ old('email') ? 'email' : 'phone' }}')">
+    <div class="auth-card bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
 
         @if($errors->any())
         <div class="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
@@ -96,21 +71,6 @@
         <form action="{{ route('register') }}" method="POST" class="space-y-5" novalidate>
             @csrf
 
-            {{-- ── Method selector ─────────────────────────────────────── --}}
-            <div>
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2.5">{{ __('app.register_method') }}</p>
-                <div class="flex gap-2">
-                    <button type="button" class="method-tab" :class="method === 'phone' ? 'active' : ''"
-                            @click="method = 'phone'">
-                        📱 {{ __('app.register_phone') }}
-                    </button>
-                    <button type="button" class="method-tab" :class="method === 'email' ? 'active' : ''"
-                            @click="method = 'email'">
-                        ✉️ {{ __('app.register_email_tab') }}
-                    </button>
-                </div>
-            </div>
-
             {{-- Full name --}}
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">{{ __('app.register_name') }}</label>
@@ -122,37 +82,8 @@
                 @error('name')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
             </div>
 
-            {{-- ── PHONE section ───────────────────────────────────────── --}}
-            <div x-show="method === 'phone'" x-transition>
-                {{-- Country select --}}
-                <div class="mb-4 hidden">
-                    @include('components.country-select', [
-                        'countries'   => $countries,
-                        'name'        => 'country_id',
-                        'label'       => 'دولة الحساب',
-                        'required'    => false,
-                        'selected'    => old('country_id', ''),
-                        'hasError'    => $errors->has('country_id'),
-                        'placeholder' => 'اختر الدولة...',
-                    ])
-                </div>
-
-                {{-- Phone input --}}
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">{{ __('app.register_phone_label') }}</label>
-                    @include('components.phone-input', [
-                        'fieldName'      => 'phone_full',
-                        'initialCountry' => 'sy',
-                        'oldValue'       => old('phone_full'),
-                        'hasError'       => $errors->has('phone_full'),
-                    ])
-                    @error('phone_full')<p class="mt-1.5 text-xs text-red-500">{{ $message }}</p>@enderror
-                    <p class="mt-1 text-[10px] text-gray-400 italic" dir="ltr">* e.g. +963 9xx xxx xxx</p>
-                </div>
-            </div>
-
-            {{-- ── EMAIL section ───────────────────────────────────────── --}}
-            <div x-show="method === 'email'" x-transition>
+            {{-- Email --}}
+            <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">{{ __('app.register_email_label') }}</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 end-0 flex items-center pe-3.5 pointer-events-none">
@@ -161,8 +92,7 @@
                                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                         </svg>
                     </div>
-                    <input type="email" name="email" value="{{ old('email') }}"
-                           :required="method === 'email'"
+                    <input type="email" name="email" value="{{ old('email') }}" required
                            placeholder="example@mail.com"
                            dir="ltr"
                            class="input-field w-full bg-gray-50 border @error('email') border-red-400 @else border-gray-200 @enderror
@@ -230,8 +160,7 @@
                            hover:opacity-90 transition transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg"
                     style="background:var(--brand-color,#0ea5e9)">
                 {{ __('app.register_submit') }}
-                <span x-text="method === 'email' ? '{{ __('app.register_otp_email') }}' : '{{ __('app.register_otp_phone') }}'"
-                      class="block text-[10px] font-normal opacity-70 mt-0.5"></span>
+                <span class="block text-[10px] font-normal opacity-70 mt-0.5">{{ __('app.register_otp_email') }}</span>
             </button>
         </form>
 
@@ -259,12 +188,6 @@
 
 @push('scripts')
 <script>
-document.addEventListener('alpine:init', function () {
-  Alpine.data('registerForm', () => ({
-    method: 'email',
-  }));
-});
-
 function togglePw(id, btn) {
     const i = document.getElementById(id);
     const h = i.type === 'password';
@@ -293,7 +216,7 @@ function checkStr(val) {
     ];
     bars.forEach((b, i) => { b.style.background = i < score ? colors[score-1] : '#e5e7eb'; });
     label.textContent = '{{ __("app.pw_strength_prefix") }}' + (labels[score-1] || '');
-    label.className   = 'text-xs ' + ['text-red-500','text-orange-500','text-yellow-500','text-green-500'][score-1] || 'text-gray-400';
+    label.className   = 'text-xs ' + (['text-red-500','text-orange-500','text-yellow-500','text-green-500'][score-1] || 'text-gray-400');
 }
 
 function checkMatch() {
