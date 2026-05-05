@@ -211,7 +211,7 @@
                 <input type="text"
                        name="name[ar]"
                        value="{{ old('name.ar') }}"
-                       required
+                       
                        dir="rtl"
                        class="cc-input"
                        placeholder="اسم المنتج بالعربية">
