@@ -60,15 +60,16 @@ class AppServiceProvider extends ServiceProvider
         ]);
     });
 View::composer('admin.*', function ($view) {
-            static $resolved = null;
+    static $resolved = null;
 
-            if (! $resolved) {
-                $resolved = Currency::where('is_base', true)->first()
-                    ?? Currency::where('is_active', true)->orderBy('sort_order')->first();
-            }
+    if (! $resolved) {
+        // استخدام المسار الكامل للموديل هنا أضمن لمنع التضارب مع الكنترولر
+        $resolved = \App\Models\Currency::where('is_base', true)->first()
+            ?? \App\Models\Currency::where('is_active', true)->orderBy('id')->first();
+    }
 
-            $view->with('activeCurrency', $resolved);
-        });
+    $view->with('activeCurrency', $resolved);
+});
     
 }
 }

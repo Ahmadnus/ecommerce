@@ -11,6 +11,8 @@ use Illuminate\View\View;
 
 class CurrencyController extends Controller
 {
+
+
     public function index(): View
     {
         $currencies = Currency::orderBy('is_base', 'desc')

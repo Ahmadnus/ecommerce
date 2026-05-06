@@ -3,15 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     CartController, OrderController, ProductController, WishlistController,
-    PageController, ShippingApiController, CheckoutController, CurrencyController as ControllersCurrencyController, ProfileController,
+    PageController, ShippingApiController, CheckoutController, ProfileController,
     SocialLinkController
 };
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\{
     DashboardController, CategoryController, HeroBannerController, SettingController,
     AnnouncementController, AttributeController, AttributeValueController, CheckoutSettingsController, HomeSectionController, SiteFeatureController,
-    CountryController, ZoneController, CurrencyController,
-    ProductController as AdminProductController,
+    CountryController, ZoneController, 
+    CurrencyController as AdminCurrencyController,
+       ProductController as AdminProductController,
     OrderController as AdminOrderController,
     PageController as AdminPageController,
     SmsSettingsController,
@@ -181,10 +182,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('site-features', SiteFeatureController::class);
     Route::resource('pages', AdminPageController::class);
     Route::resource('countries', CountryController::class);
-    Route::resource('currencies', CurrencyController::class);
+ Route::resource('currencies', AdminCurrencyController::class);
     
     Route::resource('countries.zones', ZoneController::class)->only(['index', 'store', 'update', 'destroy']);
 });
+
 Route::post('/set-user-currency', function (Illuminate\Http\Request $request) {
     session(['display_currency' => $request->currency_code]);
     return back();
@@ -357,5 +359,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::delete('/contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
     Route::patch('/contact-messages/{contactMessage}/read', [ContactMessageController::class, 'markRead'])->name('contact-messages.read');
 });
-Route::post('currency/switch', [ControllersCurrencyController::class, 'switch'])
-     ->name('currency.switch');
+
+use App\Http\Controllers\Admin\FooterTextController;
+
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    Route::get('/footer-texts', [FooterTextController::class, 'index'])->name('footer-texts.index');
+    Route::post('/footer-texts', [FooterTextController::class, 'store'])->name('footer-texts.store');
+    Route::delete('/footer-texts/{footerText}', [FooterTextController::class, 'destroy'])->name('footer-texts.destroy');
+});
