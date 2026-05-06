@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Currency;
 use App\Repositories\Eloquent\OrderRepository;
 use App\Repositories\Eloquent\ProductRepository;
 use App\Repositories\Interfaces\OrderRepositoryInterface;
@@ -26,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
         $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
         $this->app->singleton(\App\Services\SmsService::class);
+        $this->app->bind('currency', fn() => new \App\Helpers\CurrencyHelper());
         
     }
 
@@ -57,6 +59,16 @@ class AppServiceProvider extends ServiceProvider
             'wishlistedIds' => $wishlistedIds
         ]);
     });
+View::composer('admin.*', function ($view) {
+            static $resolved = null;
 
+            if (! $resolved) {
+                $resolved = Currency::where('is_base', true)->first()
+                    ?? Currency::where('is_active', true)->orderBy('sort_order')->first();
+            }
+
+            $view->with('activeCurrency', $resolved);
+        });
+    
 }
 }

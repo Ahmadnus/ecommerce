@@ -8,7 +8,9 @@
 <div class="min-h-screen py-12" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
     <div class="max-w-3xl mx-auto px-4">
         <div class="mb-8">
-            <h1 class="text-3xl font-black text-white mb-2">{{ __('app.contact_title') ?? 'اتصل بنا' }}</h1>
+<h1 class="text-3xl font-black text-black mb-2">
+    {{ __('app.contact_title') ?? 'اتصل بنا' }}
+</h1>
             <p class="text-gray-400 text-sm">{{ __('app.contact_subtitle') ?? 'أرسل لنا ملاحظاتك أو شكواك أو أي مشكلة تواجهك.' }}</p>
         </div>
 

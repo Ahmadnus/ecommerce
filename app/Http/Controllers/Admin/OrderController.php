@@ -24,14 +24,17 @@ class OrderController extends Controller
         'zone',
     ])->latest();
 
-    // فلترة حسب الحالة
     if ($request->filled('status')) {
         $query->where('status', $request->status);
     }
 
     $orders = $query->paginate(10)->withQueryString();
 
-    return view('admin.orders.index', compact('orders'));
+    // Always resolve via the base currency for admin — admins see storage currency (JOD)
+    $activeCurrency = \App\Models\Currency::where('is_base', true)->first()
+        ?? \App\Models\Currency::where('is_active', true)->orderBy('sort_order')->first();
+
+    return view('admin.orders.index', compact('orders', 'activeCurrency'));
 }
 
     public function show(Order $order)

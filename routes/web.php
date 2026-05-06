@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     CartController, OrderController, ProductController, WishlistController,
-    PageController, ShippingApiController, CheckoutController, ProfileController,
+    PageController, ShippingApiController, CheckoutController, CurrencyController as ControllersCurrencyController, ProfileController,
     SocialLinkController
 };
 use App\Http\Controllers\Auth\AuthController;
@@ -357,3 +357,5 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::delete('/contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
     Route::patch('/contact-messages/{contactMessage}/read', [ContactMessageController::class, 'markRead'])->name('contact-messages.read');
 });
+Route::post('currency/switch', [ControllersCurrencyController::class, 'switch'])
+     ->name('currency.switch');

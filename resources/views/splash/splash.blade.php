@@ -84,7 +84,7 @@
     // إعدادات النصوص
     $mainTitle   = $siteSettings['splash_title_main'] ?? 'COOL';
     $subTitle    = $siteSettings['splash_title_sub'] ?? 'VIBES';
-    $loadingText = $siteSettings['splash_loading_text'] ?? 'جاري تحضير تجربتك الخاصة...';
+  
     
     // إعدادات الألوان
     $mainColor = $siteSettings['splash_color_main'] ?? '#000000';
@@ -130,11 +130,7 @@
                 <div class="h-1 w-0 animate-line rounded-full" style="background-color: {{ $mainColor }};"></div>
             </div>
 
-            <div class="mt-16">
-                <p class="text-[10px] font-bold text-gray-400 tracking-[0.5em] uppercase animate-pulse-slow">
-                    {{ $loadingText }}
-                </p>
-            </div>
+            
         </div>
 
         <div class="absolute bottom-10 text-[10px] font-black text-gray-200 tracking-[0.4em] uppercase">

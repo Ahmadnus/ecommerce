@@ -17,13 +17,17 @@
     @if($errors->any())
     <div class="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
         <ul class="list-disc list-inside space-y-0.5">
-            @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+            @foreach($errors->all() as $e)
+                <li>{{ $e }}</li>
+            @endforeach
         </ul>
     </div>
     @endif
 
+    {{-- Update form --}}
     <form action="{{ route('admin.currencies.update', $currency) }}" method="POST" class="space-y-6">
-        @csrf @method('PUT')
+        @csrf
+        @method('PUT')
 
         <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-7 space-y-5">
             <h2 class="font-bold text-gray-800 text-base border-b border-gray-100 pb-4">تعديل بيانات العملة</h2>
@@ -65,6 +69,7 @@
                         <p class="text-xs text-gray-400">يُلغي الأساسية الأخرى</p>
                     </div>
                 </label>
+
                 <label class="flex items-center gap-3 cursor-pointer p-3 border border-gray-200 rounded-xl bg-gray-50 hover:bg-white transition-colors">
                     <input type="checkbox" name="is_active" value="1"
                            {{ old('is_active', $currency->is_active) ? 'checked' : '' }}
@@ -77,32 +82,34 @@
             </div>
         </div>
 
-        <div class="flex justify-between items-center">
-            @if(!$currency->is_base)
-            <form action="{{ route('admin.currencies.destroy', $currency) }}" method="POST"
-                  onsubmit="return confirm('حذف عملة \'{{ addslashes($currency->name) }}\'؟')">
-                @csrf @method('DELETE')
-                <button type="submit"
-                        class="flex items-center gap-2 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 px-4 py-2.5 rounded-xl transition-colors font-semibold">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    حذف العملة
-                </button>
-            </form>
-            @else
-            <div></div>
-            @endif
-            <div class="flex gap-3">
-                <a href="{{ route('admin.currencies.index') }}"
-                   class="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-red-500 transition-colors">إلغاء</a>
-                <button type="submit"
-                        class="bg-brand text-white px-8 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 hover:scale-[1.02] transition-all active:scale-95">
-                    حفظ التعديلات
-                </button>
-            </div>
+        <div class="flex justify-end gap-3">
+            <a href="{{ route('admin.currencies.index') }}"
+               class="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-red-500 transition-colors">إلغاء</a>
+
+            <button type="submit"
+                    class="bg-brand text-white px-8 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 hover:scale-[1.02] transition-all active:scale-95">
+                حفظ التعديلات
+            </button>
         </div>
     </form>
+
+    {{-- Delete form --}}
+    @if(!$currency->is_base)
+        <form action="{{ route('admin.currencies.destroy', $currency) }}" method="POST"
+              onsubmit="return confirm('حذف عملة \'{{ addslashes($currency->name) }}\'؟')"
+              class="mt-4">
+            @csrf
+            @method('DELETE')
+
+            <button type="submit"
+                    class="flex items-center gap-2 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 px-4 py-2.5 rounded-xl transition-colors font-semibold">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                حذف العملة
+            </button>
+        </form>
+    @endif
 </div>
 @endsection

@@ -89,7 +89,9 @@
                         </div>
                         {{-- نهاية قسم التفاصيل المضافة --}}
                     </td>
-                    <td class="px-6 py-4 font-bold">{{ number_format($order->total_amount, 2) }} {{ $activeCurrency->symbol ?? 'د.أ' }}</td>
+                 <td class="px-6 py-4 font-bold">
+    <x-price :amount="$order->total_amount" :currency="$activeCurrency->code ?? null" />
+</td>
                     <td class="px-6 py-4">
                         <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="inline-block">
                             @csrf @method('PATCH')

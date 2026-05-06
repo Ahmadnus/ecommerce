@@ -117,14 +117,13 @@
                             @endif
 
                             <p class="text-xs text-gray-400 mt-1.5 font-mono">
-                                {{ $item->quantity }} × {{ number_format($item->unit_price, 2) }}
-                                {{ $activeCurrency->symbol ?? 'د.أ' }}
+                             {{ $item->quantity }} × <x-price :amount="$item->unit_price" :currency="$activeCurrency->code ?? null" />
                             </p>
                         </div>
 
                         <p class="text-sm font-bold text-gray-800 tabular-nums flex-shrink-0 font-mono">
-                            {{ number_format($item->total_price, 2) }}
-                            {{ $activeCurrency->symbol ?? 'د.أ' }}
+                         <x-price :amount="$item->total_price" :currency="$activeCurrency->code ?? null" />
+
                         </p>
                     </div>
                     @endforeach
@@ -135,7 +134,7 @@
                     <div class="flex justify-between text-gray-500">
                         <span>المجموع الفرعي</span>
                         <span class="font-semibold text-gray-800 tabular-nums font-mono">
-                            {{ number_format($order->subtotal, 2) }} {{ $activeCurrency->symbol ?? 'د.أ' }}
+                       <x-price :amount="$order->subtotal" :currency="$activeCurrency->code ?? null" />
                         </span>
                     </div>
 
@@ -158,7 +157,7 @@
                             @if($deliveryFee == 0)
                                 مجاني
                             @else
-                                {{ number_format($deliveryFee, 2) }} {{ $activeCurrency->symbol ?? 'د.أ' }}
+                             <x-price :amount="$deliveryFee" :currency="$activeCurrency->code ?? null" />
                             @endif
                         </span>
                     </div>
@@ -174,7 +173,7 @@
                 <div class="border-t border-gray-100 px-5 py-3 flex justify-between items-center">
                     <span class="font-bold text-gray-800">الإجمالي الكلي</span>
                     <span class="text-xl font-black text-gray-900 tabular-nums font-mono">
-                        {{ number_format($order->total_amount, 2) }} {{ $activeCurrency->symbol ?? 'د.أ' }}
+<x-price :amount="$order->total_amount" :currency="$activeCurrency->code ?? null" class="text-xl font-black text-gray-900 tabular-nums font-mono" />
                     </span>
                 </div>
             </div>
