@@ -41,8 +41,8 @@ class AppServiceProvider extends ServiceProvider
 
         // 2. جلب اللوغو والإعدادات (حل مشكلة Undefined variable $logoUrl)
         $siteSettings = \App\Models\Setting::pluck('value', 'key');
-        $logoPath = $siteSettings['site_logo'] ?? null;
-        $logoUrl = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
+       $logoUrl = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo')
+           ?: asset('images/default-logo.png');
 
         // 3. منطق المفضلة (Wishlist)
         $wishlistedIds = [];

@@ -40,33 +40,54 @@
                     </div>
 
                     {{-- الشعار --}}
-                    <div class="space-y-4">
-                        <label class="block text-sm font-bold text-gray-700">شعار المتجر (Logo)</label>
-                        <div class="flex items-center gap-6">
-                            @php $logo = \App\Models\Setting::get('site_logo'); @endphp
-                            <div class="relative group">
-                                <div class="w-24 h-24 bg-gray-50 rounded-2xl flex items-center justify-center p-3 border-2 border-dashed border-gray-200 group-hover:border-brand transition-colors">
-                                    @if($logo)
-                                        <img src="{{ asset('storage/' . $logo) }}" class="max-h-full max-w-full object-contain">
-                                    @else
-                                        <i class="fas fa-image text-gray-300 text-2xl"></i>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="flex-1">
-                                <input type="file" name="logo" class="block w-full text-sm text-gray-500
-                                    file:ml-4 file:py-2.5 file:px-4
-                                    file:rounded-xl file:border-0
-                                    file:text-sm file:font-bold
-                                    file:bg-brand file:text-white
-                                    hover:file:opacity-90 cursor-pointer">
-                                <p class="mt-2 text-xs text-gray-400">يفضل استخدام صيغة PNG بخلفية شفافة.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                  {{-- الشعار --}}
+<div class="space-y-4">
+    <label class="block text-sm font-bold text-gray-700">شعار المتجر (Logo)</label>
+    <div class="flex items-center gap-6">
+        <div class="relative group">
+            <div class="w-24 h-24 bg-gray-50 rounded-2xl flex items-center justify-center p-3 border-2 border-dashed border-gray-200 group-hover:border-brand transition-colors overflow-hidden">
+                @if($logoUrl)
+                    <img src="{{ $logoUrl }}"
+                         class="max-h-full max-w-full object-contain"
+                         alt="الشعار الحالي">
+                @else
+                    <i class="fas fa-image text-gray-300 text-2xl"></i>
+                @endif
             </div>
         </div>
+        <div class="flex-1">
+            <input type="file" name="logo" accept="image/*"
+                   class="block w-full text-sm text-gray-500
+                          file:ml-4 file:py-2.5 file:px-4
+                          file:rounded-xl file:border-0
+                          file:text-sm file:font-bold
+                          file:bg-brand file:text-white
+                          hover:file:opacity-90 cursor-pointer">
+            <p class="mt-2 text-xs text-gray-400">يفضل استخدام صيغة PNG بخلفية شفافة · الحد الأقصى 2MB</p>
+
+            {{-- Favicon --}}
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <label class="block text-sm font-bold text-gray-700 mb-2">الفافيكون (Favicon)</label>
+                @if($faviconUrl)
+                    <div class="flex items-center gap-2 mb-2">
+                        <img src="{{ $faviconUrl }}"
+                             class="w-8 h-8 object-contain rounded border border-gray-200"
+                             alt="الفافيكون الحالي">
+                        <span class="text-xs text-gray-400">الفافيكون الحالي</span>
+                    </div>
+                @endif
+                <input type="file" name="favicon" accept=".ico,.png,.svg"
+                       class="block w-full text-sm text-gray-500
+                              file:ml-4 file:py-2.5 file:px-4
+                              file:rounded-xl file:border-0
+                              file:text-sm file:font-bold
+                              file:bg-gray-100 file:text-gray-700
+                              hover:file:bg-gray-200 cursor-pointer">
+                <p class="mt-1 text-xs text-gray-400">ICO أو PNG أو SVG · الحد الأقصى 512KB</p>
+            </div>
+        </div>
+    </div>
+</div>
 
         {{-- القسم الثاني: ألوان الثيم والموقع --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

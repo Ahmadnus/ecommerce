@@ -78,9 +78,9 @@
     $siteSettings = \App\Models\Setting::pluck('value', 'key');
     
     // إعدادات اللوغو
-    $logoPath = $siteSettings['site_logo'] ?? null;
-    $logoUrl  = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
-    
+   // ADD this one line:
+$logoUrl = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo')
+           ?: asset('images/default-logo.png');
     // إعدادات النصوص
     $mainTitle   = $siteSettings['splash_title_main'] ?? 'COOL';
     $subTitle    = $siteSettings['splash_title_sub'] ?? 'VIBES';

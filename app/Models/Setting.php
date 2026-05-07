@@ -1,18 +1,32 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Setting extends Model
+class Setting extends Model implements HasMedia
 {
-    // تحديد الحقول التي يمكن تعبئتها من خلال الفورم أو updateOrCreate
+    use InteractsWithMedia;
+
     protected $fillable = ['key', 'value'];
 
-    public static function get($key, $default = null)
-{
-    // نبحث في عمود 'key' عن القيمة المطلوبة
-    $setting = self::where('key', $key)->first();
-    return $setting ? $setting->value : $default;
-}
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('logo')->singleFile();
+        $this->addMediaCollection('favicon')->singleFile();
+    }
+
+    public static function mediaHolder(): self
+    {
+        return static::firstOrCreate(
+            ['key' => 'site_logo'],
+            ['value' => null]
+        );
+    }
+
+    public static function get(string $key, mixed $default = null): mixed
+    {
+        return static::where('key', $key)->value('value') ?? $default;
+    }
 }

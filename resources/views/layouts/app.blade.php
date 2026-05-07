@@ -15,8 +15,9 @@
         $cardColor    = $siteSettings['card_bg_color'] ?? '#ffffff';
         $footerColor  = $siteSettings['footer_bg_color'] ?? '#111827';
 
-        $logoPath = $siteSettings['site_logo'] ?? null;
-        $logoUrl  = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
+      // ADD this one line:
+$logoUrl = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo')
+           ?: asset('images/default-logo.png');
 
         $mainSeo = \App\Models\SeoSetting::forType('main');
     @endphp
