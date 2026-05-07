@@ -5,21 +5,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'ShopCraft') — Modern E-Commerce</title>
 
-    {{-- 1. جلب الإعدادات من قاعدة البيانات --}}
-@php
+    @php
         $siteSettings = \App\Models\Setting::pluck('value', 'key');
 
-        $primaryColor = $siteSettings['primary_color'] ?? '#0ea5e9';
+        $primaryColor = $siteSettings['primary_color'] ?? '#364851';
         $bgColor      = $siteSettings['bg_color'] ?? '#f9fafb';
         $navColor     = $siteSettings['nav_bg_color'] ?? '#ffffff';
         $cardColor    = $siteSettings['card_bg_color'] ?? '#ffffff';
-        $footerColor  = $siteSettings['footer_bg_color'] ?? '#111827'; // المتغير الجديد للفوتر
-        
+        $footerColor  = $siteSettings['footer_bg_color'] ?? '#111827';
+
         $logoPath = $siteSettings['site_logo'] ?? null;
-        $logoUrl = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
+        $logoUrl  = $logoPath ? asset('storage/' . $logoPath) : asset('images/default-logo.png');
+
+        $mainSeo = \App\Models\SeoSetting::forType('main');
     @endphp
+
+    <x-seo-head :seo="$mainSeo" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {

@@ -51,146 +51,155 @@
                 </button>
             </div>
 
-            {{-- Nav links --}}
-            <div class="flex-1 overflow-y-auto custom-scrollbar px-2 py-4">
-                <nav class="mt-4 px-2 space-y-1">
+        {{-- Nav links --}}
+<div class="flex-1 overflow-y-auto custom-scrollbar px-2 py-4">
+    <nav class="mt-4 px-2 space-y-1">
 
-                    @can('manage-catalog')
-                        <x-admin-nav-link href="{{ route('admin.dashboard') }}" icon="home"
-                            :active="request()->routeIs('admin.dashboard')">
-                            الرئيسية
-                        </x-admin-nav-link>
+        @can('manage-catalog')
+            <x-admin-nav-link href="{{ route('admin.dashboard') }}" icon="home"
+                :active="request()->routeIs('admin.dashboard')">
+                الرئيسية
+            </x-admin-nav-link>
 
-                        <div x-show="sidebarOpen"
-                             class="px-3 mt-4 mb-2 text-[10px] font-bold uppercase tracking-wider"
-                             style="color:rgba(255,255,255,0.4);">
-                            محتوى المتجر
-                        </div>
-
-                        <x-admin-nav-link href="{{ route('admin.announcements.index') }}" icon="speakerphone"
-                            :active="request()->routeIs('admin.announcements.*')">
-                            شريط الإعلانات
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.hero-banners.index') }}" icon="photograph"
-                            :active="request()->routeIs('admin.hero-banners.*')">
-                            البانر الإعلاني (Hero)
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.home-sections.index') }}" icon="template"
-                            :active="request()->routeIs('admin.home-sections.*')">
-                            أقسام الصفحة الرئيسية
-                        </x-admin-nav-link>
-
-                        <hr class="my-2 mx-2" style="border-color:rgba(255,255,255,0.1);">
-
-                        <x-admin-nav-link href="{{ route('admin.products.index') }}" icon="shopping-bag"
-                            :active="request()->routeIs('admin.products.*')">
-                            المنتجات
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.categories.index') }}" icon="folder"
-                            :active="request()->routeIs('admin.categories.*')">
-                            التصنيفات
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.attributes.index') }}" icon="tag"
-                            :active="request()->routeIs('admin.attributes.*')">
-                            السمات والخصائص
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.attribute-values.index') }}" icon="view-list"
-                            :active="request()->routeIs('admin.attribute-values.*')">
-                            قيم السمات
-                        </x-admin-nav-link>
-                    @endcan
-
-                    @can('manage-all')
-                        <div x-show="sidebarOpen"
-                             class="px-3 mt-6 mb-2 text-[10px] font-bold uppercase tracking-wider"
-                             style="color:rgba(255,255,255,0.4);">
-                            المبيعات والعملاء
-                        </div>
-
-                        <x-admin-nav-link href="{{ route('admin.orders.index') }}" icon="shopping-cart"
-                            :active="request()->routeIs('admin.orders.*')">
-                            الطلبات
-                            @php $pendingCount = \App\Models\Order::where('status','pending')->count(); @endphp
-                            @if($pendingCount > 0)
-                                <span x-show="sidebarOpen"
-                                      class="mr-auto text-[10px] px-1.5 py-0.5 rounded-full animate-pulse"
-                                      style="background:#ef4444; color:#ffffff;">
-                                    {{ $pendingCount }}
-                                </span>
-                            @endif
-
-                             <x-admin-nav-link href="{{ route('admin.contact-messages.index') }}" icon="star"
-                            :active="request()->is('/admin/contact-messages')">
-                            رسائل العملاء 
-                        </x-admin-nav-link>
-
-                        </x-admin-nav-link>
-
-                        <div x-show="sidebarOpen"
-                             class="px-3 mt-6 mb-2 text-[10px] font-bold uppercase tracking-wider"
-                             style="color:rgba(255,255,255,0.4);">
-                            إعدادات الموقع
-                        </div>
-
-                        <x-admin-nav-link href="{{ route('admin.site-features.index') }}" icon="star"
-                            :active="request()->routeIs('admin.site-features.*')">
-                            ميزات الموقع
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.social-links.index') }}" icon="share"
-                            :active="request()->routeIs('admin.social-links.*')">
-                            روابط التواصل
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.splash.edit') }}" icon="lightning-bolt"
-                            :active="request()->routeIs('admin.splash.*')">
-                            شاشة الترحيب (Splash)
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.pages.index') }}" icon="document-text"
-                            :active="request()->routeIs('admin.pages.*')">
-                            الصفحات
-                        </x-admin-nav-link>
-
-                        <div x-show="sidebarOpen"
-                             class="px-3 mt-6 mb-2 text-[10px] font-bold uppercase tracking-wider"
-                             style="color:rgba(255,255,255,0.4);">
-                            النظام والمالية
-                        </div>
-
-                        <x-admin-nav-link href="{{ route('admin.countries.index') }}" icon="globe"
-                            :active="request()->routeIs('admin.countries.*')">
-                            الدول والمناطق
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.currencies.index') }}" icon="currency-dollar"
-                            :active="request()->routeIs('admin.currencies.*')">
-                            العملات
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.locale-mode') }}" icon="phone"
-                            :active="request()->is('/admin/locale-mode')">
-                       اللغة
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.settings.checkout') }}" icon="credit-card"
-                            :active="request()->is('admin/settings/checkout')">
-                            إعدادات الدفع
-                        </x-admin-nav-link>
-
-                        <x-admin-nav-link href="{{ route('admin.settings') }}" icon="cog"
-                            :active="request()->routeIs('admin.settings')">
-                            الإعدادات العامة
-                        </x-admin-nav-link>
-                    @endcan
-
-                </nav>
+            <div x-show="sidebarOpen"
+                 class="px-3 mt-4 mb-2 text-[10px] font-bold uppercase tracking-wider"
+                 style="color:rgba(255,255,255,0.4);">
+                محتوى المتجر
             </div>
+
+            <x-admin-nav-link href="{{ route('admin.announcements.index') }}" icon="speakerphone"
+                :active="request()->routeIs('admin.announcements.*')">
+                شريط الإعلانات
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.hero-banners.index') }}" icon="photograph"
+                :active="request()->routeIs('admin.hero-banners.*')">
+                البانر الإعلاني (Hero)
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.home-sections.index') }}" icon="template"
+                :active="request()->routeIs('admin.home-sections.*')">
+                أقسام الصفحة الرئيسية
+            </x-admin-nav-link>
+
+            <hr class="my-2 mx-2" style="border-color:rgba(255,255,255,0.1);">
+
+            <x-admin-nav-link href="{{ route('admin.products.index') }}" icon="shopping-bag"
+                :active="request()->routeIs('admin.products.*')">
+                المنتجات
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.categories.index') }}" icon="folder"
+                :active="request()->routeIs('admin.categories.*')">
+                التصنيفات
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.attributes.index') }}" icon="tag"
+                :active="request()->routeIs('admin.attributes.*')">
+                السمات والخصائص
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.attribute-values.index') }}" icon="view-list"
+                :active="request()->routeIs('admin.attribute-values.*')">
+                قيم السمات
+            </x-admin-nav-link>
+        @endcan
+
+        @can('manage-all')
+            <div x-show="sidebarOpen"
+                 class="px-3 mt-6 mb-2 text-[10px] font-bold uppercase tracking-wider"
+                 style="color:rgba(255,255,255,0.4);">
+                المبيعات والعملاء
+            </div>
+
+            <x-admin-nav-link href="{{ route('admin.orders.index') }}" icon="shopping-cart"
+                :active="request()->routeIs('admin.orders.*')">
+                الطلبات
+                @php $pendingCount = \App\Models\Order::where('status','pending')->count(); @endphp
+                @if($pendingCount > 0)
+                    <span x-show="sidebarOpen"
+                          class="mr-auto text-[10px] px-1.5 py-0.5 rounded-full animate-pulse"
+                          style="background:#ef4444; color:#ffffff;">
+                        {{ $pendingCount }}
+                    </span>
+                @endif
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.contact-messages.index') }}" icon="star"
+                :active="request()->routeIs('admin.contact-messages.*')">
+                رسائل العملاء
+            </x-admin-nav-link>
+
+            <div x-show="sidebarOpen"
+                 class="px-3 mt-6 mb-2 text-[10px] font-bold uppercase tracking-wider"
+                 style="color:rgba(255,255,255,0.4);">
+                إعدادات الموقع
+            </div>
+
+            <x-admin-nav-link href="{{ route('admin.site-features.index') }}" icon="star"
+                :active="request()->routeIs('admin.site-features.*')">
+                ميزات الموقع
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.social-links.index') }}" icon="share"
+                :active="request()->routeIs('admin.social-links.*')">
+                روابط التواصل
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.splash.edit') }}" icon="lightning-bolt"
+                :active="request()->routeIs('admin.splash.*')">
+                شاشة الترحيب (Splash)
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.pages.index') }}" icon="document-text"
+                :active="request()->routeIs('admin.pages.*')">
+                الصفحات
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.seo.index') }}" icon="search"
+                :active="request()->routeIs('admin.seo.*')">
+                SEO Settings
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.footer-company.index') }}" icon="collection"
+                :active="request()->routeIs('admin.footer-company.*')">
+                معلومات الفوتر
+            </x-admin-nav-link>
+
+            <div x-show="sidebarOpen"
+                 class="px-3 mt-6 mb-2 text-[10px] font-bold uppercase tracking-wider"
+                 style="color:rgba(255,255,255,0.4);">
+                النظام والمالية
+            </div>
+
+            <x-admin-nav-link href="{{ route('admin.countries.index') }}" icon="globe"
+                :active="request()->routeIs('admin.countries.*')">
+                الدول والمناطق
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.currencies.index') }}" icon="currency-dollar"
+                :active="request()->routeIs('admin.currencies.*')">
+                العملات
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.locale-mode') }}" icon="phone"
+                :active="request()->is('admin/locale-mode')">
+                اللغة
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.settings.checkout') }}" icon="credit-card"
+                :active="request()->is('admin/settings/checkout')">
+                إعدادات الدفع
+            </x-admin-nav-link>
+
+            <x-admin-nav-link href="{{ route('admin.settings') }}" icon="cog"
+                :active="request()->routeIs('admin.settings')">
+                الإعدادات العامة
+            </x-admin-nav-link>
+        @endcan
+
+    </nav>
+</div>
 
             {{-- Logout --}}
             <div class="p-2 flex-shrink-0"

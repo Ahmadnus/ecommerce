@@ -12,9 +12,11 @@ use App\Http\Controllers\Admin\{
     AnnouncementController, AttributeController, AttributeValueController, CheckoutSettingsController, HomeSectionController, SiteFeatureController,
     CountryController, ZoneController, 
     CurrencyController as AdminCurrencyController,
-       ProductController as AdminProductController,
+    FooterCompanyInfoController,
+    ProductController as AdminProductController,
     OrderController as AdminOrderController,
     PageController as AdminPageController,
+    SeoSettingController,
     SmsSettingsController,
     SplashSettingsController
 };
@@ -366,4 +368,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/footer-texts', [FooterTextController::class, 'index'])->name('footer-texts.index');
     Route::post('/footer-texts', [FooterTextController::class, 'store'])->name('footer-texts.store');
     Route::delete('/footer-texts/{footerText}', [FooterTextController::class, 'destroy'])->name('footer-texts.destroy');
+});
+
+// In routes/web.php — inside your admin middleware group
+
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
+
+    // SEO Settings — type-based (main / splash)
+    Route::get('seo', [SeoSettingController::class, 'index'])
+        ->name('seo.index');
+    Route::get('seo/{type}/edit', [SeoSettingController::class, 'edit'])
+        ->name('seo.edit');
+    Route::put('seo/{type}', [SeoSettingController::class, 'update'])
+        ->name('seo.update');
+
+    // Footer Company Info CRUD
+   Route::resource('footer-company', FooterCompanyInfoController::class)
+    ->except(['show'])
+    ->parameters(['footer-company' => 'footerCompanyInfo']); // ← matches $footerCompanyInfo
 });

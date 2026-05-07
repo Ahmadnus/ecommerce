@@ -25,6 +25,34 @@
 
     $brandText = $footerTexts->get('footer_brand');
     $taglineText = $footerTexts->get('footer_tagline');
+
+    $companyInfo = \App\Models\FooterCompanyInfo::active()->first();
+
+    $companyName = $companyInfo
+        ? ($companyInfo->getTranslation('company_name', $locale, false)
+            ?: $companyInfo->getTranslation('company_name', config('app.fallback_locale', 'en'), false))
+        : '';
+
+    $companyDescription = $companyInfo
+        ? ($companyInfo->getTranslation('description', $locale, false)
+            ?: $companyInfo->getTranslation('description', config('app.fallback_locale', 'en'), false))
+        : '';
+
+    $companyLocation = $companyInfo
+        ? ($companyInfo->getTranslation('location', $locale, false)
+            ?: $companyInfo->getTranslation('location', config('app.fallback_locale', 'en'), false))
+        : '';
+
+    $companyPhone = $companyInfo?->phone ?? '';
+    $phoneHref = $companyInfo?->tel_href ?? '';
+
+    $flagUrl = null;
+    if ($companyInfo) {
+        $flagUrl = $companyInfo->getFirstMediaUrl('flag_icon');
+        if (!$flagUrl && $companyInfo->phone_country_code) {
+            $flagUrl = 'https://flagcdn.com/w20/' . strtolower($companyInfo->phone_country_code) . '.png';
+        }
+    }
 @endphp
 
 <footer class="text-gray-400 py-14 border-t border-white border-opacity-5"
@@ -32,29 +60,39 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
 
-          <div>
-<div class="{{ $isRtl ? 'text-right' : 'text-left' }}">
+            <div>
+                <div class="{{ $isRtl ? 'text-right' : 'text-left' }}">
+                    @if($companyName)
     <span class="font-display font-bold text-lg text-white block mb-4">
-        Creacure Ltd
+        {{ $companyName }}
     </span>
+@endif
 
+@if($companyDescription)
     <p class="text-sm leading-relaxed mb-2">
-        Creacure UK is a modern eyewear brand offering stylish and comfortable reading glasses for everyday use.
-        We combine clear vision, lightweight design, and modern style for both men and women.
+        {{ $companyDescription }}
     </p>
+@endif
 
+@if($companyLocation)
     <p class="text-sm mb-1">
-        London, United Kingdom
+        {{ $companyLocation }}
     </p>
+@endif
 
+@if($companyPhone)
     <p class="text-sm flex items-center gap-2 {{ $isRtl ? 'justify-end' : 'justify-start' }}">
-    <img src="https://flagcdn.com/w20/gb.png" alt="UK" class="inline-block">
-      <a href="tel:+447782281157" dir="ltr" class="select-all hover:underline">
-            +44 7782 281157
+        @if($flagUrl)
+            <img src="{{ $flagUrl }}" alt="flag" class="inline-block w-5 h-auto">
+        @endif
+
+        <a href="{{ $phoneHref }}" dir="ltr" class="select-all hover:underline">
+            {{ $companyPhone }}
         </a>
-</p>
-</div>
-</div>
+    </p>
+@endif
+                </div>
+            </div>
 
             <div>
                 <div class="flex flex-col gap-3">
@@ -68,13 +106,13 @@
                            rel="noopener noreferrer"
                            class="flex items-center gap-3 hover:text-white transition-all group"
                            title="{{ $slink->platform_name }}">
-                            <span class="w-12 h-12 rounded-full bg-white bg-opacity-5 flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden">
-                                @if($icon)
-                                    <img src="{{ $icon }}" class="w-8 h-8 object-contain" alt="{{ $slink->platform_name }}">
-                                @else
-                                    <span class="text-base font-bold">{{ mb_substr($slink->platform_name, 0, 1) }}</span>
-                                @endif
-                            </span>
+                           <span class="w-12 h-12 rounded-full bg-white flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden shadow-sm">
+    @if($icon)
+        <img src="{{ $icon }}" class="w-8 h-8 object-contain" alt="{{ $slink->platform_name }}">
+    @else
+        <span class="text-base font-bold text-gray-700">{{ mb_substr($slink->platform_name, 0, 1) }}</span>
+    @endif
+</span>
                             <span class="text-sm">{{ $slink->platform_name }}</span>
                         </a>
                     @empty
