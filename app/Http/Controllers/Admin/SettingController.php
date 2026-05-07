@@ -18,15 +18,18 @@ class SettingController extends Controller
 
 public function update(Request $request) {
     // أضفنا footer_bg_color هنا
-    $keys = [
-        'primary_color', 
-        'bg_color', 
-        'nav_bg_color', 
-        'card_bg_color', 
-        'footer_bg_color', 
-        'site_name'
-    ];
-
+$keys = [
+    'primary_color',
+    'bg_color',
+    'nav_bg_color',
+    'card_bg_color',
+    'footer_bg_color',
+    'footer_text_color',
+    'footer_link_color',
+    'footer_bottom_text_color',
+    'footer_text_size',
+    'site_name'
+];
     foreach ($keys as $key) {
         if ($request->has($key)) {
             \App\Models\Setting::updateOrCreate(['key' => $key], ['value' => $request->$key]);

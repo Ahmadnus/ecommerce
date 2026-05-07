@@ -87,37 +87,36 @@ class HeroBannerController extends Controller
         return back()->with('success', 'تم حذف البانر بنجاح');
     }
 
-    private function rules(string $layout): array
-    {
-        $isImageOnly = $layout === 'image_only';
-        $isTextOnly  = $layout === 'text_only';
-        $isTextImage = $layout === 'text_image';
+ private function rules(string $layout): array
+{
+    $isImageOnly = $layout === 'image_only';
 
-        return [
-            'layout' => 'required|in:text_image,text_only,image_only',
+    return [
+        'layout' => 'required|in:text_image,text_only,image_only',
 
-            'title.ar'       => $isImageOnly ? 'nullable|string|max:255' : 'required|string|max:255',
-            'title.en'       => 'nullable|string|max:255',
+        'title.ar'       => $isImageOnly ? 'nullable|string|max:255' : 'required|string|max:255',
+        'title.en'       => 'nullable|string|max:255',
 
-            'subtitle.ar'    => 'nullable|string|max:255',
-            'subtitle.en'    => 'nullable|string|max:255',
+        'subtitle.ar'    => 'nullable|string|max:255',
+        'subtitle.en'    => 'nullable|string|max:255',
 
-            'badge.ar'       => 'nullable|string|max:255',
-            'badge.en'       => 'nullable|string|max:255',
+        'badge.ar'       => 'nullable|string|max:255',
+        'badge.en'       => 'nullable|string|max:255',
 
-            'description.ar' => 'nullable|string',
-            'description.en' => 'nullable|string',
+        'description.ar' => 'nullable|string',
+        'description.en' => 'nullable|string',
 
-            'button_text.ar' => $isImageOnly ? 'nullable|string|max:100' : 'required|string|max:100',
-            'button_text.en' => 'nullable|string|max:100',
+        'button_text.ar' => $isImageOnly ? 'nullable|string|max:100' : 'required|string|max:100',
+        'button_text.en' => 'nullable|string|max:100',
 
-            'button_url'       => 'nullable|string|max:500',
-            'position'         => 'required|in:top,after_featured,after_products',
-            'background_color' => 'nullable|string|max:20',
-            'text_color'       => 'nullable|string|max:20',
-            'image'            => $isImageOnly ? 'required|image|max:2048' : 'nullable|image|max:2048',
-            'is_active'        => 'nullable|boolean',
-            'sort_order'       => 'nullable|integer|min:0',
-        ];
-    }
+        'button_url'       => 'nullable|string|max:500',
+        'position'         => 'required|in:top,after_featured,after_products',
+        'background_color' => 'nullable|string|max:20',
+        'text_color'       => 'nullable|string|max:20',
+
+        'image'     => $isImageOnly ? 'required|mimes:jpg,jpeg,png,webp|max:10240' : 'nullable|mimes:jpg,jpeg,png,webp|max:2048',
+        'is_active' => 'nullable|boolean',
+        'sort_order'=> 'nullable|integer|min:0',
+    ];
+}
 }
