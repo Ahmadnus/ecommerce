@@ -1,6 +1,5 @@
 @extends('layouts.admin')
 
-{{-- تأكد أن هذا الاسم هو 'admin-content' كما في صفحاتك الأخرى --}}
 @section('admin-content')
 <div class="max-w-6xl mx-auto p-6 bg-white rounded-2xl shadow-sm" dir="rtl">
     <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
@@ -8,13 +7,11 @@
         إدارة روابط السوشيال ميديا والزر العائم
     </h2>
 
-    {{-- فورم الإضافة --}}
     <form action="{{ route('admin.social-links.store') }}"
           method="POST"
-          enctype="multipart/form-data"
           class="bg-gray-50 p-6 rounded-xl mb-8 border border-gray-100">
         @csrf
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-600 mr-2">اسم المنصة</label>
@@ -42,12 +39,18 @@
             </div>
 
             <div class="flex flex-col gap-1 md:col-span-2 lg:col-span-2">
-                <label class="text-sm font-bold text-gray-600 mr-2">أيقونة</label>
-                <input type="file"
-                       name="icon"
-                       accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                       class="p-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                <p class="text-xs text-gray-400 mr-2">ارفع صورة الأيقونة من جهازك، ويفضل PNG بخلفية شفافة.</p>
+                <label class="text-sm font-bold text-gray-600 mr-2">الأيقونة</label>
+                <select name="icon_svg"
+                        class="p-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">اختر الأيقونة</option>
+                    <option value="fa-brands fa-facebook">Facebook</option>
+                    <option value="fa-brands fa-instagram">Instagram</option>
+                    <option value="fa-brands fa-whatsapp">WhatsApp</option>
+                    <option value="fa-brands fa-tiktok">TikTok</option>
+                </select>
+                <p class="text-xs text-gray-400 mr-2">
+                    سيتم حفظ اسم كلاس Font Awesome داخل قاعدة البيانات.
+                </p>
             </div>
 
             <div class="flex items-center gap-2 mt-auto mb-4">
@@ -68,7 +71,6 @@
         </button>
     </form>
 
-    {{-- جدول العرض --}}
     <div class="overflow-x-auto">
         <table class="w-full text-right border-collapse">
             <thead class="bg-gray-100 text-gray-600">
@@ -104,14 +106,8 @@
 
                     <td class="p-4 text-center">
                         <div class="w-8 h-8 mx-auto flex items-center justify-center">
-                            @php
-                                $iconUrl = $link->getFirstMediaUrl('icons');
-                            @endphp
-
-                            @if($iconUrl)
-                                <img src="{{ $iconUrl }}"
-                                     alt="{{ $link->platform_name }}"
-                                     class="w-8 h-8 object-contain">
+                            @if($link->icon_svg)
+                                <i class="{{ $link->icon_svg }} text-2xl text-gray-700"></i>
                             @else
                                 <span class="text-gray-400 text-sm">—</span>
                             @endif

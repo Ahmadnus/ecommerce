@@ -67,7 +67,6 @@
         {{ $companyName }}
     </span>
 @endif
-
 @if($companyDescription)
     <p class="text-sm leading-relaxed mb-2">
         {{ $companyDescription }}
@@ -95,46 +94,36 @@
             </div>
 
             <div>
-                <div class="flex flex-col gap-3">
-                    @forelse($socialLinks as $slink)
-                        @php
-                            $icon = $slink->getFirstMediaUrl('icons');
-                        @endphp
+<div class="flex flex-col gap-3">
+    @forelse($socialLinks as $slink)
 
-                        <a href="{{ $slink->url ?? '#' }}"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="flex items-center gap-3 hover:text-white transition-all group"
-                           title="{{ $slink->platform_name }}">
-                           <span class="w-12 h-12 rounded-full bg-white flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden shadow-sm">
-    @if($icon)
-        <img src="{{ $icon }}" class="w-8 h-8 object-contain" alt="{{ $slink->platform_name }}">
-    @else
-        <span class="text-base font-bold text-gray-700">{{ mb_substr($slink->platform_name, 0, 1) }}</span>
-    @endif
-</span>
-                            <span class="text-sm">{{ $slink->platform_name }}</span>
-                        </a>
-                    @empty
-                        <span class="text-sm text-gray-500">No social links available.</span>
-                    @endforelse
-                </div>
-            </div>
+        <a href="{{ $slink->url ?? '#' }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="flex items-center gap-3 hover:text-white transition-all group"
+           title="{{ $slink->platform_name }}">
 
-            <div>
-                <ul class="space-y-2 text-sm">
-                    @forelse($pages as $fp)
-                        <li>
-                            <a href="{{ route('pages.show', $fp->slug) }}"
-                               class="hover:text-white transition-colors">
-                                {{ $fp->name }}
-                            </a>
-                        </li>
-                    @empty
-                        <li class="text-gray-500">No pages available.</li>
-                    @endforelse
-                </ul>
-            </div>
+            <span class="w-12 h-12 rounded-full bg-white flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden shadow-sm">
+
+                @if($slink->icon_svg)
+                    <i class="fa-brands {{ $slink->icon_svg }} text-2xl text-gray-700"></i>
+                @else
+                    <span class="text-base font-bold text-gray-700">
+                        {{ mb_substr($slink->platform_name, 0, 1) }}
+                    </span>
+                @endif
+
+            </span>
+
+            <span class="text-sm">{{ $slink->platform_name }}</span>
+        </a>
+
+    @empty
+        <span class="text-sm text-gray-500">
+            No social links available.
+        </span>
+    @endforelse
+</div>
 
             <div>
                 <a href="{{ route('contact.create') }}" class="hover:text-white transition-colors">

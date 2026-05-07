@@ -9,12 +9,13 @@ class SocialLink extends Model implements HasMedia
 {
     use InteractsWithMedia;
 
-    protected $fillable = [
-        'platform_name',
-        'url',
-        'sort_order',
-        'is_active',
-        'whatsapp_number',
-        'is_floating',
-    ];
+   protected $fillable = [
+    'platform_name',
+    'url',
+    'sort_order',
+    'is_active',
+    'whatsapp_number',
+    'is_floating',
+    'icon_svg',
+];
 }

@@ -15,16 +15,16 @@ class SocialLinkController extends Controller
     return view('admin.social_links.index', compact('links'));
 }
 
-public function store(Request $request) {
-    dd();
+public function store(Request $request)
+{
     $request->validate([
         'platform_name'   => 'required|string',
-        'url'             => 'nullable|url', // جعلناه nullable لأن الواتساب قد يكتفي بالرقم
+        'url'             => 'nullable|url',
         'whatsapp_number' => 'nullable|string',
-        'icon_svg'        => 'nullable|string'
+        'icon_svg'        => 'nullable|string',
+        'is_floating'     => 'nullable|boolean',
     ]);
 
-    // نأخذ كل البيانات ونضمن معالجة الـ checkbox
     $data = $request->all();
     $data['is_floating'] = $request->has('is_floating') ? 1 : 0;
 
