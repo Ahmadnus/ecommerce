@@ -11,15 +11,25 @@
           method="POST"
           class="bg-gray-50 p-6 rounded-xl mb-8 border border-gray-100">
         @csrf
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-600 mr-2">اسم المنصة</label>
-                <input type="text"
-                       name="platform_name"
-                       placeholder="مثلاً: واتساب"
-                       class="p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                       required>
+
+            <input type="hidden" name="platform_name" id="platform_name">
+
+            <div class="flex flex-col gap-1 md:col-span-2 lg:col-span-2">
+                <label class="text-sm font-bold text-gray-600 mr-2">الأيقونة</label>
+                <select name="icon_svg"
+                        id="icon_svg"
+                        class="p-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="">اختر الأيقونة</option>
+                    <option value="fa-brands fa-facebook" data-platform="Facebook">Facebook</option>
+                    <option value="fa-brands fa-instagram" data-platform="Instagram">Instagram</option>
+                    <option value="fa-brands fa-whatsapp" data-platform="WhatsApp">WhatsApp</option>
+                    <option value="fa-brands fa-tiktok" data-platform="TikTok">TikTok</option>
+                </select>
+                <p class="text-xs text-gray-400 mr-2">
+                    سيتم حفظ اسم المنصة تلقائيًا حسب الاختيار.
+                </p>
             </div>
 
             <div class="flex flex-col gap-1">
@@ -36,21 +46,6 @@
                        name="whatsapp_number"
                        placeholder="966500000000"
                        class="p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-
-            <div class="flex flex-col gap-1 md:col-span-2 lg:col-span-2">
-                <label class="text-sm font-bold text-gray-600 mr-2">الأيقونة</label>
-                <select name="icon_svg"
-                        class="p-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                    <option value="">اختر الأيقونة</option>
-                    <option value="fa-brands fa-facebook">Facebook</option>
-                    <option value="fa-brands fa-instagram">Instagram</option>
-                    <option value="fa-brands fa-whatsapp">WhatsApp</option>
-                    <option value="fa-brands fa-tiktok">TikTok</option>
-                </select>
-                <p class="text-xs text-gray-400 mr-2">
-                    سيتم حفظ اسم كلاس Font Awesome داخل قاعدة البيانات.
-                </p>
             </div>
 
             <div class="flex items-center gap-2 mt-auto mb-4">
@@ -129,4 +124,17 @@
         </table>
     </div>
 </div>
+
+<script>
+    const iconSelect = document.getElementById('icon_svg');
+    const platformInput = document.getElementById('platform_name');
+
+    function syncPlatformName() {
+        const selectedOption = iconSelect.options[iconSelect.selectedIndex];
+        platformInput.value = selectedOption?.dataset.platform || '';
+    }
+
+    iconSelect.addEventListener('change', syncPlatformName);
+    syncPlatformName();
+</script>
 @endsection

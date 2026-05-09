@@ -130,36 +130,28 @@
                 <h4 class="font-bold mb-4" style="color: {{ $footerTextColor }}; font-size: {{ $footerTextSize + 2 }}px;">
                     {{ $isRtl ? 'تابعنا على' : 'Follow Us' }}
                 </h4>
-                <div class="flex flex-col gap-3">
-                    @forelse($socialLinks as $slink)
-                        <a href="{{ $slink->url ?? '#' }}"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="flex items-center gap-3 hover:opacity-80 transition-all group"
-                           title="{{ $slink->platform_name }}">
+            <div class="flex flex-wrap items-center gap-3">
+    @forelse($socialLinks as $slink)
+        <a href="{{ $slink->url ?? '#' }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="w-9 h-9 rounded-full bg-white flex items-center justify-center hover:opacity-80 transition-all group shadow-sm"
+           title="{{ $slink->platform_name }}">
 
-                            <span class="w-8 h-8 rounded-full bg-white flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden shadow-sm">
-                                @if($slink->icon_svg)
-                                    <i class="{{ $slink->icon_svg }} text-lg text-gray-700"></i>
-                                @else
-                                    <span class="text-sm font-bold text-gray-700">
-                                        {{ mb_substr($slink->platform_name, 0, 1) }}
-                                    </span>
-                                @endif
-                            </span>
-
-                            <span class="text-sm"
-                                  style="font-size: {{ $footerTextSize }}px; color: {{ $footerLinkColor }};">
-                                {{ $slink->platform_name }}
-                            </span>
-                        </a>
-                    @empty
-                        <span class="text-sm text-gray-500"
-                              style="font-size: {{ $footerTextSize }}px;">
-                            No social links available.
-                        </span>
-                    @endforelse
-                </div>
+            @if($slink->icon_svg)
+                <i class="{{ $slink->icon_svg }} text-lg text-gray-700"></i>
+            @else
+                <span class="text-sm font-bold text-gray-700">
+                    {{ mb_substr($slink->platform_name, 0, 1) }}
+                </span>
+            @endif
+        </a>
+    @empty
+        <span class="text-sm text-gray-500" style="font-size: {{ $footerTextSize }}px;">
+            No social links available.
+        </span>
+    @endforelse
+</div>
             </div>
 
             {{-- العمود الرابع: اتصل بنا --}}
