@@ -18,7 +18,7 @@
                 </a>
 
                 {{-- Currency switcher --}}
-                <div class="relative" x-data="{ open: false }">
+               <div class="relative hidden" x-data="{ open: false }">
                     <button @click.stop="open = !open" type="button"
                             class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100 rounded-xl shadow-sm hover:border-brand-200 transition-all">
                         <span class="text-xs font-bold text-gray-700">{{ $activeCurrency->symbol }}</span>
@@ -33,9 +33,9 @@
                          x-transition:enter-end="opacity-100 scale-100"
                          class="absolute {{ $isRtl ? 'right-0' : 'left-0' }} mt-2 w-40 bg-white border border-gray-100 rounded-2xl shadow-xl z-[100] overflow-hidden"
                          style="display: none;">
-                        <div class="py-1">
+                        <div class="py-1" ,hidden>
                             @foreach(\App\Models\Currency::active()->get() as $cur)
-                                <a href="{{ route('currency.user.switch', $cur->code) }}"
+                                <a href="{{ route('currency.user.switch', $cur->code) }}",
                                    @click="open = false"
                                    class="flex items-center justify-between px-4 py-2.5 text-xs hover:bg-gray-50 transition-colors {{ $activeCurrency->code === $cur->code ? 'bg-brand-50 text-brand-700 font-bold' : 'text-gray-600' }}">
                                     <span>{{ $cur->name }}</span>
@@ -170,8 +170,7 @@
                     </a>
                     @endauth
 
-                    <a href="{{ route('cart.index') }}"
-                       class="relative p-2 rounded-xl hover:bg-gray-50 group transition-colors">
+                    <a href="{{ route('cart.index') }}", hidden                    class="relative p-2 rounded-xl hover:bg-gray-50 group transition-colors">
                         <svg class="w-5 h-5 text-gray-600 group-hover:text-brand-600 transition-colors"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
