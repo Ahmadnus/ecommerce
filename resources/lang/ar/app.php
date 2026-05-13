@@ -7,7 +7,7 @@ return [
     'footer_copyright' => '© :year جلجام. جميع الحقوق محفوظة.',
 
     // Navbar
-    'shop'      => 'المتجر',
+    'shop'      => 'المعرض',
     'wishlist'  => 'المفضلة',
     'cart'      => 'السلة',
     'orders'    => 'طلباتي',

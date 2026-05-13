@@ -202,7 +202,7 @@
                     @endguest
 
                     @auth
-                    <div class="relative" x-data="{ open: false }" @mouseleave="open = false">
+                    <div class="relative" x-data="{ open: false }" @mouseleave="open = false" hidden>
                         <div class="flex items-center">
                             <a href="{{ route('myprofile.show') }}"
                                class="flex items-center gap-2 ps-1 pe-2 py-1 rounded-xl transition-all border border-transparent {{ request()->routeIs('myprofile.*') ? 'bg-gray-100 border-gray-200' : 'hover:bg-gray-50 hover:border-gray-100' }}">
