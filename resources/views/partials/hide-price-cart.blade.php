@@ -41,8 +41,7 @@ a[href*="cart"].bb-item { display: none !important; }
 .line-through { display: none !important; }
 
 /* ── 8. Price rows inside product cards ──────────────────────── */
-.pcard .flex.flex-col:last-child,
-.featured-card .flex.items-center.gap-1\.5 { display: none !important; }
+
 
 /* ── 9. Related-products price block ────────────────────────── */
 .grid.grid-cols-2.md\:grid-cols-4 .p-3 div { display: none !important; }
