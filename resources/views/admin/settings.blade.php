@@ -171,7 +171,113 @@
                 </div>
             </div>
         </div>
+{{-- القسم الرابع: إعدادات الخطوط --}}
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-8">
+    <div class="p-6 border-b border-gray-50 bg-gray-50/50">
+        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <span class="w-8 h-8 bg-brand/10 text-brand rounded-lg flex items-center justify-center text-sm">04</span>
+            إعدادات الخطوط (Typography)
+        </h2>
+    </div>
+   <div class="p-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
 
+        {{-- خط اللغة العربية --}}
+        <div class="space-y-2">
+            <label class="block text-sm font-bold text-gray-700">
+                خط اللغة العربية (Google Font)
+            </label>
+
+            <select name="font_ar"
+                class="w-full border-gray-200 rounded-xl focus:ring-brand focus:border-brand p-3.5 bg-white shadow-sm transition-all">
+
+                @php $currentAr = \App\Models\Setting::get('font_ar', 'Tajawal'); @endphp
+
+                <option value="Tajawal" {{ $currentAr == 'Tajawal' ? 'selected' : '' }}>Tajawal</option>
+                <option value="Cairo" {{ $currentAr == 'Cairo' ? 'selected' : '' }}>Cairo</option>
+                <option value="Almarai" {{ $currentAr == 'Almarai' ? 'selected' : '' }}>Almarai</option>
+                <option value="Amiri" {{ $currentAr == 'Amiri' ? 'selected' : '' }}>Amiri</option>
+                <option value="Changa" {{ $currentAr == 'Changa' ? 'selected' : '' }}>Changa</option>
+                <option value="El Messiri" {{ $currentAr == 'El Messiri' ? 'selected' : '' }}>El Messiri</option>
+                <option value="Readex Pro" {{ $currentAr == 'Readex Pro' ? 'selected' : '' }}>Readex Pro</option>
+                <option value="Reem Kufi" {{ $currentAr == 'Reem Kufi' ? 'selected' : '' }}>Reem Kufi</option>
+                <option value="Markazi Text" {{ $currentAr == 'Markazi Text' ? 'selected' : '' }}>Markazi Text</option>
+                <option value="Noto Kufi Arabic" {{ $currentAr == 'Noto Kufi Arabic' ? 'selected' : '' }}>Noto Kufi Arabic</option>
+                <option value="Noto Sans Arabic" {{ $currentAr == 'Noto Sans Arabic' ? 'selected' : '' }}>Noto Sans Arabic</option>
+                <option value="IBM Plex Sans Arabic" {{ $currentAr == 'IBM Plex Sans Arabic' ? 'selected' : '' }}>IBM Plex Sans Arabic</option>
+                <option value="Aref Ruqaa" {{ $currentAr == 'Aref Ruqaa' ? 'selected' : '' }}>Aref Ruqaa</option>
+                <option value="Lateef" {{ $currentAr == 'Lateef' ? 'selected' : '' }}>Lateef</option>
+                <option value="Scheherazade New" {{ $currentAr == 'Scheherazade New' ? 'selected' : '' }}>Scheherazade New</option>
+                <option value="Harmattan" {{ $currentAr == 'Harmattan' ? 'selected' : '' }}>Harmattan</option>
+                <option value="Katibeh" {{ $currentAr == 'Katibeh' ? 'selected' : '' }}>Katibeh</option>
+                <option value="Lalezar" {{ $currentAr == 'Lalezar' ? 'selected' : '' }}>Lalezar</option>
+                <option value="Mada" {{ $currentAr == 'Mada' ? 'selected' : '' }}>Mada</option>
+                <option value="Mirza" {{ $currentAr == 'Mirza' ? 'selected' : '' }}>Mirza</option>
+
+            </select>
+
+            <p class="text-xs text-gray-400">
+                سيتم تطبيق هذا الخط عند تصفح الموقع باللغة العربية.
+            </p>
+        </div>
+
+        {{-- خط اللغة الإنجليزية --}}
+        <div class="space-y-2">
+            <label class="block text-sm font-bold text-gray-700">
+                خط اللغة الإنجليزية (Google Font)
+            </label>
+
+            <select name="font_en"
+                class="w-full border-gray-200 rounded-xl focus:ring-brand focus:border-brand p-3.5 bg-white shadow-sm transition-all">
+
+                @php $currentEn = \App\Models\Setting::get('font_en', 'Inter'); @endphp
+
+                <option value="Inter" {{ $currentEn == 'Inter' ? 'selected' : '' }}>Inter</option>
+                <option value="Roboto" {{ $currentEn == 'Roboto' ? 'selected' : '' }}>Roboto</option>
+                <option value="DM Sans" {{ $currentEn == 'DM Sans' ? 'selected' : '' }}>DM Sans</option>
+                <option value="Open Sans" {{ $currentEn == 'Open Sans' ? 'selected' : '' }}>Open Sans</option>
+                <option value="Poppins" {{ $currentEn == 'Poppins' ? 'selected' : '' }}>Poppins</option>
+                <option value="Montserrat" {{ $currentEn == 'Montserrat' ? 'selected' : '' }}>Montserrat</option>
+                <option value="Lato" {{ $currentEn == 'Lato' ? 'selected' : '' }}>Lato</option>
+                <option value="Nunito" {{ $currentEn == 'Nunito' ? 'selected' : '' }}>Nunito</option>
+                <option value="Raleway" {{ $currentEn == 'Raleway' ? 'selected' : '' }}>Raleway</option>
+                <option value="Oswald" {{ $currentEn == 'Oswald' ? 'selected' : '' }}>Oswald</option>
+                <option value="Merriweather" {{ $currentEn == 'Merriweather' ? 'selected' : '' }}>Merriweather</option>
+                <option value="Playfair Display" {{ $currentEn == 'Playfair Display' ? 'selected' : '' }}>Playfair Display</option>
+                <option value="Source Sans Pro" {{ $currentEn == 'Source Sans Pro' ? 'selected' : '' }}>Source Sans Pro</option>
+                <option value="Work Sans" {{ $currentEn == 'Work Sans' ? 'selected' : '' }}>Work Sans</option>
+                <option value="Ubuntu" {{ $currentEn == 'Ubuntu' ? 'selected' : '' }}>Ubuntu</option>
+                <option value="Mulish" {{ $currentEn == 'Mulish' ? 'selected' : '' }}>Mulish</option>
+                <option value="Fira Sans" {{ $currentEn == 'Fira Sans' ? 'selected' : '' }}>Fira Sans</option>
+                <option value="PT Sans" {{ $currentEn == 'PT Sans' ? 'selected' : '' }}>PT Sans</option>
+                <option value="Quicksand" {{ $currentEn == 'Quicksand' ? 'selected' : '' }}>Quicksand</option>
+                <option value="Bebas Neue" {{ $currentEn == 'Bebas Neue' ? 'selected' : '' }}>Bebas Neue</option>
+
+                {{-- خطوط فخمة / Script --}}
+                <option value="Great Vibes" {{ $currentEn == 'Great Vibes' ? 'selected' : '' }}>
+                    Great Vibes (مثل الشعار)
+                </option>
+
+                <option value="Allura" {{ $currentEn == 'Allura' ? 'selected' : '' }}>Allura</option>
+                <option value="Alex Brush" {{ $currentEn == 'Alex Brush' ? 'selected' : '' }}>Alex Brush</option>
+                <option value="Dancing Script" {{ $currentEn == 'Dancing Script' ? 'selected' : '' }}>Dancing Script</option>
+                <option value="Pacifico" {{ $currentEn == 'Pacifico' ? 'selected' : '' }}>Pacifico</option>
+                <option value="Satisfy" {{ $currentEn == 'Satisfy' ? 'selected' : '' }}>Satisfy</option>
+                <option value="Cinzel" {{ $currentEn == 'Cinzel' ? 'selected' : '' }}>Cinzel</option>
+                <option value="Cormorant Garamond" {{ $currentEn == 'Cormorant Garamond' ? 'selected' : '' }}>
+                    Cormorant Garamond
+                </option>
+
+            </select>
+
+            <p class="text-xs text-gray-400">
+                سيتم تطبيق هذا الخط عند تصفح الموقع باللغة الإنجليزية.
+            </p>
+        </div>
+
+    </div>
+</div>
+</div>
         {{-- أزرار التحكم --}}
         <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-100">
             <button type="reset" class="px-6 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors">

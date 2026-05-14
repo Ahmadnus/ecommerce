@@ -30,9 +30,11 @@ class PageController extends Controller
             'content.ar' => 'required|string',
             'content.en' => 'nullable|string',
             // ─────────────────────────────────────────────────────────────
-            'slug'       => 'nullable|string|max:255|unique:pages,slug',
-            'sort_order' => 'nullable|integer|min:0',
-            'is_active'  => 'nullable|boolean',
+            'slug'            => 'nullable|string|max:255|unique:pages,slug',
+            'sort_order'      => 'nullable|integer|min:0',
+            'is_active'       => 'nullable|boolean',
+            'featured_image'  => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:5120',
+            'image_alt'       => 'nullable|string|max:255',
         ], [
             'name.ar.required'    => 'اسم الصفحة بالعربية مطلوب',
             'content.ar.required' => 'محتوى الصفحة بالعربية مطلوب',
@@ -45,13 +47,20 @@ class PageController extends Controller
             ? $request->slug
             : Page::uniqueSlug($arName ?: $enName);
 
-        Page::create([
-            'name'       => $request->input('name'),       // ['ar' => ..., 'en' => ...]
-            'content'    => $request->input('content'),    // ['ar' => ..., 'en' => ...]
+        $page = Page::create([
+            'name'       => $request->input('name'),
+            'content'    => $request->input('content'),
             'slug'       => $slug,
             'sort_order' => $request->input('sort_order', 0),
             'is_active'  => $request->boolean('is_active', true),
         ]);
+
+        // ── Featured image ────────────────────────────────────────────────
+        if ($request->hasFile('featured_image')) {
+            $page->addMediaFromRequest('featured_image')
+                 ->withCustomProperties(['alt' => $request->input('image_alt', '')])
+                 ->toMediaCollection('featured');
+        }
 
         return redirect()
             ->route('admin.pages.index')
@@ -70,9 +79,11 @@ class PageController extends Controller
             'name.en'    => 'nullable|string|max:255',
             'content.ar' => 'required|string',
             'content.en' => 'nullable|string',
-            'slug'       => 'nullable|string|max:255|unique:pages,slug,' . $page->id,
-            'sort_order' => 'nullable|integer|min:0',
-            'is_active'  => 'nullable|boolean',
+            'slug'            => 'nullable|string|max:255|unique:pages,slug,' . $page->id,
+            'sort_order'      => 'nullable|integer|min:0',
+            'is_active'       => 'nullable|boolean',
+            'featured_image'  => 'nullable|image|mimes:jpeg,png,jpg,webp,avif|max:5120',
+            'image_alt'       => 'nullable|string|max:255',
         ], [
             'name.ar.required'    => 'اسم الصفحة بالعربية مطلوب',
             'content.ar.required' => 'محتوى الصفحة بالعربية مطلوب',
@@ -96,6 +107,26 @@ class PageController extends Controller
             'sort_order' => $request->input('sort_order', 0),
             'is_active'  => $request->boolean('is_active', true),
         ]);
+
+        // ── Featured image ────────────────────────────────────────────────
+        if ($request->hasFile('featured_image')) {
+            // Clear existing image before adding new one
+            $page->clearMediaCollection('featured');
+
+            $page->addMediaFromRequest('featured_image')
+                 ->withCustomProperties(['alt' => $request->input('image_alt', '')])
+                 ->toMediaCollection('featured');
+        } elseif ($request->boolean('remove_image')) {
+            // Explicit removal via hidden checkbox
+            $page->clearMediaCollection('featured');
+        } else {
+            // No new file — update alt text on existing media if it changed
+            $existing = $page->getFirstMedia('featured');
+            if ($existing && $request->filled('image_alt')) {
+                $existing->setCustomProperty('alt', $request->input('image_alt'));
+                $existing->save();
+            }
+        }
 
         return redirect()
             ->route('admin.pages.index')

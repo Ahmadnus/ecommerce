@@ -387,3 +387,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     ->except(['show'])
     ->parameters(['footer-company' => 'footerCompanyInfo']); // ← matches $footerCompanyInfo
 });
+
+use App\Http\Controllers\Admin\AdminPasswordController;
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/password', [AdminPasswordController::class, 'edit'])->name('password.edit');
+    Route::put('/password', [AdminPasswordController::class, 'update'])->name('password.update');
+});

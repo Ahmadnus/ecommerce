@@ -32,6 +32,7 @@ class SettingController extends Controller
             'splash_title_main', 'splash_title_sub',
             'splash_color_main', 'splash_color_sub',
             'splash_font_size', 'splash_font_family',
+            'font_ar', 'font_en',
         ];
 
         foreach ($keys as $key) {

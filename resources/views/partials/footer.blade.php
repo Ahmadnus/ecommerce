@@ -110,20 +110,29 @@
             </div>
 
             {{-- العمود الثاني: الصفحات --}}
-            <div>
-                <h4 class="font-bold mb-4" style="color: {{ $footerTextColor }}; font-size: {{ $footerTextSize + 2 }}px;">
-                    {{ $isRtl ? 'روابط سريعة' : 'Quick Links' }}
-                </h4>
-                <div class="flex flex-col gap-3">
-                    @foreach($pages as $page)
-                        <a href="{{ route('pages.show', $page->slug) }}" 
-                           class="hover:underline transition-all"
-                           style="font-size: {{ $footerTextSize }}px; color: {{ $footerLinkColor }};">
-                            {{ $page->title }}
-                        </a>
-                    @endforeach
-                </div>
-            </div>
+          <div>
+    <h4 class="font-bold mb-4" style="color: {{ $footerTextColor }}; font-size: {{ $footerTextSize + 2 }}px;">
+        {{ $isRtl ? 'روابط سريعة' : 'Quick Links' }}
+    </h4>
+
+    <div class="flex flex-col gap-3">
+        @forelse($pages as $page)
+            @php
+                $pageLabel = $page->name ?? $page->title ?? $page->slug;
+            @endphp
+
+            <a href="{{ route('pages.show', $page->slug) }}"
+               class="hover:underline transition-all"
+               style="font-size: {{ $footerTextSize }}px; color: {{ $footerLinkColor }};">
+                {{ $pageLabel }}
+            </a>
+        @empty
+            <span class="text-sm" style="color: {{ $footerTextColor }};">
+                {{ $isRtl ? 'لا توجد صفحات متاحة' : 'No pages available' }}
+            </span>
+        @endforelse
+    </div>
+</div>
 
             {{-- العمود الثالث: السوشال ميديا --}}
             <div>

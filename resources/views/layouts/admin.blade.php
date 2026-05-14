@@ -198,6 +198,10 @@
                 :active="request()->routeIs('admin.settings')">
                 الإعدادات العامة
             </x-admin-nav-link>
+            <x-admin-nav-link href="{{ route('admin.password.edit') }}" icon="key"
+    :active="request()->routeIs('admin.password.*')">
+    تغيير كلمة السر
+</x-admin-nav-link>
         @endcan
 
     </nav>

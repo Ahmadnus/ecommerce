@@ -17,6 +17,12 @@
         $cardColor    = $siteSettings['card_bg_color'] ?? '#ffffff';
         $footerColor  = $siteSettings['footer_bg_color'] ?? '#111827';
 
+
+    // جلب القيم من موديل Setting مع وضع قيم افتراضية في حال كانت القاعدة فارغة
+    $fontAr = \App\Models\Setting::get('font_ar', 'Tajawal');
+    $fontEn = \App\Models\Setting::get('font_en', 'Inter');
+
+
       // ADD this one line:
 $logoUrl = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo')
            ?: asset('images/default-logo.png');
@@ -46,18 +52,18 @@ $logoUrl = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo')
                         accent: '#f59e0b',
                     },
                     // بقية الإعدادات كما هي...
-                    fontFamily: {
-                        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
-                        display: ['"Playfair Display"', 'serif'],
-                    },
+                   fontFamily: {
+                    // جعل تيلويند يستخدم المتغير الذي حددناه في الـ CSS
+                    sans: ['var(--app-font)', 'system-ui', 'sans-serif'],
+                },
                 }
             }
         }
     </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-
+   <!-- استيراد خط Tajawal للعربي و Inter للإنجليزي (أو اترك DM Sans كما تحب) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;500;700&family=Almarai:wght@400;700&family=Amiri:wght@400;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;500;700&family=Readex+Pro:wght@400;500;700&family=Reem+Kufi:wght@400;500;700&family=Markazi+Text:wght@400;500;700&family=Noto+Kufi+Arabic:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Inter:wght@400;500;700&family=Roboto:wght@400;500;700&family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;700&family=Montserrat:wght@400;500;700&family=Playfair+Display:wght@400;600;700&family=Great+Vibes&family=Allura&family=Alex+Brush&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
    <style>
   :root {
         --brand-color: {{ $primaryColor }};
@@ -66,8 +72,18 @@ $logoUrl = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo')
         --card-bg: {{ $cardColor }};
         --hero-grad-start: color-mix(in srgb, var(--brand-color) 40%, #000);
         --hero-grad-mid: color-mix(in srgb, var(--brand-color) 20%, #111);
-    }
 
+
+     --font-ar: '{{ $fontAr }}', sans-serif;
+        --font-en: '{{ $fontEn }}', sans-serif;
+        
+    }
+html[lang="ar"] { --app-font: var(--font-ar); }
+    html[lang="en"] { --app-font: var(--font-en); }
+
+ body, button, input, select, textarea {
+        font-family: var(--app-font) !important;
+    }
     /* 1. تطبيق لون الخلفية العام */
     body, main { 
         background-color: var(--bg-color) !important; 

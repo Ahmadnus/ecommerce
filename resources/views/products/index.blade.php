@@ -20,6 +20,31 @@
     --text-1:      #111827;
     --text-2:      #6b7280;
     --radius-card: 16px;
+
+    /* غيّر الخط من هنا فقط */
+ 
+    
+}
+html[lang="ar"], [dir="rtl"] {
+    font-family: var(--font-ar) !important;
+}
+
+html[lang="en"], [dir="ltr"] {
+    font-family: var(--font-en) !important;
+}
+
+/* لو بدك كل الصفحة داخل هذا الملف */
+.page-shop {
+    font-family: var(--font-ar);
+}
+html[lang="en"] .page-shop,
+[dir="ltr"] .page-shop {
+    font-family: var(--font-en) !important;
+}
+/* تطبيق الخط على الصفحة كلها */
+.page-shop,
+.page-shop * {
+    font-family: var(--app-font) !important;
 }
 
 /* ── Announcement bar ─────────────────────────────────────────────────── */
@@ -134,7 +159,16 @@
 }
 .heart-btn:hover{transform:scale(1.18);background:#fff}
 .heart-btn svg{width:15px;height:15px}
+.page-shop * {
+    font-family: var(--app-font) !important;
+}
+html[lang="ar"] {
+    --app-font: var(--font-ar);
+}
 
+html[lang="en"] {
+    --app-font: var(--font-en);
+}
 /* ── Share button ─────────────────────────────────────────────────────── */
 .share-btn {
     width:30px;height:30px;background:rgba(255,255,255,.93);
@@ -259,7 +293,7 @@
 @endpush
 
 @section('content')
-
+<div class="page-shop">
 {{-- ── Announcement banners ──────────────────────────────────────────── --}}
 @php
     $announcements = \App\Models\Announcement::where('is_active', true)
@@ -847,7 +881,7 @@
 
 </div>
 </div>
-
+</div>
 @endsection
 
 @push('scripts')
