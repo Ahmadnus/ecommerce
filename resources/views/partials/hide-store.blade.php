@@ -1,4 +1,5 @@
 {{-- @include('partials.hide-store') in layouts/app.blade.php — remove to restore --}}
+{{--
 <style>
 /* ── 1. Bottom nav — cart tab + shop tab + all badges ────────── */
 a[href*="cart"].bb-item,
@@ -90,4 +91,4 @@ p.text-xs.text-gray-400 { display: none !important; }
 
 /* ── 22. Toolbar row (search + sort) ────────────────────────── */
 
-</style>
+</style>--}}
