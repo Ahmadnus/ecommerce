@@ -164,7 +164,7 @@
                     @endforelse
                 </div>
 
-                
+          @include('partials.bottombar')      
             </div>
         </div>
     </div>

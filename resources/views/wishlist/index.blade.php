@@ -238,7 +238,7 @@
                 </a>
             @endforeach
         </div>
-
+@include('partials.bottombar')
         {{-- Pagination --}}
         @if($products->hasPages())
             <div class="mt-8 flex justify-center">

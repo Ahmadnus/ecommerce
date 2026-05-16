@@ -324,7 +324,7 @@ html[lang="en"] {
 @if($floatingLink)
     <x-floating-button :number="$floatingLink->whatsapp_number" />
 @endif
-
+@include('partials.bottombar')
 {{-- ── Sort drawer ───────────────────────────────────────────────────── --}}
 <div class="sort-drawer-overlay" id="sort-overlay" onclick="closeSortDrawer()">
     <div class="sort-drawer" id="sort-drawer" dir="{{ $isRtl ? 'rtl' : 'ltr' }}" onclick="event.stopPropagation()">

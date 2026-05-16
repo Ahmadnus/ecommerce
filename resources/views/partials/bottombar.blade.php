@@ -86,7 +86,7 @@
     }
 </style>
 
-<nav class="bottom-bar md:hidden"
+<nav class="bottom-bar md:"
      role="navigation"
      aria-label="Mobile navigation"
      dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
