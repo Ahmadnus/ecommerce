@@ -10,33 +10,33 @@
     
     <h3 class="font-bold text-gray-800">قائمة الطلبات</h3>
 
-    <form method="GET" class="flex gap-2 items-center">
-        <select name="status" onchange="this.form.submit()"
-            class="text-xs rounded-lg px-3 py-2 border border-gray-200 focus:ring-0">
+   <form method="GET" class="flex gap-2 items-center">
+    <select name="status" onchange="this.form.submit()"
+        class="text-xs rounded-lg px-3 py-2 border border-gray-200 focus:ring-0">
 
-            <option value="">كل الحالات</option>
+        <option value="">كل الحجوزات</option>
 
-            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>
-                قيد الانتظار
-            </option>
+        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>
+            بانتظار التأكيد
+        </option>
 
-            <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>
-                جاري التجهيز
-            </option>
+        <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>
+            تم التأكيد
+        </option>
 
-            <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>
-                تم الشحن
-            </option>
+        <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>
+            جاري التنفيذ
+        </option>
 
-            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>
-                مكتمل
-            </option>
+        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>
+            مكتمل
+        </option>
 
-            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>
-                ملغي
-            </option>
-        </select>
-    </form>
+        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>
+            ملغي
+        </option>
+    </select>
+</form>
 
 </div>
     <div class="overflow-x-auto">
@@ -93,22 +93,38 @@
     <x-price :amount="$order->total_amount" :currency="$activeCurrency->code ?? null" />
 </td>
                     <td class="px-6 py-4">
-                        <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="inline-block">
-                            @csrf @method('PATCH')
-                            <select onchange="this.form.submit()" name="status" 
-                                class="text-xs rounded-full px-3 py-1 font-bold border-0 shadow-sm
-                                {{ $order->status == 'pending' ? 'bg-amber-100 text-amber-600' : '' }}
-                                {{ $order->status == 'processing' ? 'bg-blue-100 text-blue-600' : '' }}
-                                {{ $order->status == 'shipped' ? 'bg-purple-100 text-purple-600' : '' }}
-                                {{ $order->status == 'completed' ? 'bg-green-100 text-green-600' : '' }}
-                                {{ $order->status == 'cancelled' ? 'bg-red-100 text-red-600' : '' }}">
-                                <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>قيد الانتظار</option>
-                                <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>جاري التجهيز</option>
-                                <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}>تم الشحن</option>
-                                <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>مكتمل</option>
-                                <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>ملغي</option>
-                            </select>
-                        </form>
+                       <form action="{{ route('admin.orders.updateStatus', $order) }}" method="POST" class="inline-block">
+    @csrf @method('PATCH')
+
+    <select onchange="this.form.submit()" name="status" 
+        class="text-xs rounded-full px-3 py-1 font-bold border-0 shadow-sm
+        {{ $order->status == 'pending' ? 'bg-amber-100 text-amber-600' : '' }}
+        {{ $order->status == 'processing' ? 'bg-blue-100 text-blue-600' : '' }}
+        {{ $order->status == 'shipped' ? 'bg-purple-100 text-purple-600' : '' }}
+        {{ $order->status == 'completed' ? 'bg-green-100 text-green-600' : '' }}
+        {{ $order->status == 'cancelled' ? 'bg-red-100 text-red-600' : '' }}">
+
+        <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>
+            بانتظار التأكيد
+        </option>
+
+        <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>
+            تم التأكيد
+        </option>
+
+        <option value="shipped" {{ $order->status == 'shipped' ? 'selected' : '' }}>
+            جاري التنفيذ
+        </option>
+
+        <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>
+            مكتمل
+        </option>
+
+        <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>
+            ملغي
+        </option>
+    </select>
+</form>
                     </td>
                     <td class="px-6 py-4 text-xs text-gray-500">{{ $order->created_at->format('Y-m-d H:i') }}</td>
                     <td class="px-6 py-4">

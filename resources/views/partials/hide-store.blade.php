@@ -13,6 +13,8 @@ a[href*="cart"].bb-item {
 .flex.items-center.gap-3.mb-6.mt-2 > div:first-child {
     display: none !important;
 }
+#stock-status,
+.bg-gray-100.text-gray-500.text-center.py-4.rounded-xl.mb-6 { display: none !important; }
 
 /* ── 6. Cart error / validation banners ─────────────────────── */
 

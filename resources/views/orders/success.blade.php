@@ -115,7 +115,6 @@
     {{-- Order summary card --}}
     <div class="u3 bg-white rounded-2xl border border-[#ece9e4] overflow-hidden shadow-sm mb-6">
 
-        {{-- Header --}}
         <div class="flex items-center gap-3 px-5 py-4 border-b border-[#f0ede8]">
             <div class="w-8 h-8 rounded-xl bg-[#f7f6f3] flex items-center justify-center flex-shrink-0">
                 <svg class="w-4 h-4 text-[#9a9793]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +125,6 @@
             <h2 class="font-semibold text-[#1a1917] text-sm">{{ __('app.order_success.invoice_details') }}</h2>
         </div>
 
-        {{-- Items --}}
         @if($order->items->isNotEmpty())
         <div class="divide-y divide-[#f7f6f3]">
             @foreach($order->items as $item)
@@ -156,54 +154,15 @@
         </div>
         @endif
 
-        {{-- Pricing breakdown --}}
         <div class="border-t border-[#f0ede8] px-5 py-4 space-y-2.5 text-xs">
-
             <div class="flex justify-between text-[#9a9793]">
                 <span>{{ __('app.order_success.subtotal') }}</span>
                 <span class="font-semibold text-[#1a1917] tabular-nums">
                     {{ $cv($subtotalJod) }} {{ $sym }}
                 </span>
             </div>
-
-            <div class="flex justify-between text-[#9a9793]">
-                <span class="flex items-center gap-1.5 flex-wrap">
-                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    {{ __('app.order_success.delivery_fee') }}
-                    @if($shippingArea)
-                    <span class="text-[10px] font-medium px-2 py-0.5 bg-[#f7f6f3] rounded-full text-[#9a9793]">
-                        {{ $shippingArea }}
-                    </span>
-                    @endif
-                </span>
-                <span class="font-semibold tabular-nums {{ $deliveryFeeJod == 0 ? 'text-emerald-600' : 'text-[#1a1917]' }}">
-                    @if($deliveryFeeJod == 0)
-                        {{ __('app.order_success.free') }}
-                    @else
-                        {{ $cv($deliveryFeeJod) }} {{ $sym }}
-                    @endif
-                </span>
-            </div>
-
-            @if($deliveryDays)
-            <div class="flex justify-between text-[#9a9793]">
-                <span class="flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    {{ __('app.order_success.estimated_delivery') }}
-                </span>
-                <span class="font-semibold text-[#1a1917]">{{ $deliveryDays }} {{ __('app.order_success.working_days') }}</span>
-            </div>
-            @endif
-
         </div>
 
-        {{-- Grand total --}}
         <div class="border-t border-[#f0ede8] px-5 py-4 flex justify-between items-center">
             <span class="font-bold text-[#1a1917]">{{ __('app.order_success.grand_total') }}</span>
             <span class="text-2xl font-black text-[#1a1917] tabular-nums">
@@ -211,30 +170,6 @@
             </span>
         </div>
 
-    </div>
-
-    {{-- Shipping info card --}}
-    <div class="u3 bg-white rounded-2xl border border-[#ece9e4] overflow-hidden shadow-sm mb-6">
-        <div class="flex items-center gap-3 px-5 py-4 border-b border-[#f0ede8]">
-            <div class="w-8 h-8 rounded-xl bg-[#f7f6f3] flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-[#9a9793]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-            </div>
-            <h2 class="font-semibold text-[#1a1917] text-sm">{{ __('app.order_success.shipping_address') }}</h2>
-        </div>
-        <div class="px-5 py-4 space-y-1.5 text-sm">
-            <p class="font-semibold text-[#1a1917]">{{ $order->shipping_name }}</p>
-            <p class="text-[#6b6966]">{{ $order->shipping_phone }}</p>
-            <p class="text-[#6b6966]">{{ $order->shipping_address }}</p>
-            <p class="text-[#6b6966]">{{ $order->shipping_city }}@if($order->shipping_zip)، {{ $order->shipping_zip }}@endif</p>
-            @if($shippingArea)
-            <p class="text-[10px] font-bold text-[#9a9793] pt-1">
-                {{ $shippingArea }}
-            </p>
-            @endif
-        </div>
     </div>
 
     {{-- Order status timeline --}}
@@ -263,20 +198,6 @@
                 <div class="pb-5">
                     <p class="text-sm font-bold text-[#1a1917] leading-snug">{{ __('app.order_success.stage_processing') }}</p>
                     <p class="text-xs text-[#9a9793] mt-0.5">{{ __('app.order_success.stage_processing_sub') }}</p>
-                </div>
-            </div>
-
-            <div class="tl-step">
-                <div class="flex flex-col items-center">
-                    <div class="tl-icon bg-[#f7f6f3] text-[#b5b2ab]">🚚</div>
-                    <div class="tl-line"></div>
-                </div>
-                <div class="pb-5">
-                    <p class="text-sm font-bold text-[#b5b2ab] leading-snug">{{ __('app.order_success.stage_shipping') }}</p>
-                    <p class="text-xs text-[#b5b2ab] mt-0.5">
-                        @if($shippingArea) {{ __('app.order_success.stage_shipping_to') }} {{ $shippingArea }} @endif
-                        @if($deliveryDays) — {{ __('app.order_success.stage_shipping_days', ['days' => $deliveryDays]) }} @endif
-                    </p>
                 </div>
             </div>
 

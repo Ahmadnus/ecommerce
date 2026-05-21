@@ -123,6 +123,29 @@
         font-size: 13px;
         font-weight: 800;
     }
+
+
+    .variant-option {
+    padding: 6px 14px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+    color: #374151;
+    transition: all .15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.variant-option-input:checked + .variant-option {
+    border-color: #000;
+    background: #fff;
+    color: #000;
+    box-shadow: 0 0 0 2px rgba(0,0,0,.08);
+}
 </style>
 @endpush
 
@@ -513,24 +536,40 @@
             const isColor = attr.type === 'color';
             
             // هنا حافظنا على منطق البوردر الأسود للعنصر المختار فقط
-            options += `
-                <label class="cursor-pointer group relative">
-                    <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" class="sr-only peer">
-                    
-                    <span class="${isColor 
-                        ? 'w-9 h-9 rounded-full block border-2 peer-checked:border-black peer-checked:ring-2 peer-checked:ring-black peer-checked:ring-offset-2' 
-                        : 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all border-2 peer-checked:border-black peer-checked:bg-black peer-checked:text-white'} 
-                        transition-all flex items-center justify-center text-center" 
-                        
-                        style="${isColor 
-                            ? 'background-color:' + v.color_hex + '; border-color:#d1d5db;' 
-                            : 'background:#f3f4f6; border:1px solid #e5e7eb; color:#374151;'}" 
-                        title="${v.label}">
-                        
-                        ${isColor ? '' : v.label}
-                    </span>
-                </label>
-            `;
+     options += `
+<label class="cursor-pointer relative">
+    <input type="checkbox"
+           name="variants[${i}][attribute_values][]"
+           value="${v.id}"
+           class="sr-only peer">
+
+    ${
+        isColor
+        ? `
+        <span
+            class="w-9 h-9 rounded-full block border-2 transition-all
+                   peer-checked:border-black
+                   peer-checked:ring-2
+                   peer-checked:ring-black
+                   peer-checked:ring-offset-2"
+            style="background-color:${v.color_hex}; border-color:#d1d5db;"
+            title="${v.label}">
+        </span>
+        `
+        : `
+        <span
+            class="px-4 py-2 rounded-lg text-xs font-bold border transition-all inline-flex items-center justify-center
+                   bg-gray-100 text-gray-700 border-gray-300
+                   peer-checked:bg-black
+                   peer-checked:text-white
+                   peer-checked:border-black
+                   peer-checked:shadow-md">
+            ${v.label}
+        </span>
+        `
+    }
+</label>
+`;
         });
 
         attrHTML += `

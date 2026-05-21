@@ -45,38 +45,44 @@
             ],
         ];
 
-        $orderStats = [
-            [
-                'label' => 'إجمالي الطلبات',
-                'value' => \App\Models\Order::count(),
-                'bg' => 'bg-slate-50',
-                'text' => 'text-slate-600',
-            ],
-            [
-                'label' => 'قيد المعالجة',
-                'value' => \App\Models\Order::where('status', 'processing')->count(),
-                'bg' => 'bg-yellow-50',
-                'text' => 'text-yellow-700',
-            ],
-            [
-                'label' => 'قيد التوصيل',
-                'value' => \App\Models\Order::where('status', 'shipped')->count(),
-                'bg' => 'bg-blue-50',
-                'text' => 'text-blue-700',
-            ],
-            [
-                'label' => 'تم التسليم',
-                'value' => \App\Models\Order::where('status', 'delivered')->count(),
-                'bg' => 'bg-emerald-50',
-                'text' => 'text-emerald-700',
-            ],
-            [
-                'label' => 'ملغي',
-                'value' => \App\Models\Order::where('status', 'cancelled')->count(),
-                'bg' => 'bg-red-50',
-                'text' => 'text-red-600',
-            ],
-        ];
+      $orderStats = [
+    [
+        'label' => 'إجمالي الحجوزات',
+        'value' => \App\Models\Order::count(),
+        'bg' => 'bg-slate-50',
+        'text' => 'text-slate-600',
+    ],
+    [
+        'label' => 'بانتظار التأكيد',
+        'value' => \App\Models\Order::where('status', 'pending')->count(),
+        'bg' => 'bg-amber-50',
+        'text' => 'text-amber-700',
+    ],
+    [
+        'label' => 'تم التأكيد',
+        'value' => \App\Models\Order::where('status', 'processing')->count(),
+        'bg' => 'bg-blue-50',
+        'text' => 'text-blue-700',
+    ],
+    [
+        'label' => 'جاري التنفيذ',
+        'value' => \App\Models\Order::where('status', 'shipped')->count(),
+        'bg' => 'bg-purple-50',
+        'text' => 'text-purple-700',
+    ],
+    [
+        'label' => 'مكتمل',
+        'value' => \App\Models\Order::where('status', 'completed')->count(),
+        'bg' => 'bg-emerald-50',
+        'text' => 'text-emerald-700',
+    ],
+    [
+        'label' => 'ملغي',
+        'value' => \App\Models\Order::where('status', 'cancelled')->count(),
+        'bg' => 'bg-red-50',
+        'text' => 'text-red-600',
+    ],
+];
     @endphp
 
     {{-- شبكة الإحصائيات --}}
