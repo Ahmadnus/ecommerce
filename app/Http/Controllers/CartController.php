@@ -37,7 +37,7 @@ class CartController extends Controller
         $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'quantity'   => 'nullable|integer|min:1|max:100',
-            'variant_id' => 'nullable|integer',
+          
         ]);
 
         $productId = $request->integer('product_id');
@@ -57,26 +57,7 @@ class CartController extends Controller
         $hasVariants    = $activeVariants->isNotEmpty();
 
         // ── Rule 2: variants exist but none supplied ──────────────────────────
-        if ($hasVariants && ! $variantId) {
-            // Build a dynamic list of required attribute names for the error message
-            $requiredNames = $activeVariants
-                ->flatMap(fn($v) => $v->attributeValues->pluck('attribute.name'))
-                ->unique()
-                ->values()
-                ->implode(' و ');
-
-            return response()->json([
-                'success'             => false,
-                'message'             => 'يرجى اختيار ' . $requiredNames . ' أولاً',
-                'required_attributes' => $activeVariants
-                    ->flatMap(fn($v) => $v->attributeValues->map(fn($av) => [
-                        'id'   => $av->attribute_id,
-                        'name' => $av->attribute->name,
-                    ]))
-                    ->unique('id')
-                    ->values(),
-            ], 422);
-        }
+       
 
         // ── Rules 3-5: variant supplied ──────────────────────────────────────
         if ($variantId) {
@@ -91,25 +72,27 @@ class CartController extends Controller
             }
 
             // Rule 4: variant must cover all required attribute types (dynamic)
-            $requiredTypeIds = $activeVariants
-                ->flatMap(fn($v) => $v->attributeValues->pluck('attribute_id'))
-                ->unique()
-                ->sort()
-                ->values();
+         // ── Rule 4: variant must cover all required attribute types (dynamic)
+$requiredTypeIds = $activeVariants
+    ->flatMap(fn($v) => $v->attributeValues->pluck('attribute_id'))
+    ->unique()
+    ->sort()
+    ->values();
 
-            $variantTypeIds = $variant->attributeValues
-                ->pluck('attribute_id')
-                ->unique()
-                ->sort()
-                ->values();
+$variantTypeIds = $variant->attributeValues
+    ->pluck('attribute_id')
+    ->unique()
+    ->sort()
+    ->values();
 
-            $missing = $requiredTypeIds->diff($variantTypeIds);
+$missing = $requiredTypeIds->diff($variantTypeIds);
 
-            if ($missing->isNotEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'يرجى اختيار جميع الخصائص المطلوبة',
-                ], 422);
+if ($missing->isNotEmpty()) {
+    return response()->json([
+        'success' => false,
+        'message' => 'يرجى اختيار جميع الخصائص المطلوبة',
+    ], 422);
+
             }
 
             // Rule 5: stock

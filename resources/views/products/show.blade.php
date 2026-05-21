@@ -675,19 +675,22 @@ function validateSelections() {
 
 /* ── Add to cart ────────────────────────────────────────────────── */
 function addToCart() {
-    if (!validateSelections()) return;
-
-    if (!selectedVariant || !selectedVariant.id) {
-        Swal.fire({ icon: 'error', title: I18N.errorTitle, text: I18N.optionUnavailable });
-        return;
-    }
-
     var btn             = document.getElementById('add-to-cart-btn');
     var qty             = parseInt(document.getElementById('qty-input').value) || 1;
     var originalContent = btn.innerHTML;
 
-    btn.disabled   = true;
-    btn.innerHTML  = '<span class="animate-spin">🔄</span> ' + I18N.addingToCart;
+    btn.disabled  = true;
+    btn.innerHTML = '<span class="animate-spin">🔄</span> ' + I18N.addingToCart;
+
+    var payload = {
+        product_id: "{{ $product->id }}",
+        quantity: qty,
+    };
+
+    // أرسل variant_id فقط إذا كان موجود فعلاً
+    if (selectedVariant && selectedVariant.id) {
+        payload.variant_id = selectedVariant.id;
+    }
 
     fetch("{{ route('cart.add') }}", {
         method: 'POST',
@@ -696,20 +699,18 @@ function addToCart() {
             'X-CSRF-TOKEN': "{{ csrf_token() }}",
             'Accept': 'application/json',
         },
-        body: JSON.stringify({
-            product_id: "{{ $product->id }}",
-            variant_id: selectedVariant.id,
-            quantity:   qty,
-        }),
+        body: JSON.stringify(payload),
     })
     .then(async function (response) {
         var data = await response.json();
+
         if (!response.ok) {
             throw new Error(data.message || (response.status === 422 ? I18N.cartError : I18N.serverError));
         }
+
         return data;
     })
-    .then(function (data) {
+    .then(function () {
         if (window.Livewire) Livewire.dispatch('cartUpdated');
 
         Swal.mixin({
