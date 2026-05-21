@@ -394,3 +394,5 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/password', [AdminPasswordController::class, 'edit'])->name('password.edit');
     Route::put('/password', [AdminPasswordController::class, 'update'])->name('password.update');
 });
+Route::post('/booking/initiate', [CartController::class, 'initiateBooking'])
+     ->name('booking.initiate');

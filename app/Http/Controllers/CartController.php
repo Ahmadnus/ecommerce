@@ -14,11 +14,11 @@ class CartController extends Controller
 
     // ── View ─────────────────────────────────────────────────────────────────
 
-    public function index(): View
-    {
-        $summary = $this->cart->getSummary();
-        return view('cart.index', compact('summary'));
-    }
+  public function index()
+{
+    // Redirect cart page directly to checkout for the booking flow
+    return redirect()->route('checkout.index');
+}
 
     // ── AJAX: Add to cart ────────────────────────────────────────────────────
     /**
@@ -173,4 +173,61 @@ class CartController extends Controller
             $this->cart->getSummary()
         ));
     }
+    public function initiateBooking(Request $request): JsonResponse
+{
+    $request->validate([
+        'product_id' => 'required|integer|exists:products,id',
+        'quantity'   => 'nullable|integer|min:1|max:100',
+        'variant_id' => 'nullable|integer',
+    ]);
+
+    $productId = $request->integer('product_id');
+    $quantity  = max(1, $request->integer('quantity', 1));
+    $variantId = $request->integer('variant_id') ?: null;
+
+    // ── One-item limit: wipe whatever was in the cart before ──────────────
+    $this->cart->clear();
+
+    // ── Reuse your existing validation logic ──────────────────────────────
+    $product = Product::active()
+        ->with([
+            'variants' => fn($q) => $q
+                ->where('is_active', true)
+                ->with(['attributeValues.attribute']),
+        ])
+        ->findOrFail($productId);
+
+    $activeVariants = $product->variants;
+    $hasVariants    = $activeVariants->isNotEmpty();
+
+    if ($hasVariants && ! $variantId) {
+        return response()->json([
+            'success' => false,
+            'message' => __('app.cart_error_missing'),
+        ], 422);
+    }
+
+    if ($variantId) {
+        $variant = $activeVariants->firstWhere('id', $variantId);
+
+        if (! $variant) {
+            return response()->json(['success' => false, 'message' => __('app.option_unavailable')], 422);
+        }
+
+        if ($variant->stock_quantity < $quantity) {
+            return response()->json([
+                'success' => false,
+                'message' => "Available: {$variant->stock_quantity}",
+            ], 422);
+        }
+    }
+
+    // ── Add to (now-empty) cart ────────────────────────────────────────────
+    $this->cart->add($productId, $quantity, $variantId);
+
+    return response()->json([
+        'success'      => true,
+        'redirect_url' => route('checkout.index'),
+    ]);
+}
 }

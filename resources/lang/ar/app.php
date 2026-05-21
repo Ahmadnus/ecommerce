@@ -23,9 +23,9 @@ return [
     'all_products' => 'جميع المنتجات',
     'create_account' => 'إنشاء حساب',
 
+'app.book_now'=>'احجز الآن',
 
-
-
+'book_now'=>'احجز الآن',
 
     // Products index
 'sort_by'           => 'ترتيب حسب',

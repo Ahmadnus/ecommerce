@@ -22,7 +22,7 @@ return [
     'no_phone'  => 'No phone number',
     'all_products' => 'All products',
     'create_account' => 'Register',
-
+'book_now'=>'book now',
     // Products index
 'sort_by'           => 'Sort by',
 'sort_featured'     => 'Featured first',

@@ -9,6 +9,7 @@
 
 @push('head')
 <style>
+
 /* ─── Variant buttons ──────────────────────────────────────────────────── */
 .variant-btn {
     padding: 7px 16px;
@@ -415,19 +416,19 @@
                                    hover:bg-gray-50 transition-colors text-xl select-none">+</button>
                 </div>
 
-                <button id="add-to-cart-btn"
-                        type="button"
-                        onclick="addToCart()"
-                        class="flex-1 text-white font-bold px-6 py-3 rounded-xl
-                               transition-all flex items-center justify-center gap-2 text-sm
-                               hover:opacity-90 active:scale-[.97]"
-                        style="background: var(--brand-color, #0ea5e9)">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    {{ __('app.add_to_cart') }}
-                </button>
+              <button id="book-now-btn"
+        type="button"
+        onclick="bookNow()"
+        class="flex-1 text-white font-bold px-6 py-3 rounded-xl
+               transition-all flex items-center justify-center gap-2 text-sm
+               hover:opacity-90 active:scale-[.97]"
+        style="background: var(--brand-color, #0ea5e9)">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+    </svg>
+    {{ __('app.book_now') }}
+</button>
             </div>
             @else
             <div class="bg-gray-100 text-gray-500 text-center py-4 rounded-xl mb-6 font-medium text-sm">
@@ -674,22 +675,23 @@ function validateSelections() {
 }
 
 /* ── Add to cart ────────────────────────────────────────────────── */
-function addToCart() {
+function bookNow() {
     if (!validateSelections()) return;
 
-    if (!selectedVariant || !selectedVariant.id) {
+    if (window.REQUIRED_ATTRS.length > 0 && (!selectedVariant || !selectedVariant.id)) {
         Swal.fire({ icon: 'error', title: I18N.errorTitle, text: I18N.optionUnavailable });
         return;
     }
 
-    var btn             = document.getElementById('add-to-cart-btn');
-    var qty             = parseInt(document.getElementById('qty-input').value) || 1;
-    var originalContent = btn.innerHTML;
+    var btn = document.getElementById('book-now-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin">🔄</span> ' + I18N.addingToCart;
 
-    btn.disabled   = true;
-    btn.innerHTML  = '<span class="animate-spin">🔄</span> ' + I18N.addingToCart;
+    var qty       = parseInt(document.getElementById('qty-input').value) || 1;
+    var variantId = selectedVariant ? selectedVariant.id : null;
 
-    fetch("{{ route('cart.add') }}", {
+    // POST to a new "book now" route that clears cart + adds item + redirects
+    fetch("{{ route('booking.initiate') }}", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -698,39 +700,23 @@ function addToCart() {
         },
         body: JSON.stringify({
             product_id: "{{ $product->id }}",
-            variant_id: selectedVariant.id,
+            variant_id: variantId,
             quantity:   qty,
         }),
     })
-    .then(async function (response) {
+    .then(async function(response) {
         var data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || (response.status === 422 ? I18N.cartError : I18N.serverError));
-        }
+        if (!response.ok) throw new Error(data.message || I18N.serverError);
         return data;
     })
-    .then(function (data) {
-        if (window.Livewire) Livewire.dispatch('cartUpdated');
-
-        Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: function (toast) {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
-            },
-        }).fire({ icon: 'success', title: I18N.cartSuccess });
+    .then(function(data) {
+        // Redirect directly to checkout
+        window.location.href = data.redirect_url;
     })
-    .catch(function (error) {
-        console.error('Error:', error);
+    .catch(function(error) {
+        btn.disabled = false;
+        btn.innerHTML = '<svg ...></svg> {{ __("app.book_now") }}';
         Swal.fire({ icon: 'warning', title: I18N.warningTitle, text: error.message });
-    })
-    .finally(function () {
-        btn.disabled  = false;
-        btn.innerHTML = originalContent;
     });
 }
 </script>
