@@ -83,42 +83,6 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $messages = [
-            'name.ar.required'                  => 'اسم المنتج بالعربية مطلوب.',
-            'name.ar.max'                       => 'اسم المنتج بالعربية يجب ألا يتجاوز 255 حرفاً.',
-            'name.en.max'                       => 'اسم المنتج بالإنجليزية يجب ألا يتجاوز 255 حرفاً.',
-            'short_description.ar.max'          => 'الوصف المختصر بالعربية يجب ألا يتجاوز 500 حرف.',
-            'short_description.en.max'          => 'الوصف المختصر بالإنجليزية يجب ألا يتجاوز 500 حرف.',
-            'base_price.required'               => 'السعر الأساسي مطلوب.',
-            'base_price.numeric'                => 'السعر الأساسي يجب أن يكون رقماً.',
-            'base_price.min'                    => 'السعر الأساسي يجب أن يكون صفراً أو أكثر.',
-            'discount_price.numeric'            => 'سعر الخصم يجب أن يكون رقماً.',
-            'discount_price.min'                => 'سعر الخصم يجب أن يكون صفراً أو أكثر.',
-            'discount_price.lt'                 => 'سعر الخصم يجب أن يكون أقل من السعر الأساسي.',
-            'sku.unique'                        => 'رمز SKU مستخدم بالفعل، يرجى اختيار رمز آخر.',
-            'category_ids.required'             => 'يجب اختيار تصنيف واحد على الأقل.',
-            'category_ids.min'                  => 'يجب اختيار تصنيف واحد على الأقل.',
-            'category_ids.*.exists'             => 'أحد التصنيفات المختارة غير موجود.',
-            'primary_category_id.required'      => 'يجب تحديد التصنيف الأساسي للمنتج.',
-            'primary_category_id.exists'        => 'التصنيف الأساسي المحدد غير موجود.',
-            'main_image.required'               => 'صورة الغلاف مطلوبة.',
-            'main_image.image'                  => 'الملف المرفوع يجب أن يكون صورة.',
-            'main_image.mimes'                  => 'صورة الغلاف يجب أن تكون بصيغة: JPEG، PNG، WebP، أو AVIF.',
-            'main_image.max'                    => 'حجم صورة الغلاف يجب ألا يتجاوز 5 ميغابايت.',
-            'product_images.max'                => 'لا يمكن رفع أكثر من 20 صورة للمعرض.',
-            'product_images.*.image'            => 'كل ملف في المعرض يجب أن يكون صورة.',
-            'product_images.*.mimes'            => 'صور المعرض يجب أن تكون بصيغة: JPEG، PNG، WebP، أو AVIF.',
-            'product_images.*.max'              => 'حجم كل صورة في المعرض يجب ألا يتجاوز 5 ميغابايت.',
-            'variants.required'                 => 'يجب إضافة متغير واحد على الأقل.',
-            'variants.min'                      => 'يجب إضافة متغير واحد على الأقل.',
-            'variants.*.stock_quantity.integer' => 'كمية المخزون يجب أن تكون عدداً صحيحاً.',
-            'variants.*.stock_quantity.min'     => 'كمية المخزون يجب أن تكون صفراً أو أكثر.',
-            'variants.*.price_override.numeric' => 'سعر المتغير يجب أن يكون رقماً.',
-            'variants.*.price_override.min'     => 'سعر المتغير يجب أن يكون صفراً أو أكثر.',
-            'variants.*.sku.max'                => 'رمز SKU للمتغير يجب ألا يتجاوز 100 حرف.',
-            'variants.*.attribute_values.*.exists' => 'قيمة الخاصية المختارة غير موجودة.',
-        ];
-
         $request->validate([
             'name.ar'              => 'required|string|max:255',
             'name.en'              => 'nullable|string|max:255',
@@ -141,7 +105,55 @@ class ProductController extends Controller
             'variants.*.sku'                => 'nullable|string|max:100',
             'variants.*.attribute_values'   => 'nullable|array',
             'variants.*.attribute_values.*' => 'exists:attribute_values,id',
-        ], $messages);
+        ], [
+            // ── اسم المنتج ──────────────────────────────────────────────
+            'name.ar.required'                  => 'اسم المنتج بالعربية مطلوب.',
+            'name.ar.max'                       => 'اسم المنتج بالعربية يجب ألا يتجاوز 255 حرفاً.',
+            'name.en.max'                       => 'اسم المنتج بالإنجليزية يجب ألا يتجاوز 255 حرفاً.',
+
+            // ── الوصف ───────────────────────────────────────────────────
+            'short_description.ar.max'          => 'الوصف المختصر بالعربية يجب ألا يتجاوز 500 حرف.',
+            'short_description.en.max'          => 'الوصف المختصر بالإنجليزية يجب ألا يتجاوز 500 حرف.',
+
+            // ── السعر ───────────────────────────────────────────────────
+            'base_price.required'               => 'السعر الأساسي مطلوب.',
+            'base_price.numeric'                => 'السعر الأساسي يجب أن يكون رقماً.',
+            'base_price.min'                    => 'السعر الأساسي يجب أن يكون صفراً أو أكثر.',
+            'discount_price.numeric'            => 'سعر الخصم يجب أن يكون رقماً.',
+            'discount_price.min'                => 'سعر الخصم يجب أن يكون صفراً أو أكثر.',
+            'discount_price.lt'                 => 'سعر الخصم يجب أن يكون أقل من السعر الأساسي.',
+
+            // ── SKU ─────────────────────────────────────────────────────
+            'sku.unique'                        => 'رمز SKU مستخدم بالفعل، يرجى اختيار رمز آخر.',
+
+            // ── التصنيفات ───────────────────────────────────────────────
+            'category_ids.required'             => 'يجب اختيار تصنيف واحد على الأقل.',
+            'category_ids.min'                  => 'يجب اختيار تصنيف واحد على الأقل.',
+            'category_ids.*.exists'             => 'أحد التصنيفات المختارة غير موجود.',
+            'primary_category_id.required'      => 'يجب تحديد التصنيف الأساسي للمنتج.',
+            'primary_category_id.exists'        => 'التصنيف الأساسي المحدد غير موجود.',
+
+            // ── الصور ───────────────────────────────────────────────────
+            'main_image.required'               => 'صورة الغلاف مطلوبة.',
+            'main_image.image'                  => 'الملف المرفوع يجب أن يكون صورة.',
+            'main_image.mimes'                  => 'صورة الغلاف يجب أن تكون بصيغة: JPEG أو PNG أو WebP أو AVIF.',
+            'main_image.max'                    => 'حجم صورة الغلاف يجب ألا يتجاوز 5 ميغابايت.',
+            'product_images.max'                => 'لا يمكن رفع أكثر من 20 صورة للمعرض.',
+            'product_images.*.image'            => 'كل ملف في المعرض يجب أن يكون صورة.',
+            'product_images.*.mimes'            => 'صور المعرض يجب أن تكون بصيغة: JPEG أو PNG أو WebP أو AVIF.',
+            'product_images.*.max'              => 'حجم كل صورة يجب ألا يتجاوز 5 ميغابايت.',
+
+            // ── المتغيرات ───────────────────────────────────────────────
+            'variants.required'                     => 'يجب إضافة متغير واحد على الأقل.',
+            'variants.min'                          => 'يجب إضافة متغير واحد على الأقل.',
+            'variants.*.stock_quantity.required'    => 'كمية المخزون مطلوبة لكل متغير.',
+            'variants.*.stock_quantity.integer'     => 'كمية المخزون يجب أن تكون عدداً صحيحاً.',
+            'variants.*.stock_quantity.min'         => 'كمية المخزون يجب أن تكون صفراً أو أكثر.',
+            'variants.*.price_override.numeric'     => 'سعر المتغير يجب أن يكون رقماً.',
+            'variants.*.price_override.min'         => 'سعر المتغير يجب أن يكون صفراً أو أكثر.',
+            'variants.*.sku.max'                    => 'رمز SKU للمتغير يجب ألا يتجاوز 100 حرف.',
+            'variants.*.attribute_values.*.exists'  => 'قيمة الخاصية المختارة غير موجودة.',
+        ]);
 
         DB::transaction(function () use ($request) {
             $product = Product::create([
@@ -185,7 +197,7 @@ class ProductController extends Controller
         });
 
         return redirect()->route('admin.products.index')
-                         ->with('success', 'تم إضافة المنتج بنجاح');
+                         ->with('success', 'تم إضافة المنتج بنجاح ✓');
     }
 
     // ─── Show ─────────────────────────────────────────────────────────────────
@@ -237,39 +249,6 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $messages = [
-            'name.ar.required'                  => 'اسم المنتج بالعربية مطلوب.',
-            'name.ar.max'                       => 'اسم المنتج بالعربية يجب ألا يتجاوز 255 حرفاً.',
-            'name.en.max'                       => 'اسم المنتج بالإنجليزية يجب ألا يتجاوز 255 حرفاً.',
-            'short_description.ar.max'          => 'الوصف المختصر بالعربية يجب ألا يتجاوز 500 حرف.',
-            'short_description.en.max'          => 'الوصف المختصر بالإنجليزية يجب ألا يتجاوز 500 حرف.',
-            'base_price.required'               => 'السعر الأساسي مطلوب.',
-            'base_price.numeric'                => 'السعر الأساسي يجب أن يكون رقماً.',
-            'base_price.min'                    => 'السعر الأساسي يجب أن يكون صفراً أو أكثر.',
-            'discount_price.numeric'            => 'سعر الخصم يجب أن يكون رقماً.',
-            'discount_price.min'                => 'سعر الخصم يجب أن يكون صفراً أو أكثر.',
-            'discount_price.lt'                 => 'سعر الخصم يجب أن يكون أقل من السعر الأساسي.',
-            'sku.unique'                        => 'رمز SKU مستخدم بالفعل لمنتج آخر، يرجى اختيار رمز مختلف.',
-            'category_ids.required'             => 'يجب اختيار تصنيف واحد على الأقل.',
-            'category_ids.min'                  => 'يجب اختيار تصنيف واحد على الأقل.',
-            'category_ids.*.exists'             => 'أحد التصنيفات المختارة غير موجود.',
-            'primary_category_id.required'      => 'يجب تحديد التصنيف الأساسي للمنتج.',
-            'primary_category_id.exists'        => 'التصنيف الأساسي المحدد غير موجود.',
-            'product_images.max'                => 'لا يمكن رفع أكثر من 20 صورة للمعرض.',
-            'product_images.*.image'            => 'كل ملف في المعرض يجب أن يكون صورة.',
-            'product_images.*.mimes'            => 'صور المعرض يجب أن تكون بصيغة: JPEG، PNG، WebP، أو AVIF.',
-            'product_images.*.max'              => 'حجم كل صورة في المعرض يجب ألا يتجاوز 5 ميغابايت.',
-            'delete_media_ids.*.integer'        => 'معرّف الصورة المحذوفة يجب أن يكون رقماً صحيحاً.',
-            'variants.required'                 => 'يجب إضافة متغير واحد على الأقل.',
-            'variants.min'                      => 'يجب إضافة متغير واحد على الأقل.',
-            'variants.*.stock_quantity.integer' => 'كمية المخزون يجب أن تكون عدداً صحيحاً.',
-            'variants.*.stock_quantity.min'     => 'كمية المخزون يجب أن تكون صفراً أو أكثر.',
-            'variants.*.price_override.numeric' => 'سعر المتغير يجب أن يكون رقماً.',
-            'variants.*.price_override.min'     => 'سعر المتغير يجب أن يكون صفراً أو أكثر.',
-            'variants.*.sku.max'                => 'رمز SKU للمتغير يجب ألا يتجاوز 100 حرف.',
-            'variants.*.attribute_values.*.exists' => 'قيمة الخاصية المختارة غير موجودة.',
-        ];
-
         $request->validate([
             'name.ar'              => 'required|string|max:255',
             'name.en'              => 'nullable|string|max:255',
@@ -279,17 +258,10 @@ class ProductController extends Controller
             'short_description.en' => 'nullable|string|max:500',
             'base_price'           => 'required|numeric|min:0',
             'discount_price'       => 'nullable|numeric|min:0|lt:base_price',
-
-            // FIX: ignore this product's own SKU when checking for uniqueness
-            // so the user can save the form without touching the SKU field.
-            // Without this, update() would reject the existing SKU as a duplicate.
             'sku'                  => [
-                'nullable',
-                'string',
-                'max:100',
+                'nullable', 'string', 'max:100',
                 Rule::unique('products', 'sku')->ignore($product->id),
             ],
-
             'category_ids'         => 'required|array|min:1',
             'category_ids.*'       => 'exists:categories,id',
             'primary_category_id'  => 'required|exists:categories,id',
@@ -303,7 +275,52 @@ class ProductController extends Controller
             'variants.*.sku'                => 'nullable|string|max:100',
             'variants.*.attribute_values'   => 'nullable|array',
             'variants.*.attribute_values.*' => 'exists:attribute_values,id',
-        ], $messages);
+        ], [
+            // ── اسم المنتج ──────────────────────────────────────────────
+            'name.ar.required'                  => 'اسم المنتج بالعربية مطلوب.',
+            'name.ar.max'                       => 'اسم المنتج بالعربية يجب ألا يتجاوز 255 حرفاً.',
+            'name.en.max'                       => 'اسم المنتج بالإنجليزية يجب ألا يتجاوز 255 حرفاً.',
+
+            // ── الوصف ───────────────────────────────────────────────────
+            'short_description.ar.max'          => 'الوصف المختصر بالعربية يجب ألا يتجاوز 500 حرف.',
+            'short_description.en.max'          => 'الوصف المختصر بالإنجليزية يجب ألا يتجاوز 500 حرف.',
+
+            // ── السعر ───────────────────────────────────────────────────
+            'base_price.required'               => 'السعر الأساسي مطلوب.',
+            'base_price.numeric'                => 'السعر الأساسي يجب أن يكون رقماً.',
+            'base_price.min'                    => 'السعر الأساسي يجب أن يكون صفراً أو أكثر.',
+            'discount_price.numeric'            => 'سعر الخصم يجب أن يكون رقماً.',
+            'discount_price.min'                => 'سعر الخصم يجب أن يكون صفراً أو أكثر.',
+            'discount_price.lt'                 => 'سعر الخصم يجب أن يكون أقل من السعر الأساسي.',
+
+            // ── SKU ─────────────────────────────────────────────────────
+            'sku.unique'                        => 'رمز SKU مستخدم لمنتج آخر، يرجى اختيار رمز مختلف.',
+
+            // ── التصنيفات ───────────────────────────────────────────────
+            'category_ids.required'             => 'يجب اختيار تصنيف واحد على الأقل.',
+            'category_ids.min'                  => 'يجب اختيار تصنيف واحد على الأقل.',
+            'category_ids.*.exists'             => 'أحد التصنيفات المختارة غير موجود.',
+            'primary_category_id.required'      => 'يجب تحديد التصنيف الأساسي للمنتج.',
+            'primary_category_id.exists'        => 'التصنيف الأساسي المحدد غير موجود.',
+
+            // ── الصور ───────────────────────────────────────────────────
+            'product_images.max'                => 'لا يمكن رفع أكثر من 20 صورة للمعرض.',
+            'product_images.*.image'            => 'كل ملف في المعرض يجب أن يكون صورة.',
+            'product_images.*.mimes'            => 'صور المعرض يجب أن تكون بصيغة: JPEG أو PNG أو WebP أو AVIF.',
+            'product_images.*.max'              => 'حجم كل صورة يجب ألا يتجاوز 5 ميغابايت.',
+            'delete_media_ids.*.integer'        => 'معرّف الصورة المحذوفة يجب أن يكون رقماً صحيحاً.',
+
+            // ── المتغيرات ───────────────────────────────────────────────
+            'variants.required'                     => 'يجب إضافة متغير واحد على الأقل.',
+            'variants.min'                          => 'يجب إضافة متغير واحد على الأقل.',
+            'variants.*.stock_quantity.required'    => 'كمية المخزون مطلوبة لكل متغير.',
+            'variants.*.stock_quantity.integer'     => 'كمية المخزون يجب أن تكون عدداً صحيحاً.',
+            'variants.*.stock_quantity.min'         => 'كمية المخزون يجب أن تكون صفراً أو أكثر.',
+            'variants.*.price_override.numeric'     => 'سعر المتغير يجب أن يكون رقماً.',
+            'variants.*.price_override.min'         => 'سعر المتغير يجب أن يكون صفراً أو أكثر.',
+            'variants.*.sku.max'                    => 'رمز SKU للمتغير يجب ألا يتجاوز 100 حرف.',
+            'variants.*.attribute_values.*.exists'  => 'قيمة الخاصية المختارة غير موجودة.',
+        ]);
 
         DB::transaction(function () use ($request, $product) {
             $newArName = $request->input('name.ar');
@@ -359,31 +376,29 @@ class ProductController extends Controller
         });
 
         return redirect()->route('admin.products.show', $product)
-                         ->with('success', 'تم تحديث المنتج بنجاح');
+                         ->with('success', 'تم تحديث المنتج بنجاح ✓');
     }
 
     // ─── Stock update ─────────────────────────────────────────────────────────
 
     public function updateStock(Request $request, Product $product)
     {
-        $messages = [
-            'variants.required'                 => 'بيانات المتغيرات مطلوبة.',
-            'variants.*.id.required'            => 'معرّف المتغير مطلوب.',
-            'variants.*.id.exists'              => 'المتغير المحدد غير موجود.',
-            'variants.*.stock_quantity.required'=> 'كمية المخزون مطلوبة.',
-            'variants.*.stock_quantity.integer' => 'كمية المخزون يجب أن تكون عدداً صحيحاً.',
-            'variants.*.stock_quantity.min'     => 'كمية المخزون يجب أن تكون صفراً أو أكثر.',
-            'variants.*.price_override.numeric' => 'سعر المتغير يجب أن يكون رقماً.',
-            'variants.*.price_override.min'     => 'سعر المتغير يجب أن يكون صفراً أو أكثر.',
-        ];
-
         $request->validate([
             'variants'                  => 'required|array',
             'variants.*.id'             => 'required|exists:product_variants,id',
             'variants.*.stock_quantity' => 'required|integer|min:0',
             'variants.*.price_override' => 'nullable|numeric|min:0',
             'variants.*.is_active'      => 'nullable|boolean',
-        ], $messages);
+        ], [
+            'variants.required'                  => 'بيانات المتغيرات مطلوبة.',
+            'variants.*.id.required'             => 'معرّف المتغير مطلوب.',
+            'variants.*.id.exists'               => 'المتغير المحدد غير موجود.',
+            'variants.*.stock_quantity.required' => 'كمية المخزون مطلوبة.',
+            'variants.*.stock_quantity.integer'  => 'كمية المخزون يجب أن تكون عدداً صحيحاً.',
+            'variants.*.stock_quantity.min'      => 'كمية المخزون يجب أن تكون صفراً أو أكثر.',
+            'variants.*.price_override.numeric'  => 'سعر المتغير يجب أن يكون رقماً.',
+            'variants.*.price_override.min'      => 'سعر المتغير يجب أن يكون صفراً أو أكثر.',
+        ]);
 
         foreach ($request->variants as $data) {
             ProductVariant::where('id', $data['id'])
@@ -396,10 +411,10 @@ class ProductController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'تم تحديث المخزون']);
+            return response()->json(['success' => true, 'message' => 'تم تحديث المخزون بنجاح ✓']);
         }
 
-        return back()->with('success', 'تم تحديث المخزون بنجاح');
+        return back()->with('success', 'تم تحديث المخزون بنجاح ✓');
     }
 
     // ─── Destroy ──────────────────────────────────────────────────────────────
@@ -409,7 +424,7 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->route('admin.products.index')
-                         ->with('success', 'تم نقل المنتج إلى المحذوفات');
+                         ->with('success', 'تم نقل المنتج إلى سلة المحذوفات');
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────
