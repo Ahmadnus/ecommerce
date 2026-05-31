@@ -20,32 +20,12 @@
     --text-1:      #111827;
     --text-2:      #6b7280;
     --radius-card: 16px;
-
-    /* غيّر الخط من هنا فقط */
- 
-    
 }
-html[lang="ar"], [dir="rtl"] {
-    font-family: var(--font-ar) !important;
-}
-
-html[lang="en"], [dir="ltr"] {
-    font-family: var(--font-en) !important;
-}
-
-/* لو بدك كل الصفحة داخل هذا الملف */
-.page-shop {
-    font-family: var(--font-ar);
-}
-html[lang="en"] .page-shop,
-[dir="ltr"] .page-shop {
-    font-family: var(--font-en) !important;
-}
-/* تطبيق الخط على الصفحة كلها */
-.page-shop,
-.page-shop * {
-    font-family: var(--app-font) !important;
-}
+html[lang="ar"], [dir="rtl"] { font-family: var(--font-ar) !important; }
+html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
+.page-shop { font-family: var(--font-ar); }
+html[lang="en"] .page-shop, [dir="ltr"] .page-shop { font-family: var(--font-en) !important; }
+.page-shop, .page-shop * { font-family: var(--app-font) !important; }
 
 /* ── Announcement bar ─────────────────────────────────────────────────── */
 .announce-bar {
@@ -159,16 +139,10 @@ html[lang="en"] .page-shop,
 }
 .heart-btn:hover{transform:scale(1.18);background:#fff}
 .heart-btn svg{width:15px;height:15px}
-.page-shop * {
-    font-family: var(--app-font) !important;
-}
-html[lang="ar"] {
-    --app-font: var(--font-ar);
-}
+.page-shop * { font-family: var(--app-font) !important; }
+html[lang="ar"] { --app-font: var(--font-ar); }
+html[lang="en"] { --app-font: var(--font-en); }
 
-html[lang="en"] {
-    --app-font: var(--font-en);
-}
 /* ── Share button ─────────────────────────────────────────────────────── */
 .share-btn {
     width:30px;height:30px;background:rgba(255,255,255,.93);
@@ -233,35 +207,23 @@ html[lang="en"] {
     flex-shrink:0;background:#f3f4f6;
 }
 .scrollbar-hide, [x-category-grid] {
-    padding-top: 12px !important;   /* نعطي مساحة داخلية للبوردر */
-    margin-top: -12px !important;   /* نسحب الكومبوننت لفوق ليعوض المساحة */
-    padding-bottom: 4px !important; 
-    overflow-y: visible !important; /* السماح بظهور العناصر الخارجة عمودياً */
+    padding-top: 12px !important;
+    margin-top: -12px !important;
+    padding-bottom: 4px !important;
+    overflow-y: visible !important;
 }
-
-/* تأكد أن الحاوية الأب لا تقص المحتوى */
-.max-w-screen-2xl {
-    overflow: visible !important;
+.max-w-screen-2xl { overflow: visible !important; }
+[x-category-grid] .flex, .overflow-x-auto {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    margin-top: -8px !important;
 }
-/* بنعطي مساحة "تنفّس" داخل حاوية الكاتيغوري عشان البوردر ما ينقص */
-    [x-category-grid] .flex, 
-    .overflow-x-auto {
-        padding-top: 8px !important;
-        padding-bottom: 8px !important;
-        margin-top: -8px !important;
-    }
-    .cat-banner {
-    border-radius: 20px; overflow: hidden; position: relative;
-    margin-bottom: 20px;
-}
+.cat-banner { border-radius: 20px; overflow: hidden; position: relative; margin-bottom: 20px; }
 .cat-banner-inner {
     display: flex; align-items: center; gap: 24px;
-    padding: 36px 28px;
-    position: relative; z-index: 10;
+    padding: 36px 28px; position: relative; z-index: 10;
 }
-@media(min-width: 768px) {
-    .cat-banner-inner { padding: 48px 56px; gap: 40px; }
-}
+@media(min-width: 768px) { .cat-banner-inner { padding: 48px 56px; gap: 40px; } }
 .cat-banner-img {
     width: 120px; height: 120px; flex-shrink: 0;
     border-radius: 16px; object-fit: cover;
@@ -271,19 +233,11 @@ html[lang="en"] {
 @media(min-width: 640px) { .cat-banner-img { width: 160px; height: 160px; } }
 @media(min-width: 768px) { .cat-banner-img { width: 200px; height: 200px; } }
 .cat-banner-img-wrap {
-    width: 100%;
-    max-height: 320px;
-    overflow: hidden;
-    border-radius: 20px;
-    margin-bottom: 20px;
-    background: #f3f4f6;
+    width: 100%; max-height: 320px; overflow: hidden;
+    border-radius: 20px; margin-bottom: 20px; background: #f3f4f6;
 }
 .cat-banner-img-wrap img {
-    width: 100%;
-    height: 100%;
-    max-height: 320px;
-    object-fit: cover;
-    display: block;
+    width: 100%; height: 100%; max-height: 320px; object-fit: cover; display: block;
 }
 @media (max-width: 640px) {
     .cat-banner-img-wrap { max-height: 160px; border-radius: 14px; }
@@ -294,6 +248,7 @@ html[lang="en"] {
 
 @section('content')
 <div class="page-shop">
+
 {{-- ── Announcement banners ──────────────────────────────────────────── --}}
 @php
     $announcements = \App\Models\Announcement::where('is_active', true)
@@ -336,7 +291,6 @@ html[lang="en"] {
                 </svg>
             </button>
         </div>
-
         @php
         $sortOptions = [
             'featured'   => ['label' => __('app.sort_featured'),   'icon' => '⭐'],
@@ -345,7 +299,6 @@ html[lang="en"] {
             'newest'     => ['label' => __('app.sort_newest'),     'icon' => '🆕'],
         ];
         @endphp
-
         @foreach($sortOptions as $val => $opt)
         @php $isChosen = request('sort', 'featured') === $val; @endphp
         <a href="{{ request()->fullUrlWithQuery(['sort' => $val]) }}" onclick="closeSortDrawer()"
@@ -364,89 +317,67 @@ html[lang="en"] {
     </div>
 </div>
 
-
 @include('partials.bottombar')
-{{-- ════════════════════════════════════════════════════════════════════
-     PAGE BODY
-════════════════════════════════════════════════════════════════════════ --}}
+
 <div class="bg-gray-50 pb-bar md:pb-12" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <div class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
 
     {{-- ── Hero banners (top position) ─────────────────────────────── --}}
- @if(!$currentCategory)
+    @if(!$currentCategory)
     @php
         $banners = \App\Models\HeroBanner::where('is_active', true)->orderBy('sort_order')->get();
     @endphp
-
     @foreach($banners as $banner)
         @if($banner->position === 'top')
-          @php
-    $layout = $banner->layout ?? 'text_image';
-    $image = $banner->getFirstMediaUrl('banner_image');
-    $hasImage = !empty($image);
-    $isImageOnly = $layout === 'image_only';
-    $hasText = in_array($layout, ['text_image', 'text_only']);
-@endphp
-
-<div class="hero-banner mt-4 mb-5 reveal relative overflow-hidden"
-     style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
-
-    {{-- ✅ صورة فقط --}}
-    @if($isImageOnly && $hasImage)
-        <img src="{{ $image }}"
-             class="w-full h-40 sm:h-52 md:h-64 object-cover rounded-2xl">
-    @else
-
-        <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
-                    {{ $hasImage ? '' : 'justify-center text-center' }}">
-
-            {{-- ✅ النص --}}
-            @if($hasText)
-                <div class="{{ $hasImage ? 'flex-1 ' . ($isRtl ? 'text-right' : 'text-left') : 'max-w-xl mx-auto text-center' }}">
-
-                    @if($banner->badge)
-                        <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
-                              style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
-                            {{ $banner->badge }}
-                        </span>
-                    @endif
-
-                    <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
-                        style="color: {{ $banner->text_color ?? '#fff' }};">
-                        {{ $banner->title }}
-                        @if($banner->subtitle)
-                            <br><span>{{ $banner->subtitle }}</span>
+        @php
+            $layout   = $banner->layout ?? 'text_image';
+            $image    = $banner->getFirstMediaUrl('banner_image');
+            $hasImage = !empty($image);
+            $isImageOnly = $layout === 'image_only';
+            $hasText  = in_array($layout, ['text_image', 'text_only']);
+        @endphp
+        <div class="hero-banner mt-4 mb-5 reveal relative overflow-hidden"
+             style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
+            @if($isImageOnly && $hasImage)
+                <img src="{{ $image }}" class="w-full h-40 sm:h-52 md:h-64 object-cover rounded-2xl">
+            @else
+                <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
+                            {{ $hasImage ? '' : 'justify-center text-center' }}">
+                    @if($hasText)
+                    <div class="{{ $hasImage ? 'flex-1 ' . ($isRtl ? 'text-right' : 'text-left') : 'max-w-xl mx-auto text-center' }}">
+                        @if($banner->badge)
+                            <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
+                                  style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
+                                {{ $banner->badge }}
+                            </span>
                         @endif
-                    </h2>
-
-                    <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
-                       style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
-                        {{ $banner->description }}
-                    </p>
-
-                    <a href="{{ $banner->button_url ?? '#' }}"
-                       class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
-                       style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
-                        {{ $banner->button_text }}
-                    </a>
+                        <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
+                            style="color: {{ $banner->text_color ?? '#fff' }};">
+                            {{ $banner->title }}
+                            @if($banner->subtitle)<br><span>{{ $banner->subtitle }}</span>@endif
+                        </h2>
+                        <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
+                           style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
+                            {{ $banner->description }}
+                        </p>
+                        <a href="{{ $banner->button_url ?? '#' }}"
+                           class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
+                           style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
+                            {{ $banner->button_text }}
+                        </a>
+                    </div>
+                    @endif
+                    @if($hasImage && !$isImageOnly)
+                    <div class="w-32 sm:w-40 md:w-52 flex-shrink-0">
+                        <img src="{{ $image }}" class="w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+                    </div>
+                    @endif
                 </div>
             @endif
-
-            {{-- ✅ الصورة مع النص --}}
-            @if($hasImage && !$isImageOnly)
-                <div class="w-32 sm:w-40 md:w-52 flex-shrink-0">
-                    <img src="{{ $image }}"
-                         class="w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
-                </div>
-            @endif
-
         </div>
-
-    @endif
-</div>
         @endif
     @endforeach
-@endif
+    @endif
 
     {{-- ── Category grid ────────────────────────────────────────────── --}}
     @php
@@ -473,14 +404,12 @@ html[lang="en"] {
         </div>
 
         <div class="flex items-center gap-2">
-
-            {{-- Live search (Alpine.js) --}}
+            {{-- Live search --}}
             <div class="hidden sm:block relative"
                  x-data="liveSearch()"
                  x-init="init()"
                  @click.outside="close()"
                  @keydown.escape="close()">
-
                 <div class="relative">
                     <input
                         type="text"
@@ -507,7 +436,6 @@ html[lang="en"] {
                     </div>
                 </div>
 
-                {{-- Results dropdown --}}
                 <div x-show="isOpen && (results.length > 0 || query.length >= 2)"
                      x-transition:enter="transition ease-out duration-150"
                      x-transition:enter-start="opacity-0 translate-y-1 scale-98"
@@ -515,22 +443,17 @@ html[lang="en"] {
                      x-transition:leave="transition ease-in duration-100"
                      x-transition:leave-start="opacity-100"
                      x-transition:leave-end="opacity-0"
-                     class="search-dropdown"
-                     style="display:none">
-
+                     class="search-dropdown" style="display:none">
                     <template x-if="results.length === 0 && !loading && query.length >= 2">
                         <div class="px-4 py-6 text-center">
                             <p class="text-sm text-gray-400 font-medium"
                                x-text="'{{ addslashes(__('app.no_results', ['term' => ''])) }}'.replace(':term', query)"></p>
                         </div>
                     </template>
-
                     <template x-for="(item, index) in results" :key="item.id">
-                        <a :href="item.url"
-                           class="search-result-item"
+                        <a :href="item.url" class="search-result-item"
                            :class="activeIndex === index ? 'bg-gray-50' : ''"
-                           @mouseenter="activeIndex = index"
-                           @click="close()">
+                           @mouseenter="activeIndex = index" @click="close()">
                             <template x-if="item.image">
                                 <img :src="item.image" :alt="item.name" class="search-result-img">
                             </template>
@@ -548,28 +471,21 @@ html[lang="en"] {
                                     <span class="text-sm font-black tabular-nums"
                                           :style="item.is_on_sale ? 'color:var(--sale-red)' : 'color:#111827'"
                                           x-text="item.price_formatted"></span>
-                                    <span x-show="item.is_on_sale"
-                                          class="text-[10px] text-gray-400 line-through tabular-nums"
-                                          x-text="item.original_price"></span>
+                                    <span x-show="item.is_on_sale" class="text-[10px] text-gray-400 line-through tabular-nums" x-text="item.original_price"></span>
                                 </div>
                             </div>
-                            {{-- Arrow flips for LTR --}}
                             <svg class="w-4 h-4 text-gray-300 flex-shrink-0 {{ $isRtl ? '' : 'rotate-180' }}"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                             </svg>
                         </a>
                     </template>
-
                     <template x-if="results.length > 0">
                         <a :href="'{{ route('products.index') }}?search=' + encodeURIComponent(query)"
-                           class="flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold
-                                  bg-gray-50 hover:bg-gray-100 transition-colors"
-                           style="color:var(--brand-color)"
-                           @click="close()">
+                           class="flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold bg-gray-50 hover:bg-gray-100 transition-colors"
+                           style="color:var(--brand-color)" @click="close()">
                             {{ __('app.view_all_results') }} (<span x-text="results.length"></span>)
-                            <svg class="w-3.5 h-3.5 {{ $isRtl ? 'rotate-180' : '' }}"
-                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5 {{ $isRtl ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
                         </a>
@@ -577,7 +493,7 @@ html[lang="en"] {
                 </div>
             </div>
 
-            {{-- Desktop sort select --}}
+            {{-- Desktop sort --}}
             <div class="hidden sm:block">
                 <select onchange="window.location.href=this.value"
                         class="text-xs border border-gray-200 rounded-xl px-3 py-2 bg-white cursor-pointer outline-none focus:ring-2"
@@ -597,7 +513,7 @@ html[lang="en"] {
                 </select>
             </div>
 
-            {{-- Mobile sort button --}}
+            {{-- Mobile sort --}}
             <button onclick="openSortDrawer()"
                     class="flex sm:hidden items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-600 shadow-sm active:scale-95 transition-transform">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -608,12 +524,11 @@ html[lang="en"] {
         </div>
     </div>
 
-    {{-- ── Category banner image ────────────────────────────────────── --}}
+    {{-- ── Category banner ──────────────────────────────────────────── --}}
     @if($currentCategory && $currentCategory->shouldShowBanner())
     <div class="cat-banner-img-wrap reveal">
         <img src="{{ $currentCategory->getBannerImageUrl() }}"
-             alt="{{ $currentCategory->name }}"
-             loading="eager">
+             alt="{{ $currentCategory->name }}" loading="eager">
     </div>
     @endif
 
@@ -637,7 +552,6 @@ html[lang="en"] {
          DYNAMIC HOME SECTIONS
     ══════════════════════════════════════════════════════════════════ --}}
     @if(!$currentCategory && !request('search') && !request('sort'))
-
     @foreach($homeSections as $section)
     @php $sectionProducts = $section->resolveProducts(); @endphp
     @if($sectionProducts->isNotEmpty())
@@ -652,7 +566,6 @@ html[lang="en"] {
                 {{ __('app.view_all_arrow') }}
             </a>
         </div>
-
         <div class="featured-list">
             @foreach($sectionProducts as $sp)
             @php $spWishlisted = in_array($sp->id, $wishlistedIds ?? []); @endphp
@@ -734,9 +647,7 @@ html[lang="en"] {
                     <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
                         style="color: {{ $banner->text_color ?? '#fff' }};">
                         {{ $banner->title }}
-                        @if($banner->subtitle)
-                            <br><span style="color: {{ $banner->text_color ?? '#fff' }};">{{ $banner->subtitle }}</span>
-                        @endif
+                        @if($banner->subtitle)<br><span style="color: {{ $banner->text_color ?? '#fff' }};">{{ $banner->subtitle }}</span>@endif
                     </h2>
                     <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
                        style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
@@ -749,9 +660,9 @@ html[lang="en"] {
                     </a>
                 </div>
                 @if($hasImage)
-                    <div class="w-32 sm:w-40 md:w-52 flex-shrink-0 relative">
-                        <img src="{{ $image }}" class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
-                    </div>
+                <div class="w-32 sm:w-40 md:w-52 flex-shrink-0 relative">
+                    <img src="{{ $image }}" class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+                </div>
                 @endif
             </div>
         </div>
@@ -807,6 +718,8 @@ html[lang="en"] {
                 </span>
                 @endif
 
+                {{-- ✅ تم حذف overlay "نفذ المخزون" — المنتج يظهر طبيعياً دائماً --}}
+
                 <div class="absolute bottom-2 left-2 z-20 flex gap-1.5" onclick="event.stopPropagation()">
                     @auth
                     <button type="button" class="heart-btn wishlist-btn"
@@ -832,14 +745,6 @@ html[lang="en"] {
                         </svg>
                     </button>
                 </div>
-
-                @if(!$product->in_stock)
-                <div class="absolute inset-0 bg-white/55 z-10 flex items-end justify-center pb-3">
-                    <span class="bg-white/95 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full border border-gray-100 shadow-sm">
-                        {{ __('app.out_of_stock') }}
-                    </span>
-                </div>
-                @endif
             </div>
 
             <div class="px-2 pt-2 pb-2.5 flex flex-col gap-1 {{ $isRtl ? 'text-right' : 'text-left' }}">
@@ -886,7 +791,6 @@ html[lang="en"] {
 
 @push('scripts')
 <script>
-/* ── Sort drawer ──────────────────────────────────────────────────── */
 function openSortDrawer() {
     document.getElementById('sort-overlay').classList.add('open');
     document.getElementById('sort-drawer').classList.add('open');
@@ -898,7 +802,6 @@ function closeSortDrawer() {
     document.body.style.overflow = '';
 }
 
-/* ── Scroll-reveal ────────────────────────────────────────────────── */
 (function () {
     var targets = document.querySelectorAll('.reveal');
     if (!targets.length) return;
@@ -917,46 +820,32 @@ document.querySelectorAll('.pcard button, .featured-card button').forEach(functi
     btn.addEventListener('click', function(e) { e.stopPropagation(); });
 });
 
-/* ── Share product ────────────────────────────────────────────────── */
 function shareProduct(url, title) {
     var shareData = {
         title: title,
         text:  '{{ addslashes(__('app.share_text', ['name' => ''])) }}'.replace(':name', title),
         url:   url,
     };
-
     if (navigator.share) {
         navigator.share(shareData).catch(function(err) {
             if (err.name !== 'AbortError') console.warn('Share failed:', err);
         });
         return;
     }
-
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(function() {
             showShareToast('{{ __('app.share_copied') }}');
-        }).catch(function() {
-            showSharePrompt(url);
-        });
+        }).catch(function() { showSharePrompt(url); });
         return;
     }
-
     showSharePrompt(url);
 }
 
 function showShareToast(message) {
-    if (typeof Cart !== 'undefined' && Cart.toast) {
-        Cart.toast(message, 'success');
-        return;
-    }
+    if (typeof Cart !== 'undefined' && Cart.toast) { Cart.toast(message, 'success'); return; }
     var toast = document.createElement('div');
     toast.textContent = message;
-    toast.style.cssText = [
-        'position:fixed','top:20px','right:20px','z-index:9999',
-        'background:#111827','color:#fff','font-size:13px','font-weight:600',
-        'padding:10px 18px','border-radius:12px','box-shadow:0 8px 30px rgba(0,0,0,.2)',
-        'transition:opacity .3s','pointer-events:none'
-    ].join(';');
+    toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;background:#111827;color:#fff;font-size:13px;font-weight:600;padding:10px 18px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.2);transition:opacity .3s;pointer-events:none';
     document.body.appendChild(toast);
     setTimeout(function() { toast.style.opacity = '0'; }, 2000);
     setTimeout(function() { document.body.removeChild(toast); }, 2400);
@@ -966,46 +855,28 @@ function showSharePrompt(url) {
     window.prompt('{{ __('app.share_prompt') }}', url);
 }
 
-/* ── Alpine.js liveSearch component ──────────────────────────────── */
 document.addEventListener('alpine:init', function () {
     Alpine.data('liveSearch', function () {
         return {
             query: '', results: [], isOpen: false,
             loading: false, activeIndex: -1, timer: null,
-
             init() {},
-
             onInput() {
                 clearTimeout(this.timer);
                 this.activeIndex = -1;
-                if (this.query.length < 2) {
-                    this.results = [];
-                    this.isOpen  = false;
-                    return;
-                }
+                if (this.query.length < 2) { this.results = []; this.isOpen = false; return; }
                 this.timer = setTimeout(() => { this.fetch(); }, 280);
             },
-
             async fetch() {
-                this.loading = true;
-                this.isOpen  = true;
+                this.loading = true; this.isOpen = true;
                 try {
-                    var res  = await window.fetch('/api/search?q=' + encodeURIComponent(this.query), {
-                        headers: { 'Accept': 'application/json' },
-                    });
+                    var res  = await window.fetch('/api/search?q=' + encodeURIComponent(this.query), { headers: { 'Accept': 'application/json' } });
                     var data = await res.json();
                     this.results = data.results || [];
-                } catch (e) {
-                    console.warn('Live search error:', e);
-                    this.results = [];
-                } finally {
-                    this.loading = false;
-                }
+                } catch (e) { this.results = []; } finally { this.loading = false; }
             },
-
             open()  { this.isOpen = true; },
             close() { this.isOpen = false; this.activeIndex = -1; },
-
             moveDown() { if (this.activeIndex < this.results.length - 1) this.activeIndex++; },
             moveUp()   { if (this.activeIndex > 0) this.activeIndex--; },
             followActive() {
