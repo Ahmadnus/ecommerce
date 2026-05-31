@@ -720,7 +720,7 @@ function markForDeletion(mediaId) {
         input.disabled = false;
         wrapper.style.opacity = '0.3';
         wrapper.style.filter  = 'grayscale(1)';
-        wrapper.style.border  = '2px solid #dc2626';
+        wrapper.style.border  = '2px solid #dd1f1f';
     } else {
         input.disabled = true;
         wrapper.style.opacity = '1';
