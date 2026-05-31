@@ -123,6 +123,23 @@
         font-size: 13px;
         font-weight: 800;
     }
+    .variant-choice input:checked + span.text-swatch {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #000 !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,.12);
+    transform: scale(1.05);
+}
+
+.variant-choice input:checked + span.color-swatch {
+    border-color: #000 !important;
+    box-shadow: 0 0 0 2px #000 inset, 0 8px 20px rgba(0,0,0,.12) !important;
+    transform: scale(1.1);
+}
+
+.variant-choice input:checked + span.color-swatch .check-mark {
+    opacity: 1;
+}
 </style>
 @endpush
 
@@ -247,7 +264,7 @@
                        value="{{ old('name.en') }}"
                        dir="ltr"
                        class="cc-input"
-                       placeholder="Product name in English">
+                       placeholder="اسم المنتج بالإنجليزية">
                 @error('name.en')
                     <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                 @enderror
@@ -259,7 +276,7 @@
                           rows="5"
                           dir="ltr"
                           class="cc-input custom-scroll"
-                          placeholder="Product details and specs in English...">{{ old('description.en') }}</textarea>
+                          placeholder="تفاصيل ومواصفات المنتج بالإنجليزية...">{{ old('description.en') }}</textarea>
             </div>
 
             <div class="md:col-span-2">
@@ -268,7 +285,7 @@
                           rows="2"
                           dir="ltr"
                           class="cc-input"
-                          placeholder="Short description for product listings...">{{ old('short_description.en') }}</textarea>
+                          placeholder="وصف مختصر يظهر في قائمة المنتجات بالإنجليزية...">{{ old('short_description.en') }}</textarea>
             </div>
         </div>
     </div>
@@ -314,7 +331,7 @@
                                     <img id="img-preview" class="w-full h-full object-cover hidden" alt="">
                                     <div id="img-ph" class="text-center" style="color:#9ca3af;">
                                         <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.3;"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="1.5"/></svg>
-                                        <span class="text-[10px] font-bold uppercase tracking-widest">Cover</span>
+                                        <span class="text-[10px] font-bold uppercase tracking-widest">غلاف المنتج</span>
                                     </div>
                                 </div>
                                 <label class="absolute -bottom-2 -left-2 w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-lg transition-all active:scale-95" style="background:#000000;">
@@ -534,25 +551,38 @@
                 // reflect what the user had entered before the failed submit.
                 const checked  = selectedAVIds.includes(Number(v.id)) ? 'checked' : '';
 
-                options += `
-                    <label class="cursor-pointer group relative">
-                        <input type="checkbox"
-                               name="variants[${i}][attribute_values][]"
-                               value="${v.id}"
-                               ${checked}
-                               class="sr-only peer">
-                        <span class="${isColor
-                            ? 'w-9 h-9 rounded-full block border-2 peer-checked:border-black peer-checked:ring-2 peer-checked:ring-black peer-checked:ring-offset-2'
-                            : 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all border-2 peer-checked:border-black peer-checked:bg-black peer-checked:text-white'}
-                            transition-all flex items-center justify-center text-center"
-                            style="${isColor
-                                ? 'background-color:' + v.color_hex + '; border-color:#d1d5db;'
-                                : 'background:#f3f4f6; border:1px solid #e5e7eb; color:#374151;'}"
-                            title="${v.label}">
-                            ${isColor ? '' : v.label}
-                        </span>
-                    </label>
-                `;
+           options += `
+    <label class="cursor-pointer group relative variant-choice inline-flex">
+        <input
+            type="radio"
+            name="variants[${i}][attributes][${attr.id}]"
+            value="${v.id}"
+            class="sr-only peer"
+            ${checked}
+        >
+
+        <span
+            class="${isColor
+                ? 'color-swatch relative w-9 h-9 rounded-full block border-2 transition-all duration-200 overflow-hidden'
+                : 'text-swatch relative px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 border-2'} 
+            flex items-center justify-center text-center"
+            style="${isColor
+                ? 'background-color:' + (v.color_hex || '#ffffff') + '; border-color:#d1d5db;'
+                : 'background:#f3f4f6; border:1px solid #e5e7eb; color:#374151;'}"
+            title="${v.label}">
+
+            ${isColor ? `
+                <span class="check-mark absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-200">
+                    <svg class="w-4 h-4 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </span>
+            ` : `
+                ${v.label}
+            `}
+        </span>
+    </label>
+`;
             });
 
             attrHTML += `

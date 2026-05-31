@@ -106,6 +106,74 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
     transition:border-color .15s;
 }
 .variant-card:hover { border-color:#9ca3af; }
+
+/* ── Attribute swatches ───────────────────────────────────────── */
+.variant-choice { display:inline-flex; }
+.variant-choice input { position:absolute; opacity:0; width:0; height:0; }
+
+/* Text swatches */
+.text-swatch {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:6px 14px;
+    border-radius:8px;
+    font-size:11.5px;
+    font-weight:700;
+    border:2px solid #e5e7eb;
+    background:#f3f4f6;
+    color:#374151;
+    cursor:pointer;
+    user-select:none;
+    transition:background .15s, color .15s, border-color .15s,
+               box-shadow .15s, transform .12s;
+    white-space:nowrap;
+}
+.text-swatch:hover {
+    border-color:#9ca3af;
+    background:#ececec;
+}
+.variant-choice input:checked + .text-swatch {
+    background:#000000 !important;
+    color:#ffffff !important;
+    border-color:#000000 !important;
+    box-shadow:0 8px 20px rgba(0,0,0,.12);
+    transform:scale(1.05);
+}
+
+/* Color swatches */
+.color-swatch {
+    position:relative;
+    display:block;
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    border:2px solid #d1d5db;
+    cursor:pointer;
+    transition:border-color .15s, box-shadow .15s, transform .12s;
+    overflow:hidden;
+}
+.color-swatch:hover {
+    border-color:#9ca3af;
+    transform:scale(1.08);
+}
+.variant-choice input:checked + .color-swatch {
+    border-color:#000000 !important;
+    box-shadow:0 0 0 2px #000000 inset, 0 8px 20px rgba(0,0,0,.15) !important;
+    transform:scale(1.12);
+}
+.color-swatch .check-mark {
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    transition:opacity .15s;
+}
+.variant-choice input:checked + .color-swatch .check-mark {
+    opacity:1;
+}
 </style>
 @endpush
 
@@ -184,7 +252,7 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
             <div>
                 <label class="cc-label">اسم المنتج (EN) <span style="color:#dc2626;">*</span></label>
                 <input type="text" name="name[en]"
-                       value="{{ old('name.en', $product->getTranslation('name', 'en')) }}" 
+                       value="{{ old('name.en', $product->getTranslation('name', 'en')) }}" required
                        class="cc-input @error('name.en') has-error @enderror">
                 @error('name.en')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -496,24 +564,47 @@ function buildVariantRowHTML(i, prefill) {
     let attrHTML = '';
     attrs.forEach(function(attr) {
         let valsHTML = '';
-        if (attr.type === 'color') {
-            attr.values.forEach(function(v) {
-                const chk = selected.includes(Number(v.id)) ? 'checked' : '';
-                valsHTML += `<label class="cursor-pointer" title="${v.label||v.value}">
-                    <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" ${chk} class="sr-only peer">
-                    <span class="inline-flex w-8 h-8 rounded-full border-2 border-transparent peer-checked:border-gray-900 peer-checked:scale-110 hover:scale-105 transition-all" style="background:${v.color_hex||'#888'}"></span>
-                </label>`;
-            });
-        } else {
-            attr.values.forEach(function(v) {
-                const chk = selected.includes(Number(v.id)) ? 'checked' : '';
-                valsHTML += `<label class="cursor-pointer">
-                    <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" ${chk} class="sr-only peer">
-                    <span class="inline-block px-3 py-1.5 text-xs font-semibold rounded-lg transition-all select-none" style="border:1px solid #e5e7eb; background:#f9fafb; color:#374151;" onmouseover="this.style.borderColor='#000'" onmouseout="this.style.borderColor='#e5e7eb'">${v.label||v.value}</span>
-                </label>`;
-            });
-        }
-        attrHTML += `<div><p class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color:#6b7280;">${attr.name}</p><div class="flex flex-wrap gap-2">${valsHTML}</div></div>`;
+        const isColor = attr.type === 'color';
+
+        attr.values.forEach(function(v) {
+            const chk   = selected.includes(Number(v.id)) ? 'checked' : '';
+            const label = v.label || v.value || '';
+
+            if (isColor) {
+                // ── Color swatch ──────────────────────────────────────────
+                valsHTML += `
+<label class="variant-choice cursor-pointer" title="${label}">
+    <input type="checkbox"
+           name="variants[${i}][attribute_values][]"
+           value="${v.id}"
+           ${chk}>
+    <span class="color-swatch"
+          style="background:${v.color_hex || '#888888'};">
+        <span class="check-mark">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 13l4 4L19 7"/>
+            </svg>
+        </span>
+    </span>
+</label>`;
+            } else {
+                // ── Text swatch ───────────────────────────────────────────
+                valsHTML += `
+<label class="variant-choice cursor-pointer">
+    <input type="checkbox"
+           name="variants[${i}][attribute_values][]"
+           value="${v.id}"
+           ${chk}>
+    <span class="text-swatch">${label}</span>
+</label>`;
+            }
+        });
+
+        attrHTML += `
+<div>
+    <p class="text-[10px] font-bold uppercase tracking-widest mb-2.5" style="color:#6b7280;">${attr.name}</p>
+    <div class="flex flex-wrap gap-2">${valsHTML}</div>
+</div>`;
     });
 
     return `<div class="variant-card" data-idx="${i}">
