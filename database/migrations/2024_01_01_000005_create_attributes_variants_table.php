@@ -39,7 +39,7 @@ return new class extends Migration
             $table->string('sku')->unique();
             $table->decimal('price_override', 10, 2)->nullable()
                   ->comment('NULL = inherit product base_price');
-            $table->unsignedInteger('stock_quantity')->default(10);
+            $table->unsignedInteger('stock_quantity')->default(0);
             $table->string('variant_image')->nullable()
                   ->comment('storage/ relative path');
             $table->boolean('is_active')->default(true);

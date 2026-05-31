@@ -123,26 +123,6 @@
         font-size: 13px;
         font-weight: 800;
     }
-    .variant-choice input:checked + span.text-swatch {
-    background: #000 !important;
-    color: #fff !important;
-    border-color: #000 !important;
-    box-shadow: 0 8px 20px rgba(0,0,0,.12);
-    transform: scale(1.05);
-}
-
-.variant-choice input:checked + span.color-swatch {
-    border-color: #000 !important;
-    box-shadow: 0 0 0 2px #000 inset, 0 8px 20px rgba(0,0,0,.12) !important;
-    transform: scale(1.1);
-}
-
-.variant-choice input:checked + span.color-swatch .check-mark {
-    opacity: 1;
-}
-.variant-card .grid.grid-cols-1.md\:grid-cols-3.gap-5 > div:first-child {
-    display: none !important;
-}
 </style>
 @endpush
 
@@ -190,6 +170,8 @@
             <div class="lg:col-span-8 space-y-10">
                 
                 {{-- 01: Information --}}
+{{-- Replace section 01 (المعلومات الأساسية) with this: --}}
+
 <div class="cc-card p-8 md:p-10">
     <div class="flex items-center gap-4 mb-10 pb-4" style="border-bottom:1px solid #f3f4f6;">
         <div class="section-number">01</div>
@@ -229,6 +211,7 @@
                 <input type="text"
                        name="name[ar]"
                        value="{{ old('name.ar') }}"
+                       
                        dir="rtl"
                        class="cc-input"
                        placeholder="اسم المنتج بالعربية">
@@ -267,7 +250,7 @@
                        value="{{ old('name.en') }}"
                        dir="ltr"
                        class="cc-input"
-                       placeholder="اسم المنتج بالإنجليزية">
+                       placeholder="Product name in English">
                 @error('name.en')
                     <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                 @enderror
@@ -279,7 +262,7 @@
                           rows="5"
                           dir="ltr"
                           class="cc-input custom-scroll"
-                          placeholder="تفاصيل ومواصفات المنتج بالإنجليزية...">{{ old('description.en') }}</textarea>
+                          placeholder="Product details and specs in English...">{{ old('description.en') }}</textarea>
             </div>
 
             <div class="md:col-span-2">
@@ -288,12 +271,12 @@
                           rows="2"
                           dir="ltr"
                           class="cc-input"
-                          placeholder="وصف مختصر يظهر في قائمة المنتجات بالإنجليزية...">{{ old('short_description.en') }}</textarea>
+                          placeholder="Short description for product listings...">{{ old('short_description.en') }}</textarea>
             </div>
         </div>
     </div>
 
-    {{-- Price fields --}}
+    {{-- Price fields (not translatable — stay unchanged) --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2 pt-8 border-t border-gray-50">
         <div>
             <label class="cc-label">السعر الأساسي ($)</label>
@@ -334,7 +317,7 @@
                                     <img id="img-preview" class="w-full h-full object-cover hidden" alt="">
                                     <div id="img-ph" class="text-center" style="color:#9ca3af;">
                                         <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.3;"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="1.5"/></svg>
-                                        <span class="text-[10px] font-bold uppercase tracking-widest">غلاف المنتج</span>
+                                        <span class="text-[10px] font-bold uppercase tracking-widest">Cover</span>
                                     </div>
                                 </div>
                                 <label class="absolute -bottom-2 -left-2 w-11 h-11 rounded-xl flex items-center justify-center cursor-pointer shadow-lg transition-all active:scale-95" style="background:#000000;">
@@ -402,21 +385,21 @@
                         <label class="flex items-center justify-between p-4 rounded-xl cursor-pointer transition-colors" style="background:#f9fafb; border:1px solid #e5e7eb;" onmouseover="this.style.borderColor='#d1d5db'" onmouseout="this.style.borderColor='#e5e7eb'">
                             <span class="text-sm font-bold" style="color:#000000;">تفعيل المنتج للعملاء</span>
                             <div class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }} class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-300 rounded-full peer 
-                                            peer-checked:bg-green-600 
-                                            peer-checked:after:translate-x-full 
-                                            after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
-                                            after:bg-white after:rounded-full after:h-5 after:w-5 
-                                            after:transition-all transition-colors"></div>
-                            </div>
+    <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }} class="sr-only peer">
+    <div class="w-11 h-6 bg-gray-300 rounded-full peer 
+                peer-checked:bg-green-600 
+                peer-checked:after:translate-x-full 
+                after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                after:bg-white after:rounded-full after:h-5 after:w-5 
+                after:transition-all transition-colors"></div>
+</div>
                         </label>
                         <label class="flex items-center justify-between p-4 rounded-xl cursor-pointer transition-colors" style="background:#f9fafb; border:1px solid #e5e7eb;" onmouseover="this.style.borderColor='#d1d5db'" onmouseout="this.style.borderColor='#e5e7eb'">
                             <span class="text-sm font-bold" style="color:#000000;">تمييز كمنتج مميز ⭐</span>
-                            <div class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_featured" value="1" class="sr-only peer" {{ old('is_featured') ? 'checked' : '' }}>
-                                <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all transition-colors"></div>
-                            </div>
+                          <div class="relative inline-flex items-center cursor-pointer">
+    <input type="checkbox" name="is_featured" value="1" class="sr-only peer" {{ old('is_featured') ? 'checked' : '' }}>
+    <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all transition-colors"></div>
+</div>
                         </label>
                     </div>
                 </div>
@@ -428,26 +411,18 @@
                         @foreach($categories as $root)
                         <div class="p-4 rounded-xl" style="background:#f9fafb; border:1px solid #e5e7eb;">
                             <div class="flex items-center gap-3.5">
-                                <input type="checkbox" name="category_ids[]" value="{{ $root->id }}" id="cat-{{ $root->id }}"
-                                       {{ in_array($root->id, old('category_ids', [])) ? 'checked' : '' }}
-                                       class="w-5 h-5 rounded-md accent-gray-900">
+                                <input type="checkbox" name="category_ids[]" value="{{ $root->id }}" id="cat-{{ $root->id }}" class="w-5 h-5 rounded-md accent-gray-900">
                                 <label for="cat-{{ $root->id }}" class="text-sm font-extrabold flex-1 cursor-pointer" style="color:#000000;">{{ $root->name }}</label>
-                                <input type="radio" name="primary_category_id" value="{{ $root->id }}"
-                                       {{ old('primary_category_id') == $root->id ? 'checked' : '' }}
-                                       class="w-4 h-4 accent-gray-900" title="تعيين كأساسي">
+                                <input type="radio" name="primary_category_id" value="{{ $root->id }}" class="w-4 h-4 accent-gray-900" title="تعيين كأساسي">
                             </div>
 
                             @if($root->allActiveChildren->count() > 0)
                             <div class="mt-4 mr-7 space-y-3.5 pr-4" style="border-right:1px solid #e5e7eb;">
                                 @foreach($root->allActiveChildren as $sub)
                                 <div class="flex items-center gap-3 group">
-                                    <input type="checkbox" name="category_ids[]" value="{{ $sub->id }}" id="cat-{{ $sub->id }}"
-                                           {{ in_array($sub->id, old('category_ids', [])) ? 'checked' : '' }}
-                                           class="w-4 h-4 rounded accent-gray-900">
+                                    <input type="checkbox" name="category_ids[]" value="{{ $sub->id }}" id="cat-{{ $sub->id }}" class="w-4 h-4 rounded accent-gray-900">
                                     <label for="cat-{{ $sub->id }}" class="text-xs font-bold cursor-pointer flex-1 transition-colors" style="color:#6b7280;" onmouseover="this.style.color='#000'" onmouseout="this.style.color='#6b7280'">{{ $sub->name }}</label>
-                                    <input type="radio" name="primary_category_id" value="{{ $sub->id }}"
-                                           {{ old('primary_category_id') == $sub->id ? 'checked' : '' }}
-                                           class="w-3 h-3 accent-gray-900">
+                                    <input type="radio" name="primary_category_id" value="{{ $sub->id }}" class="w-3 h-3 accent-gray-900">
                                 </div>
                                 @endforeach
                             </div>
@@ -472,11 +447,6 @@
 </div>
 
 <script>
-    {{-- ─────────────────────────────────────────────────────────────────────
-         FIX: Inject old('variants') as a PHP-side JSON variable so the JS
-         variant-seeding logic can restore all user-entered rows after a
-         failed validation redirect.  Falls back to [] on a fresh page load.
-    ──────────────────────────────────────────────────────────────────────── --}}
     window.ATTRIBUTES = {!! json_encode($attributes->map(fn($a) => [
         'id'     => $a->id,
         'name'   => $a->name,
@@ -487,24 +457,8 @@
             'color_hex' => $v->color_hex,
         ])
     ])) !!};
-
-    {{-- OLD_VARIANTS: populated by Laravel's old() after a validation failure,
-         empty array on a fresh GET request. --}}
-    window.OLD_VARIANTS = {!! json_encode(
-        collect(old('variants', []))->map(function ($v) {
-            return [
-                'stock_quantity'  => $v['stock_quantity']  ?? 0,
-                'price_override'  => $v['price_override']  ?? '',
-                'sku'             => $v['sku']              ?? '',
-                // attribute_values come in as an array of string IDs from the POST
-                'attribute_values'=> array_map('intval', $v['attribute_values'] ?? []),
-            ];
-        })->values()->toArray()
-    ) !!};
-
     window.variantIndex = 0;
 
-    // ── image helpers ──────────────────────────────────────────────────────
     function previewMainImg(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -521,7 +475,7 @@
         const container = document.getElementById('multi-preview');
         container.innerHTML = ''; 
         if (input.files) {
-            Array.from(input.files).forEach((file) => {
+            Array.from(input.files).forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const html = `
@@ -539,133 +493,85 @@
         }
     }
 
-    // ── variant builder ────────────────────────────────────────────────────
-    function buildVariantRowHTML(i, prefill) {
-        prefill = prefill || {};
-        // Normalise attribute_values to an array of integers for easy lookup
-        const selectedAVIds = (prefill.attribute_values || []).map(Number);
-
-        let attrHTML = '';
-        window.ATTRIBUTES.forEach(function(attr) {
-            let options = '';
-            attr.values.forEach(function(v) {
-                const isColor  = attr.type === 'color';
-                // FIX: check against restored selectedAVIds so checkboxes
-                // reflect what the user had entered before the failed submit.
-                const checked  = selectedAVIds.includes(Number(v.id)) ? 'checked' : '';
-
-           options += `
-    <label class="cursor-pointer group relative variant-choice inline-flex">
-        <input
-            type="radio"
-            name="variants[${i}][attributes][${attr.id}]"
-            value="${v.id}"
-            class="sr-only peer"
-            ${checked}
-        >
-
-        <span
-            class="${isColor
-                ? 'color-swatch relative w-9 h-9 rounded-full block border-2 transition-all duration-200 overflow-hidden'
-                : 'text-swatch relative px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 border-2'} 
-            flex items-center justify-center text-center"
-            style="${isColor
-                ? 'background-color:' + (v.color_hex || '#ffffff') + '; border-color:#d1d5db;'
-                : 'background:#f3f4f6; border:1px solid #e5e7eb; color:#374151;'}"
-            title="${v.label}">
-
-            ${isColor ? `
-                <span class="check-mark absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-200">
-                    <svg class="w-4 h-4 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                </span>
-            ` : `
-                ${v.label}
-            `}
-        </span>
-    </label>
-`;
-            });
-
-            attrHTML += `
-                <div class="mb-7 last:mb-0">
-                    <p class="text-[10px] font-black mb-3.5 uppercase tracking-widest" style="color:#6b7280;">${attr.name}</p>
-                    <div class="flex flex-wrap gap-3">${options}</div>
-                </div>
-            `;
-        });
-
-        return `
-            <div class="flex justify-between items-center mb-6 pb-4" style="border-bottom:1px solid #f3f4f6;">
-                <div class="flex items-center gap-3.5">
-                    <span class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black" style="background:#000000; color:#ffffff; font-family:'JetBrains Mono',monospace;">#${i + 1}</span>
-                    <h4 class="text-base font-bold" style="color:#000000;">تخصيص خيارات المتغير</h4>
-                </div>
-                <button type="button" onclick="this.closest('.variant-card').remove(); checkVariantsEmpty();" class="transition-colors p-1" style="color:#9ca3af;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#9ca3af'">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round"/></svg>
-                </button>
-            </div>
-
-            <div class="p-5 rounded-xl mb-7" style="background:#ffffff; border:1px solid #f3f4f6;">
-                ${attrHTML}
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div>
-                    <label class="cc-label">الكمية في المخزن</label>
-                    <input type="number" name="variants[${i}][stock_quantity]"
-                           value="${prefill.stock_quantity !== undefined ? prefill.stock_quantity : 0}"
-                           class="cc-input py-3 text-sm">
-                </div>
-                <div>
-                    <label class="cc-label">سعر المتغير (اختياري)</label>
-                    <input type="number" step="0.01" name="variants[${i}][price_override]"
-                           value="${prefill.price_override || ''}"
-                           class="cc-input py-3 text-sm" placeholder="يجاوز السعر الأساسي">
-                </div>
-                <div>
-                    <label class="cc-label">رمز SKU الخاص</label>
-                    <input type="text" name="variants[${i}][sku]"
-                           value="${prefill.sku || ''}"
-                           class="cc-input py-3 text-sm font-mono" placeholder="يترك للتوليد التلقائي" style="font-family:'JetBrains Mono',monospace; color:#6b7280;">
-                </div>
-            </div>
-        `;
-    }
-
-    function addVariantRow(prefill) {
-        const container  = document.getElementById('variants-container');
+    function addVariantRow() {
+        const container = document.getElementById('variants-container');
         const emptyState = document.getElementById('variants-empty');
         if (emptyState) emptyState.style.display = 'none';
 
-        const i   = window.variantIndex++;
+        const i = window.variantIndex++;
         const row = document.createElement('div');
-        row.className  = 'variant-card p-6 rounded-xl relative transition-all';
-        row.style.cssText = 'background:#fafafa; border:1px solid #e5e7eb;';
-        row.innerHTML  = buildVariantRowHTML(i, prefill || {});
+        row.className = "variant-card p-6 rounded-xl relative transition-all";
+        row.style.cssText = "background:#fafafa; border:1px solid #e5e7eb;";
+        row.innerHTML = buildVariantRowHTML(i);
         container.appendChild(row);
     }
+    function buildVariantRowHTML(i) {
+    let attrHTML = '';
+    window.ATTRIBUTES.forEach(attr => {
+        let options = '';
+        attr.values.forEach(v => {
+            const isColor = attr.type === 'color';
+            
+            // هنا حافظنا على منطق البوردر الأسود للعنصر المختار فقط
+            options += `
+                <label class="cursor-pointer group relative">
+                    <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" class="sr-only peer">
+                    
+                    <span class="${isColor 
+                        ? 'w-9 h-9 rounded-full block border-2 peer-checked:border-black peer-checked:ring-2 peer-checked:ring-black peer-checked:ring-offset-2' 
+                        : 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all border-2 peer-checked:border-black peer-checked:bg-black peer-checked:text-white'} 
+                        transition-all flex items-center justify-center text-center" 
+                        
+                        style="${isColor 
+                            ? 'background-color:' + v.color_hex + '; border-color:#d1d5db;' 
+                            : 'background:#f3f4f6; border:1px solid #e5e7eb; color:#374151;'}" 
+                        title="${v.label}">
+                        
+                        ${isColor ? '' : v.label}
+                    </span>
+                </label>
+            `;
+        });
 
-    function checkVariantsEmpty() {
-        const empty = !document.querySelectorAll('.variant-card').length;
-        const el    = document.getElementById('variants-empty');
-        if (el) el.style.display = empty ? '' : 'none';
-    }
-
-    // ── DOMContentLoaded: restore state ────────────────────────────────────
-    document.addEventListener('DOMContentLoaded', function () {
-        // FIX: If the user had already entered variants before the form
-        // failed validation, OLD_VARIANTS will contain their data.
-        // Seed those rows back so nothing is lost.
-        if (window.OLD_VARIANTS && window.OLD_VARIANTS.length > 0) {
-            window.OLD_VARIANTS.forEach(function (v) {
-                addVariantRow(v);
-            });
-        } else {
-            // Fresh page load — show empty state
-            checkVariantsEmpty();
-        }
+        attrHTML += `
+            <div class="mb-7 last:mb-0">
+                <p class="text-[10px] font-black mb-3.5 uppercase tracking-widest" style="color:#6b7280;">${attr.name}</p>
+                <div class="flex flex-wrap gap-3">${options}</div>
+            </div>
+        `;
     });
+
+    // العودة لاستخدام كلاساتك الأصلية (cc-input, cc-label) لضمان عدم خراب التصميم
+    return `
+        <div class="flex justify-between items-center mb-6 pb-4" style="border-bottom:1px solid #f3f4f6;">
+            <div class="flex items-center gap-3.5">
+                <span class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black" style="background:#000000; color:#ffffff; font-family:'JetBrains Mono',monospace;">#${i + 1}</span>
+                <h4 class="text-base font-bold" style="color:#000000;">تخصيص خيارات المتغير</h4>
+            </div>
+            <button type="button" onclick="this.closest('.variant-card').remove()" class="transition-colors p-1" style="color:#9ca3af;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#9ca3af'">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+
+        <div class="p-5 rounded-xl mb-7" style="background:#ffffff; border:1px solid #f3f4f6;">
+            ${attrHTML}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+                <label class="cc-label">الكمية في المخزن</label>
+                <input type="number" name="variants[${i}][stock_quantity]" value="0" class="cc-input py-3 text-sm">
+            </div>
+            <div>
+                <label class="cc-label">سعر المتغير (اختياري)</label>
+                <input type="number" step="0.01" name="variants[${i}][price_override]" class="cc-input py-3 text-sm" placeholder="يجاوز السعر الأساسي">
+            </div>
+            <div>
+                <label class="cc-label">رمز SKU الخاص</label>
+                <input type="text" name="variants[${i}][sku]" class="cc-input py-3 text-sm font-mono" placeholder="يترك للتوليد التلقائي" style="font-family:'JetBrains Mono',monospace; color:#6b7280;">
+            </div>
+        </div>
+    `;
+}
 </script>
 @endsection

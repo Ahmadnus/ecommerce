@@ -86,6 +86,11 @@
 }
 
 /* ─── Dynamic features grid ────────────────────────────────────────────── */
+/*
+   Keeps the same grid-cols-3 layout the static version had.
+   Each cell matches the app's design system (white bg, brand icon bubble,
+   consistent border-radius, gray typography scale).
+*/
 .features-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -104,6 +109,7 @@
 }
 .feature-cell:last-child { border-right: none; }
 
+/* RTL: reverse the border direction */
 [dir="rtl"] .feature-cell             { border-right: none; border-left: 1px solid #f3f4f6; }
 [dir="rtl"] .feature-cell:last-child  { border-left: none; }
 
@@ -128,8 +134,8 @@
     <x-floating-button :number="$floatingLink->whatsapp_number" />
 @endif
 
-@include('partials.bottombar')
 
+@include('partials.bottombar')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -272,7 +278,7 @@
                 @endif
             </div>
 
-            {{-- Stock indicator — عرض فقط بدون منع الشراء --}}
+            {{-- Stock indicator --}}
             <div id="stock-status" class="flex items-center gap-2 mb-5">
                 @if($product->in_stock)
                 <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0"></div>
@@ -280,8 +286,8 @@
                     {{ __('app.in_stock', ['qty' => $product->total_stock]) }}
                 </span>
                 @else
-                <div class="w-2.5 h-2.5 rounded-full bg-orange-400 flex-shrink-0"></div>
-                <span class="text-sm text-orange-600 font-medium">
+                <div class="w-2.5 h-2.5 rounded-full bg-red-400 flex-shrink-0"></div>
+                <span class="text-sm text-red-600 font-medium">
                     {{ __('app.out_of_stock_full') }}
                 </span>
                 @endif
@@ -372,6 +378,7 @@
                                   d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
                                   clip-rule="evenodd"/>
                         </svg>
+                        {{-- Baked in at render time; attrName is already locale-aware (Phase 2) --}}
                         {{ __('app.attr_required', ['attr' => $attrName]) }}
                     </p>
                 </div>
@@ -392,13 +399,15 @@
 
             @endif {{-- /variants --}}
 
-            {{-- ── Qty + CTA — دائماً ظاهر بغض النظر عن الـ stock ── --}}
+            {{-- Qty + CTA --}}
+            @if($product->in_stock)
             <div class="flex items-center gap-3 mb-6 mt-2">
                 <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden flex-shrink-0">
                     <button type="button" onclick="adjustQty(-1)"
                             class="w-10 h-12 flex items-center justify-center text-gray-600
                                    hover:bg-gray-50 transition-colors text-xl select-none">−</button>
-                    <input id="qty-input" type="number" value="1" min="1"
+                    <input id="qty-input" type="number" value="1"
+                           min="1" max="{{ $product->total_stock }}"
                            class="w-12 h-12 text-center border-x border-gray-200
                                   text-sm font-bold focus:outline-none">
                     <button type="button" onclick="adjustQty(1)"
@@ -420,6 +429,11 @@
                     {{ __('app.add_to_cart') }}
                 </button>
             </div>
+            @else
+            <div class="bg-gray-100 text-gray-500 text-center py-4 rounded-xl mb-6 font-medium text-sm">
+                {{ __('app.product_unavailable') }}
+            </div>
+            @endif
 
             {{-- Site features (dynamic, DB-driven) --}}
             @php $siteFeatures = \App\Models\SiteFeature::active()->get(); @endphp
@@ -492,6 +506,10 @@
 
 @push('scripts')
 <script>
+/*
+ * All locale strings baked in at server render time.
+ * JS never needs to know the current locale — it just reads I18N.
+ */
 var I18N = {
     inStock:           "{{ __('app.stock_in_js') }}",
     outOfStock:        "{{ __('app.stock_out_js') }}",
@@ -507,17 +525,18 @@ var I18N = {
     variantSkuPrefix:  "{{ __('app.variant_sku_prefix') }}",
 };
 
-var MAX_QTY         = {{ (int) $product->total_stock }};
+var MAX_QTY      = {{ (int) $product->total_stock }};
 var selectedVariant = null;
 
 window.REQUIRED_ATTRS = (window.REQUIRED_ATTRS || []).map(String);
 window.SEL_AVS = {};
 
-/* ── Qty — بلا حد أقصى من الـ stock ────────────────────────────── */
+/* ── Qty ────────────────────────────────────────────────────────── */
 function adjustQty(delta) {
-    var input   = document.getElementById('qty-input');
+    var input  = document.getElementById('qty-input');
+    var maxQty = selectedVariant ? selectedVariant.stock : MAX_QTY;
     var current = parseInt(input.value || 1);
-    input.value = Math.max(1, current + delta);
+    input.value = Math.max(1, Math.min(maxQty, current + delta));
 }
 
 /* ── Gallery ────────────────────────────────────────────────────── */
@@ -552,7 +571,7 @@ function selectOption(btn) {
     resolveVariant();
 }
 
-/* ── Resolve variant — بدون تعطيل الزر عند stock=0 ─────────────── */
+/* ── Resolve variant ────────────────────────────────────────────── */
 function resolveVariant() {
     var selectedIds = Object.values(window.SEL_AVS).map(Number);
     if (!selectedIds.length) return;
@@ -578,27 +597,35 @@ function resolveVariant() {
             }).format(converted) + ' ' + (window.CURRENCY_SYMBOL || '');
     }
 
-    /* Stock badge — عرض فقط، لا يمنع الشراء */
+    /* Stock badge — uses I18N object, no hardcoded Arabic */
     var stockEl = document.getElementById('stock-status');
     if (stockEl && match) {
         stockEl.innerHTML = match.stock > 0
             ? '<div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>' +
               '<span class="text-sm text-emerald-700 font-medium">' +
                   I18N.inStock + ' (' + match.stock + ')</span>'
-            : '<div class="w-2.5 h-2.5 rounded-full bg-orange-400"></div>' +
-              '<span class="text-sm text-orange-600 font-medium">' + I18N.outOfStock + '</span>';
+            : '<div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>' +
+              '<span class="text-sm text-red-600 font-medium">' + I18N.outOfStock + '</span>';
     }
 
     /* SKU */
     var skuEl = document.getElementById('variant-sku');
     if (skuEl) skuEl.textContent = match ? I18N.variantSkuPrefix + match.sku : '';
 
-    /* الزر دائماً مفعّل بغض النظر عن الـ stock */
+    /* Qty cap */
+    var qtyInput = document.getElementById('qty-input');
+    if (qtyInput && match) {
+        qtyInput.max   = match.stock;
+        qtyInput.value = Math.min(parseInt(qtyInput.value || 1), match.stock || 1);
+    }
+
+    /* Cart button state */
     var cartBtn = document.getElementById('add-to-cart-btn');
     if (cartBtn) {
-        cartBtn.disabled      = false;
-        cartBtn.style.opacity = '1';
-        cartBtn.style.cursor  = 'pointer';
+        var disabled = match && match.stock <= 0;
+        cartBtn.disabled     = disabled;
+        cartBtn.style.opacity = disabled ? '0.4' : '1';
+        cartBtn.style.cursor  = disabled ? 'not-allowed' : 'pointer';
     }
 
     if (match && match.image_url) switchImage(match.image_url, null);
@@ -646,10 +673,8 @@ function validateSelections() {
     return true;
 }
 
-/* ── Add to cart — بدون تحقق من الـ stock ──────────────────────── */
+/* ── Add to cart ────────────────────────────────────────────────── */
 function addToCart() {
-    if (!validateSelections()) return;
-
     var btn             = document.getElementById('add-to-cart-btn');
     var qty             = parseInt(document.getElementById('qty-input').value) || 1;
     var originalContent = btn.innerHTML;
@@ -659,9 +684,10 @@ function addToCart() {
 
     var payload = {
         product_id: "{{ $product->id }}",
-        quantity:   qty,
+        quantity: qty,
     };
 
+    // أرسل variant_id فقط إذا كان موجود فعلاً
     if (selectedVariant && selectedVariant.id) {
         payload.variant_id = selectedVariant.id;
     }
@@ -669,17 +695,19 @@ function addToCart() {
     fetch("{{ route('cart.add') }}", {
         method: 'POST',
         headers: {
-            'Content-Type':  'application/json',
-            'X-CSRF-TOKEN':  "{{ csrf_token() }}",
-            'Accept':        'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': "{{ csrf_token() }}",
+            'Accept': 'application/json',
         },
         body: JSON.stringify(payload),
     })
     .then(async function (response) {
         var data = await response.json();
+
         if (!response.ok) {
             throw new Error(data.message || (response.status === 422 ? I18N.cartError : I18N.serverError));
         }
+
         return data;
     })
     .then(function () {
