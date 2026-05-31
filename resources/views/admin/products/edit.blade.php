@@ -47,7 +47,6 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
     width:100%;
     font-family:var(--cc-sans);
 }
-
 .cc-input:focus {
     border-color:#000000;
     box-shadow:0 0 0 3px rgba(0,0,0,0.06);
@@ -107,6 +106,74 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
     transition:border-color .15s;
 }
 .variant-card:hover { border-color:#9ca3af; }
+
+/* ── Attribute swatches ───────────────────────────────────────── */
+.variant-choice { display:inline-flex; }
+.variant-choice input { position:absolute; opacity:0; width:0; height:0; }
+
+/* Text swatches */
+.text-swatch {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:6px 14px;
+    border-radius:8px;
+    font-size:11.5px;
+    font-weight:700;
+    border:2px solid #e5e7eb;
+    background:#f3f4f6;
+    color:#374151;
+    cursor:pointer;
+    user-select:none;
+    transition:background .15s, color .15s, border-color .15s,
+               box-shadow .15s, transform .12s;
+    white-space:nowrap;
+}
+.text-swatch:hover {
+    border-color:#9ca3af;
+    background:#ececec;
+}
+.variant-choice input:checked + .text-swatch {
+    background:#000000 !important;
+    color:#ffffff !important;
+    border-color:#000000 !important;
+    box-shadow:0 8px 20px rgba(0,0,0,.12);
+    transform:scale(1.05);
+}
+
+/* Color swatches */
+.color-swatch {
+    position:relative;
+    display:block;
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    border:2px solid #d1d5db;
+    cursor:pointer;
+    transition:border-color .15s, box-shadow .15s, transform .12s;
+    overflow:hidden;
+}
+.color-swatch:hover {
+    border-color:#9ca3af;
+    transform:scale(1.08);
+}
+.variant-choice input:checked + .color-swatch {
+    border-color:#000000 !important;
+    box-shadow:0 0 0 2px #000000 inset, 0 8px 20px rgba(0,0,0,.15) !important;
+    transform:scale(1.12);
+}
+.color-swatch .check-mark {
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    transition:opacity .15s;
+}
+.variant-choice input:checked + .color-swatch .check-mark {
+    opacity:1;
+}
 </style>
 @endpush
 
@@ -293,14 +360,16 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
                      style="border-color:#f3f4f6;">
                     <label class="flex items-center gap-3 px-4 py-3 cursor-pointer transition" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
                         <input type="checkbox" name="category_ids[]" value="{{ $root->id }}"
-                               {{ in_array($root->id, $selectedCatIds) ? 'checked' : '' }}
+                               {{-- FIX: prefer old() on validation failure, fall back to DB selection --}}
+                               {{ in_array($root->id, old('category_ids', $selectedCatIds)) ? 'checked' : '' }}
                                class="w-4 h-4 accent-gray-800 rounded">
                         <span class="font-bold text-sm" style="color:#000000;">{{ $root->name }}</span>
                         <span class="text-[10px] mono ms-auto" style="color:#9ca3af; font-family:'JetBrains Mono',monospace;">{{ $root->slug }}</span>
                     </label>
                     <div class="px-4">
                         <input type="radio" name="primary_category_id" value="{{ $root->id }}"
-                               {{ $primaryCatId == $root->id ? 'checked' : '' }}
+                               {{-- FIX: prefer old() on validation failure --}}
+                               {{ old('primary_category_id', $primaryCatId) == $root->id ? 'checked' : '' }}
                                class="w-4 h-4 accent-gray-800">
                     </div>
                 </div>
@@ -309,7 +378,7 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
                      style="border-color:#f3f4f6; background:#fafafa;">
                     <label class="flex items-center gap-3 px-4 py-2.5 cursor-pointer transition" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
                         <input type="checkbox" name="category_ids[]" value="{{ $sub->id }}"
-                               {{ in_array($sub->id, $selectedCatIds) ? 'checked' : '' }}
+                               {{ in_array($sub->id, old('category_ids', $selectedCatIds)) ? 'checked' : '' }}
                                class="w-4 h-4 accent-gray-800 rounded">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#d1d5db;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -318,7 +387,7 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
                     </label>
                     <div class="px-4">
                         <input type="radio" name="primary_category_id" value="{{ $sub->id }}"
-                               {{ $primaryCatId == $sub->id ? 'checked' : '' }}
+                               {{ old('primary_category_id', $primaryCatId) == $sub->id ? 'checked' : '' }}
                                class="w-4 h-4 accent-gray-800">
                     </div>
                 </div>
@@ -406,7 +475,7 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
                 </button>
             </div>
 
-           <script>
+            <script>
     window.ATTRIBUTES = {!! json_encode($attributes->map(function($a) {
         return [
             'id'     => $a->id,
@@ -422,8 +491,30 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
             })->toArray(),
         ];
     })->toArray()) !!};
-    
+
+    {{-- ─────────────────────────────────────────────────────────────────────
+         FIX: On a failed validation the session has old('variants') with
+         exactly what the user submitted.  We prefer that over the DB snapshot
+         (EXISTING_VARIANTS) so any changes the user made are not lost.
+
+         Priority:
+           1. old('variants')       — present when validation failed
+           2. $existingVariants     — DB snapshot for a fresh GET /edit
+    ──────────────────────────────────────────────────────────────────────── --}}
     window.EXISTING_VARIANTS = {!! json_encode($existingVariants) !!};
+
+    window.OLD_VARIANTS = {!! json_encode(
+        collect(old('variants', []))->map(function ($v) {
+            return [
+                'stock_quantity'   => $v['stock_quantity']   ?? 0,
+                'price_override'   => $v['price_override']   ?? '',
+                'sku'              => $v['sku']              ?? '',
+                // attribute_values arrive as string IDs from the POST body
+                'attribute_values' => array_map('intval', $v['attribute_values'] ?? []),
+            ];
+        })->values()->toArray()
+    ) !!};
+
     window.variantIndex = 0;
 </script>
 
@@ -462,31 +553,60 @@ function previewImg(input) {
     r.readAsDataURL(input.files[0]);
 }
 
-function buildVariantRowHTML(i, prefill = {}) {
+// ── Variant row builder ────────────────────────────────────────────────────
+function buildVariantRowHTML(i, prefill) {
+    prefill = prefill || {};
     const attrs = window.ATTRIBUTES;
+
+    // FIX: normalise to integers for reliable includes() checks
+    const selected = (prefill.attribute_values || []).map(Number);
+
     let attrHTML = '';
-    attrs.forEach(attr => {
-        const selected = (prefill.attribute_values || []).map(String);
+    attrs.forEach(function(attr) {
         let valsHTML = '';
-        if (attr.type === 'color') {
-            attr.values.forEach(v => {
-                const chk = selected.includes(String(v.id)) ? 'checked' : '';
-                valsHTML += `<label class="cursor-pointer" title="${v.label||v.value}">
-                    <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" ${chk} class="sr-only peer">
-                    <span class="inline-flex w-8 h-8 rounded-full border-2 border-transparent peer-checked:border-gray-900 peer-checked:scale-110 hover:scale-105 transition-all" style="background:${v.color_hex||'#888'}"></span>
-                </label>`;
-            });
-        } else {
-            attr.values.forEach(v => {
-                const chk = selected.includes(String(v.id)) ? 'checked' : '';
-                valsHTML += `<label class="cursor-pointer">
-                    <input type="checkbox" name="variants[${i}][attribute_values][]" value="${v.id}" ${chk} class="sr-only peer">
-                    <span class="inline-block px-3 py-1.5 text-xs font-semibold rounded-lg transition-all select-none" style="border:1px solid #e5e7eb; background:#f9fafb; color:#374151;" onmouseover="this.style.borderColor='#000'" onmouseout="this.style.borderColor='#e5e7eb'">${v.label||v.value}</span>
-                </label>`;
-            });
-        }
-        attrHTML += `<div><p class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color:#6b7280;">${attr.name}</p><div class="flex flex-wrap gap-2">${valsHTML}</div></div>`;
+        const isColor = attr.type === 'color';
+
+        attr.values.forEach(function(v) {
+            const chk   = selected.includes(Number(v.id)) ? 'checked' : '';
+            const label = v.label || v.value || '';
+
+            if (isColor) {
+                // ── Color swatch ──────────────────────────────────────────
+                valsHTML += `
+<label class="variant-choice cursor-pointer" title="${label}">
+    <input type="checkbox"
+           name="variants[${i}][attribute_values][]"
+           value="${v.id}"
+           ${chk}>
+    <span class="color-swatch"
+          style="background:${v.color_hex || '#888888'};">
+        <span class="check-mark">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 13l4 4L19 7"/>
+            </svg>
+        </span>
+    </span>
+</label>`;
+            } else {
+                // ── Text swatch ───────────────────────────────────────────
+                valsHTML += `
+<label class="variant-choice cursor-pointer">
+    <input type="checkbox"
+           name="variants[${i}][attribute_values][]"
+           value="${v.id}"
+           ${chk}>
+    <span class="text-swatch">${label}</span>
+</label>`;
+            }
+        });
+
+        attrHTML += `
+<div>
+    <p class="text-[10px] font-bold uppercase tracking-widest mb-2.5" style="color:#6b7280;">${attr.name}</p>
+    <div class="flex flex-wrap gap-2">${valsHTML}</div>
+</div>`;
     });
+
     return `<div class="variant-card" data-idx="${i}">
         <div class="flex items-center justify-between mb-4">
             <span class="text-xs font-bold" style="color:#6b7280;">متغير #${i+1}</span>
@@ -496,30 +616,36 @@ function buildVariantRowHTML(i, prefill = {}) {
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t pt-4" style="border-color:#f3f4f6;">
             <div>
                 <label class="cc-label">الكمية *</label>
-                <input type="number" name="variants[${i}][stock_quantity]" value="${prefill.stock_quantity??0}" min="0" required class="cc-input mono">
+                <input type="number" name="variants[${i}][stock_quantity]"
+                       value="${prefill.stock_quantity !== undefined ? prefill.stock_quantity : 0}"
+                       min="0" required class="cc-input mono">
             </div>
             <div>
                 <label class="cc-label">تجاوز السعر</label>
-                <input type="number" step="0.01" min="0" name="variants[${i}][price_override]" value="${prefill.price_override??''}" placeholder="يرث سعر المنتج" class="cc-input mono">
+                <input type="number" step="0.01" min="0" name="variants[${i}][price_override]"
+                       value="${prefill.price_override || ''}"
+                       placeholder="يرث سعر المنتج" class="cc-input mono">
             </div>
             <div>
                 <label class="cc-label">SKU</label>
-                <input type="text" name="variants[${i}][sku]" value="${prefill.sku??''}" placeholder="يُولَّد تلقائياً" class="cc-input mono">
+                <input type="text" name="variants[${i}][sku]"
+                       value="${prefill.sku || ''}"
+                       placeholder="يُولَّد تلقائياً" class="cc-input mono">
             </div>
         </div>
     </div>`;
 }
 
-function addVariantRow(prefill = {}) {
+function addVariantRow(prefill) {
     const i         = window.variantIndex++;
     const container = document.getElementById('variants-container');
     document.getElementById('variants-empty').classList.add('hidden');
     const el = document.createElement('div');
-    el.innerHTML = buildVariantRowHTML(i, prefill);
+    el.innerHTML = buildVariantRowHTML(i, prefill || {});
     const row = el.firstElementChild;
     row.style.opacity = '0'; row.style.transform = 'translateY(8px)';
     container.appendChild(row);
-    requestAnimationFrame(() => {
+    requestAnimationFrame(function() {
         row.style.transition = 'opacity .2s, transform .2s';
         row.style.opacity = '1'; row.style.transform = 'translateY(0)';
     });
@@ -529,7 +655,7 @@ function removeVariantRow(btn) {
     const row = btn.closest('.variant-card');
     row.style.transition = 'opacity .15s, transform .15s';
     row.style.opacity = '0'; row.style.transform = 'translateY(-6px)';
-    setTimeout(() => {
+    setTimeout(function() {
         row.remove();
         if (!document.querySelectorAll('.variant-card').length) {
             document.getElementById('variants-empty').classList.remove('hidden');
@@ -537,17 +663,24 @@ function removeVariantRow(btn) {
     }, 160);
 }
 
-// Seed existing variants on page load
-document.addEventListener('DOMContentLoaded', () => {
-    const existing = window.EXISTING_VARIANTS || [];
-    if (existing.length) {
-        existing.forEach(v => addVariantRow(v));
+// ── Seed variants on page load ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    // FIX: When a POST validation fails, Laravel flashes old() input and
+    // redirects back.  OLD_VARIANTS contains the user's submitted form data —
+    // use it so their changes are not lost.  Only fall back to the DB
+    // snapshot (EXISTING_VARIANTS) on a clean GET request.
+    const source = (window.OLD_VARIANTS && window.OLD_VARIANTS.length > 0)
+        ? window.OLD_VARIANTS
+        : (window.EXISTING_VARIANTS || []);
+
+    if (source.length) {
+        source.forEach(function(v) { addVariantRow(v); });
     } else {
         document.getElementById('variants-empty').classList.remove('hidden');
     }
 });
 
-// 1. معاينة الصورة الأساسية
+// ── Image helpers ──────────────────────────────────────────────────────────
 function previewMain(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -558,17 +691,16 @@ function previewMain(input) {
     }
 }
 
-// 2. معاينة صور المعرض الجديدة قبل الرفع
 function previewGallery(input) {
     const container = document.getElementById('new-gallery-preview');
     container.innerHTML = '';
     if (input.files) {
-        Array.from(input.files).forEach(file => {
+        Array.from(input.files).forEach(function(file) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const div = document.createElement('div');
-                div.className = "relative aspect-square rounded-lg overflow-hidden";
-                div.style.border = "1px solid #6ee7b7";
+                div.className = 'relative aspect-square rounded-lg overflow-hidden';
+                div.style.border = '1px solid #6ee7b7';
                 div.innerHTML = `
                     <img src="${e.target.result}" class="w-full h-full object-cover">
                     <div class="absolute top-0 left-0 text-[8px] px-1 font-bold" style="background:#059669; color:#ffffff;">NEW</div>
@@ -580,21 +712,20 @@ function previewGallery(input) {
     }
 }
 
-// 3. وضع علامة حذف على الصور القديمة
 function markForDeletion(mediaId) {
     const wrapper = document.getElementById('media-' + mediaId);
-    const input = document.getElementById('delete-input-' + mediaId);
+    const input   = document.getElementById('delete-input-' + mediaId);
     
     if (input.disabled) {
         input.disabled = false;
-        wrapper.style.opacity = "0.3";
-        wrapper.style.filter = "grayscale(1)";
-        wrapper.style.border = "2px solid #dc2626";
+        wrapper.style.opacity = '0.3';
+        wrapper.style.filter  = 'grayscale(1)';
+        wrapper.style.border  = '2px solid #dc2626';
     } else {
         input.disabled = true;
-        wrapper.style.opacity = "1";
-        wrapper.style.filter = "none";
-        wrapper.style.border = "1px solid #e5e7eb";
+        wrapper.style.opacity = '1';
+        wrapper.style.filter  = 'none';
+        wrapper.style.border  = '1px solid #e5e7eb';
     }
 }
 </script>
