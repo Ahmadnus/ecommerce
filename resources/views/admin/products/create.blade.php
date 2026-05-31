@@ -140,6 +140,9 @@
 .variant-choice input:checked + span.color-swatch .check-mark {
     opacity: 1;
 }
+.variant-card .grid.grid-cols-1.md\:grid-cols-3.gap-5 > div:first-child {
+    display: none !important;
+}
 </style>
 @endpush
 
