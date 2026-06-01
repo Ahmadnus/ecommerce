@@ -15,7 +15,7 @@ class CategoryController extends Controller
             ->with(['allChildren.products', 'media'])
             ->roots()
             ->orderBy('sort_order')
-            ->orderBy('name')   // Spatie sorts by current locale automatically
+            ->orderBy('name')
             ->get();
 
         return view('admin.categories.index', compact('categories'));
@@ -38,34 +38,28 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            // ── Translatable ────────────────────────────────────────────────
-            'name.ar'         => 'required|string|max:255',
-            'name.en'         => 'nullable|string|max:255',
-            'description.ar'  => 'nullable|string',
-            'description.en'  => 'nullable|string',
-            // ────────────────────────────────────────────────────────────────
-            'slug'            => 'nullable|string|unique:categories,slug',
-            'parent_id'       => 'nullable|exists:categories,id',
-            'sort_order'      => 'nullable|integer|min:0',
-            'is_active'       => 'nullable|boolean',
-            'image'           => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
-            'banner_image'    => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
-            'banner_is_active'=> 'nullable|boolean',
+            'name.ar'          => 'required|string|max:255',
+            'description.ar'   => 'nullable|string',
+            'slug'             => 'nullable|string|unique:categories,slug',
+            'parent_id'        => 'nullable|exists:categories,id',
+            'sort_order'       => 'nullable|integer|min:0',
+            'is_active'        => 'nullable|boolean',
+            'image'            => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'banner_image'     => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'banner_is_active' => 'nullable|boolean',
         ], [
-            'name.ar.required' => 'اسم التصنيف بالعربية مطلوب',
+            'name.ar.required' => 'اسم التصنيف مطلوب',
             'image.max'        => 'حجم الصورة يجب أن لا يتجاوز 4 ميجابايت',
         ]);
 
         $arName = $request->input('name.ar');
-        $enName = $request->input('name.en');
 
         $category = Category::create([
-            // Pass the full array — Spatie stores it as {"ar": "...", "en": "..."}
-            'name'             => $request->input('name'),
-            'description'      => $request->input('description'),
+            'name'             => ['ar' => $arName, 'en' => ''],
+            'description'      => ['ar' => $request->input('description.ar', ''), 'en' => ''],
             'slug'             => $request->filled('slug')
                                     ? $request->slug
-                                    : Str::slug($arName ?: $enName),
+                                    : Str::slug($arName),
             'parent_id'        => $request->parent_id,
             'sort_order'       => $request->input('sort_order', 0),
             'is_active'        => $request->boolean('is_active', true),
@@ -75,16 +69,16 @@ class CategoryController extends Controller
         if ($request->hasFile('image')) {
             $category
                 ->addMediaFromRequest('image')
-                ->usingName($arName ?: $enName)
-                ->usingFileName(Str::slug($arName ?: $enName) . '.' . $request->file('image')->extension())
+                ->usingName($arName)
+                ->usingFileName(Str::slug($arName) . '.' . $request->file('image')->extension())
                 ->toMediaCollection('category_images');
         }
 
         if ($request->hasFile('banner_image')) {
             $category
                 ->addMediaFromRequest('banner_image')
-                ->usingName(($arName ?: $enName) . ' Banner')
-                ->usingFileName(Str::slug($arName ?: $enName) . '-banner.' . $request->file('banner_image')->extension())
+                ->usingName($arName . ' Banner')
+                ->usingFileName(Str::slug($arName) . '-banner.' . $request->file('banner_image')->extension())
                 ->toMediaCollection('category_banner');
         }
 
@@ -111,22 +105,20 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $request->validate([
-            // ── Translatable ────────────────────────────────────────────────
-            'name.ar'         => 'required|string|max:255',
-            'name.en'         => 'nullable|string|max:255',
-            'description.ar'  => 'nullable|string',
-            'description.en'  => 'nullable|string',
-            // ────────────────────────────────────────────────────────────────
-            'slug'            => 'nullable|string|unique:categories,slug,' . $category->id,
-        
-            'parent_id'       => 'nullable|exists:categories,id',
-            'sort_order'      => 'nullable|integer|min:0',
-            'is_active'       => 'nullable|boolean',
-            'image'           => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
-            'remove_image'    => 'nullable|boolean',
-            'banner_image'    => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'name.ar'             => 'required|string|max:255',
+            'description.ar'      => 'nullable|string',
+            'slug'                => 'nullable|string|unique:categories,slug,' . $category->id,
+            'parent_id'           => 'nullable|exists:categories,id',
+            'sort_order'          => 'nullable|integer|min:0',
+            'is_active'           => 'nullable|boolean',
+            'image'               => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
+            'remove_image'        => 'nullable|boolean',
+            'banner_image'        => 'nullable|image|max:4096|mimes:jpeg,png,jpg,webp,gif',
             'remove_banner_image' => 'nullable|boolean',
-            'banner_is_active'=> 'nullable|boolean',
+            'banner_is_active'    => 'nullable|boolean',
+        ], [
+            'name.ar.required' => 'اسم التصنيف مطلوب',
+            'image.max'        => 'حجم الصورة يجب أن لا يتجاوز 4 ميجابايت',
         ]);
 
         // Prevent circular parent
@@ -138,19 +130,16 @@ class CategoryController extends Controller
         }
 
         $arName = $request->input('name.ar');
-        $enName = $request->input('name.en');
 
         // Regenerate slug only if Arabic name changed
         $slug = $category->slug;
         if ($arName !== $category->getTranslation('name', 'ar', false)) {
-            $slug = $request->filled('slug')
-                ? $request->slug
-                : Str::slug($arName ?: $enName);
+            $slug = $request->filled('slug') ? $request->slug : Str::slug($arName);
         }
 
         $category->update([
-            'name'             => $request->input('name'),
-            'description'      => $request->input('description'),
+            'name'             => ['ar' => $arName, 'en' => $category->getTranslation('name', 'en')],
+            'description'      => ['ar' => $request->input('description.ar', ''), 'en' => $category->getTranslation('description', 'en')],
             'slug'             => $slug,
             'parent_id'        => $request->parent_id,
             'sort_order'       => $request->input('sort_order', 0),
@@ -168,8 +157,8 @@ class CategoryController extends Controller
             $category->clearMediaCollection('category_images');
             $category
                 ->addMediaFromRequest('image')
-                ->usingName($arName ?: $enName)
-                ->usingFileName(Str::slug($arName ?: $enName) . '.' . $request->file('image')->extension())
+                ->usingName($arName)
+                ->usingFileName(Str::slug($arName) . '.' . $request->file('image')->extension())
                 ->toMediaCollection('category_images');
         }
 
@@ -181,8 +170,8 @@ class CategoryController extends Controller
             $category->clearMediaCollection('category_banner');
             $category
                 ->addMediaFromRequest('banner_image')
-                ->usingName(($arName ?: $enName) . ' Banner')
-                ->usingFileName(Str::slug($arName ?: $enName) . '-banner.' . $request->file('banner_image')->extension())
+                ->usingName($arName . ' Banner')
+                ->usingFileName(Str::slug($arName) . '-banner.' . $request->file('banner_image')->extension())
                 ->toMediaCollection('category_banner');
         }
 

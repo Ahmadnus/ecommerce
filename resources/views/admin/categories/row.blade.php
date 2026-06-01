@@ -11,6 +11,7 @@
     $childCount  = $category->allChildren->count();
     $rowId       = 'cat-row-' . $category->id;
     $childrenId  = 'children-' . $category->id;
+    $arName      = $category->getTranslation('name', 'ar');
 @endphp
 
 <tr id="{{ $rowId }}"
@@ -46,7 +47,7 @@
                 @if($category->getFirstMediaUrl('categories'))
                 <img src="{{ $category->getFirstMediaUrl('categories') }}"
                      class="w-full h-full object-cover"
-                     alt="{{ $category->name }}">
+                     alt="{{ $arName }}">
                 @else
                 <div class="w-full h-full flex items-center justify-center">
                     <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +61,7 @@
             {{-- Name --}}
             <div>
                 <p class="text-sm font-semibold text-gray-900 leading-tight">
-                    {{ $category->name }}
+                    {{ $arName }}
                     @if($hasChildren)
                     <span class="text-[10px] font-bold text-brand/70 bg-brand/10 px-1.5 py-0.5 rounded-full mr-1">
                         {{ $childCount }}
@@ -124,7 +125,7 @@
                 </svg>
             </a>
             <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST"
-                  onsubmit="return confirm('حذف {{ addslashes($category->name) }}؟ سيتم حذف جميع تصنيفاته الفرعية.')"
+                  onsubmit="return confirm('حذف {{ addslashes($arName) }}؟ سيتم حذف جميع تصنيفاته الفرعية.')"
                   class="inline-block">
                 @csrf
                 @method('DELETE')

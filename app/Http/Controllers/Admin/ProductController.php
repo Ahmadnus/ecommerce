@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Attribute;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -14,8 +12,6 @@ use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    private const LOW_STOCK_THRESHOLD = 5;
-
     // ─── Index ────────────────────────────────────────────────────────────────
 
     public function index(Request $request)
@@ -32,21 +28,15 @@ class ProductController extends Controller
                 ->where('name', 'like', '%' . $request->search . '%')
                 ->orWhere('sku', 'like', '%' . $request->search . '%'));
         }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        if ($request->filled('stock')) {
-            match ($request->stock) {
-                'out'   => $query->whereHas('variants', fn($q) => $q->where('stock_quantity', 0)),
-                'low'   => $query->whereHas('variants', fn($q) => $q
-                               ->where('stock_quantity', '>', 0)
-                               ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)),
-                default => null,
-            };
-        }
+
         if ($request->filled('category')) {
             $query->whereHas('categories', fn($q) => $q->where('categories.id', $request->category));
         }
+
         match ($request->get('sort', 'newest')) {
             'name_asc'   => $query->orderBy('name'),
             'name_desc'  => $query->orderByDesc('name'),
@@ -57,12 +47,10 @@ class ProductController extends Controller
 
         $products   = $query->paginate(20)->withQueryString();
         $categories = Category::active()->orderBy('name')->get();
+
         $stats = [
             'total'  => Product::count(),
             'active' => Product::where('status', 'active')->count(),
-            'out'    => ProductVariant::where('stock_quantity', 0)->count(),
-            'low'    => ProductVariant::where('stock_quantity', '>', 0)
-                                      ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)->count(),
         ];
 
         return view('admin.products.index', compact('products', 'categories', 'stats'));
@@ -74,95 +62,59 @@ class ProductController extends Controller
     {
         $categories = Category::active()->roots()
             ->with('allActiveChildren')->orderBy('sort_order')->get();
-        $attributes = Attribute::with('values')->orderBy('sort_order')->get();
 
-        return view('admin.products.create', compact('categories', 'attributes'));
+        return view('admin.products.create', compact('categories'));
     }
 
     // ─── Store ────────────────────────────────────────────────────────────────
+    // Variants are NOT submitted from the create form.
+    // A single default variant (no attributes) is created automatically.
 
     public function store(Request $request)
     {
         $request->validate([
             'name.ar'              => 'required|string|max:255',
-            'name.en'              => 'nullable|string|max:255',
             'description.ar'       => 'nullable|string',
-            'description.en'       => 'nullable|string',
             'short_description.ar' => 'nullable|string|max:500',
-            'short_description.en' => 'nullable|string|max:500',
             'base_price'           => 'required|numeric|min:0',
             'discount_price'       => 'nullable|numeric|min:0|lt:base_price',
-            'sku'                  => 'nullable|unique:products,sku',
+            'sku'                  => 'nullable|string|max:100|unique:products,sku',
             'category_ids'         => 'required|array|min:1',
             'category_ids.*'       => 'exists:categories,id',
             'primary_category_id'  => 'required|exists:categories,id',
             'main_image'           => 'required|image|mimes:jpeg,png,jpg,webp,avif|max:5120',
             'product_images'       => 'nullable|array|max:20',
             'product_images.*'     => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
-            'variants'                      => 'required|array|min:1',
-            'variants.*.stock_quantity'     => 'required|integer|min:0',
-            'variants.*.price_override'     => 'nullable|numeric|min:0',
-            'variants.*.sku'                => 'nullable|string|max:100',
-            'variants.*.attribute_values'   => 'nullable|array',
-            'variants.*.attribute_values.*' => 'exists:attribute_values,id',
         ], [
-            // ── اسم المنتج ──────────────────────────────────────────────
-            'name.ar.required'                  => 'اسم المنتج بالعربية مطلوب.',
-            'name.ar.max'                       => 'اسم المنتج بالعربية يجب ألا يتجاوز 255 حرفاً.',
-            'name.en.max'                       => 'اسم المنتج بالإنجليزية يجب ألا يتجاوز 255 حرفاً.',
-
-            // ── الوصف ───────────────────────────────────────────────────
-            'short_description.ar.max'          => 'الوصف المختصر بالعربية يجب ألا يتجاوز 500 حرف.',
-            'short_description.en.max'          => 'الوصف المختصر بالإنجليزية يجب ألا يتجاوز 500 حرف.',
-
-            // ── السعر ───────────────────────────────────────────────────
-            'base_price.required'               => 'السعر الأساسي مطلوب.',
-            'base_price.numeric'                => 'السعر الأساسي يجب أن يكون رقماً.',
-            'base_price.min'                    => 'السعر الأساسي يجب أن يكون صفراً أو أكثر.',
-            'discount_price.numeric'            => 'سعر الخصم يجب أن يكون رقماً.',
-            'discount_price.min'                => 'سعر الخصم يجب أن يكون صفراً أو أكثر.',
-            'discount_price.lt'                 => 'سعر الخصم يجب أن يكون أقل من السعر الأساسي.',
-
-            // ── SKU ─────────────────────────────────────────────────────
-            'sku.unique'                        => 'رمز SKU مستخدم بالفعل، يرجى اختيار رمز آخر.',
-
-            // ── التصنيفات ───────────────────────────────────────────────
-            'category_ids.required'             => 'يجب اختيار تصنيف واحد على الأقل.',
-            'category_ids.min'                  => 'يجب اختيار تصنيف واحد على الأقل.',
-            'category_ids.*.exists'             => 'أحد التصنيفات المختارة غير موجود.',
-            'primary_category_id.required'      => 'يجب تحديد التصنيف الأساسي للمنتج.',
-            'primary_category_id.exists'        => 'التصنيف الأساسي المحدد غير موجود.',
-
-            // ── الصور ───────────────────────────────────────────────────
-            'main_image.required'               => 'صورة الغلاف مطلوبة.',
-            'main_image.image'                  => 'الملف المرفوع يجب أن يكون صورة.',
-            'main_image.mimes'                  => 'صورة الغلاف يجب أن تكون بصيغة: JPEG أو PNG أو WebP أو AVIF.',
-            'main_image.max'                    => 'حجم صورة الغلاف يجب ألا يتجاوز 5 ميغابايت.',
-            'product_images.max'                => 'لا يمكن رفع أكثر من 20 صورة للمعرض.',
-            'product_images.*.image'            => 'كل ملف في المعرض يجب أن يكون صورة.',
-            'product_images.*.mimes'            => 'صور المعرض يجب أن تكون بصيغة: JPEG أو PNG أو WebP أو AVIF.',
-            'product_images.*.max'              => 'حجم كل صورة يجب ألا يتجاوز 5 ميغابايت.',
-
-            // ── المتغيرات ───────────────────────────────────────────────
-            'variants.required'                     => 'يجب إضافة متغير واحد على الأقل.',
-            'variants.min'                          => 'يجب إضافة متغير واحد على الأقل.',
-            'variants.*.stock_quantity.required'    => 'كمية المخزون مطلوبة لكل متغير.',
-            'variants.*.stock_quantity.integer'     => 'كمية المخزون يجب أن تكون عدداً صحيحاً.',
-            'variants.*.stock_quantity.min'         => 'كمية المخزون يجب أن تكون صفراً أو أكثر.',
-            'variants.*.price_override.numeric'     => 'سعر المتغير يجب أن يكون رقماً.',
-            'variants.*.price_override.min'         => 'سعر المتغير يجب أن يكون صفراً أو أكثر.',
-            'variants.*.sku.max'                    => 'رمز SKU للمتغير يجب ألا يتجاوز 100 حرف.',
-            'variants.*.attribute_values.*.exists'  => 'قيمة الخاصية المختارة غير موجودة.',
+            'name.ar.required'             => 'اسم المنتج مطلوب.',
+            'name.ar.max'                  => 'اسم المنتج يجب ألا يتجاوز 255 حرفاً.',
+            'short_description.ar.max'     => 'الوصف المختصر يجب ألا يتجاوز 500 حرف.',
+            'base_price.required'          => 'السعر الأساسي مطلوب.',
+            'base_price.numeric'           => 'السعر الأساسي يجب أن يكون رقماً.',
+            'base_price.min'               => 'السعر الأساسي يجب أن يكون صفراً أو أكثر.',
+            'discount_price.numeric'       => 'سعر الخصم يجب أن يكون رقماً.',
+            'discount_price.min'           => 'سعر الخصم يجب أن يكون صفراً أو أكثر.',
+            'discount_price.lt'            => 'سعر الخصم يجب أن يكون أقل من السعر الأساسي.',
+            'sku.unique'                   => 'رمز SKU مستخدم بالفعل، يرجى اختيار رمز آخر.',
+            'category_ids.required'        => 'يجب اختيار تصنيف واحد على الأقل.',
+            'category_ids.min'             => 'يجب اختيار تصنيف واحد على الأقل.',
+            'primary_category_id.required' => 'يجب تحديد التصنيف الأساسي.',
+            'main_image.required'          => 'صورة الغلاف مطلوبة.',
+            'main_image.image'             => 'الملف المرفوع يجب أن يكون صورة.',
+            'main_image.mimes'             => 'صورة الغلاف يجب أن تكون بصيغة: JPEG أو PNG أو WebP أو AVIF.',
+            'main_image.max'               => 'حجم الصورة يجب ألا يتجاوز 5 ميغابايت.',
+            'product_images.max'           => 'لا يمكن رفع أكثر من 20 صورة.',
+            'product_images.*.image'       => 'كل ملف يجب أن يكون صورة.',
+            'product_images.*.mimes'       => 'صور المعرض يجب أن تكون بصيغة: JPEG أو PNG أو WebP أو AVIF.',
+            'product_images.*.max'         => 'حجم كل صورة يجب ألا يتجاوز 5 ميغابايت.',
         ]);
 
         DB::transaction(function () use ($request) {
             $product = Product::create([
-                'name'              => $request->input('name'),
-                'description'       => $request->input('description'),
-                'short_description' => $request->input('short_description'),
-                'slug'              => $this->uniqueSlug(
-                                           $request->input('name.ar') ?: $request->input('name.en')
-                                       ),
+                'name'              => ['ar' => $request->input('name.ar'), 'en' => ''],
+                'description'       => ['ar' => $request->input('description.ar', ''), 'en' => ''],
+                'short_description' => ['ar' => $request->input('short_description.ar', ''), 'en' => ''],
+                'slug'              => $this->uniqueSlug($request->input('name.ar')),
                 'base_price'        => $request->base_price,
                 'discount_price'    => $request->discount_price,
                 'sku'               => $request->sku,
@@ -170,6 +122,7 @@ class ProductController extends Controller
                 'is_featured'       => $request->boolean('is_featured'),
             ]);
 
+            // Categories
             $pivot = [];
             foreach ($request->category_ids as $catId) {
                 $pivot[(int) $catId] = [
@@ -178,11 +131,13 @@ class ProductController extends Controller
             }
             $product->categories()->attach($pivot);
 
+            // Main image
             if ($request->hasFile('main_image')) {
                 $product->addMedia($request->file('main_image'))
                         ->toMediaCollection('main');
             }
 
+            // Gallery images
             if ($request->hasFile('product_images')) {
                 foreach ($request->file('product_images') as $index => $image) {
                     $product->addMedia($image)
@@ -191,9 +146,13 @@ class ProductController extends Controller
                 }
             }
 
-            foreach ($request->variants as $variantData) {
-                $this->createVariant($product, $variantData);
-            }
+            // Auto-create one default variant (no attributes, no stock tracking)
+            $product->variants()->create([
+                'sku'            => $request->sku ?: strtoupper(Str::random(8)),
+                'price_override' => null,
+                'stock_quantity' => 0,
+                'is_active'      => true,
+            ]);
         });
 
         return redirect()->route('admin.products.index')
@@ -205,43 +164,26 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         $product->load(['categories', 'variants.attributeValues.attribute', 'media']);
-        $lowThreshold = self::LOW_STOCK_THRESHOLD;
 
-        return view('admin.products.show', compact('product', 'lowThreshold'));
+        return view('admin.products.show', compact('product'));
     }
 
     // ─── Edit ─────────────────────────────────────────────────────────────────
 
     public function edit(Product $product)
     {
-        $product->load(['categories', 'variants.attributeValues.attribute']);
+        $product->load(['categories', 'media']);
 
         $categories = Category::active()->roots()
             ->with('allActiveChildren')->orderBy('sort_order')->get();
-        $attributes = Attribute::with('values')->orderBy('sort_order')->get();
 
         $selectedCatIds = $product->categories->pluck('id')->toArray();
         $primaryCatId   = $product->categories
             ->first(fn($c) => $c->pivot->is_primary)?->id
             ?? $product->categories->first()?->id;
 
-        $existingVariants = $product->variants->map(fn($v) => [
-            'id'               => $v->id,
-            'sku'              => $v->sku,
-            'stock_quantity'   => $v->stock_quantity,
-            'price_override'   => $v->price_override,
-            'is_active'        => $v->is_active,
-            'attribute_values' => $v->attributeValues->pluck('id')->toArray(),
-        ]);
-
-        $existingImages = $product->getMedia('products')->map(fn($m) => [
-            'id'  => $m->id,
-            'url' => $m->getUrl(),
-        ]);
-
         return view('admin.products.edit', compact(
-            'product', 'categories', 'attributes',
-            'selectedCatIds', 'primaryCatId', 'existingVariants', 'existingImages'
+            'product', 'categories', 'selectedCatIds', 'primaryCatId'
         ));
     }
 
@@ -251,11 +193,8 @@ class ProductController extends Controller
     {
         $request->validate([
             'name.ar'              => 'required|string|max:255',
-            'name.en'              => 'nullable|string|max:255',
             'description.ar'       => 'nullable|string',
-            'description.en'       => 'nullable|string',
             'short_description.ar' => 'nullable|string|max:500',
-            'short_description.en' => 'nullable|string|max:500',
             'base_price'           => 'required|numeric|min:0',
             'discount_price'       => 'nullable|numeric|min:0|lt:base_price',
             'sku'                  => [
@@ -269,71 +208,37 @@ class ProductController extends Controller
             'product_images.*'     => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
             'delete_media_ids'     => 'nullable|array',
             'delete_media_ids.*'   => 'integer',
-            'variants'                      => 'required|array|min:1',
-            'variants.*.stock_quantity'     => 'required|integer|min:0',
-            'variants.*.price_override'     => 'nullable|numeric|min:0',
-            'variants.*.sku'                => 'nullable|string|max:100',
-            'variants.*.attribute_values'   => 'nullable|array',
-            'variants.*.attribute_values.*' => 'exists:attribute_values,id',
         ], [
-            // ── اسم المنتج ──────────────────────────────────────────────
-            'name.ar.required'                  => 'اسم المنتج بالعربية مطلوب.',
-            'name.ar.max'                       => 'اسم المنتج بالعربية يجب ألا يتجاوز 255 حرفاً.',
-            'name.en.max'                       => 'اسم المنتج بالإنجليزية يجب ألا يتجاوز 255 حرفاً.',
-
-            // ── الوصف ───────────────────────────────────────────────────
-            'short_description.ar.max'          => 'الوصف المختصر بالعربية يجب ألا يتجاوز 500 حرف.',
-            'short_description.en.max'          => 'الوصف المختصر بالإنجليزية يجب ألا يتجاوز 500 حرف.',
-
-            // ── السعر ───────────────────────────────────────────────────
-            'base_price.required'               => 'السعر الأساسي مطلوب.',
-            'base_price.numeric'                => 'السعر الأساسي يجب أن يكون رقماً.',
-            'base_price.min'                    => 'السعر الأساسي يجب أن يكون صفراً أو أكثر.',
-            'discount_price.numeric'            => 'سعر الخصم يجب أن يكون رقماً.',
-            'discount_price.min'                => 'سعر الخصم يجب أن يكون صفراً أو أكثر.',
-            'discount_price.lt'                 => 'سعر الخصم يجب أن يكون أقل من السعر الأساسي.',
-
-            // ── SKU ─────────────────────────────────────────────────────
-            'sku.unique'                        => 'رمز SKU مستخدم لمنتج آخر، يرجى اختيار رمز مختلف.',
-
-            // ── التصنيفات ───────────────────────────────────────────────
-            'category_ids.required'             => 'يجب اختيار تصنيف واحد على الأقل.',
-            'category_ids.min'                  => 'يجب اختيار تصنيف واحد على الأقل.',
-            'category_ids.*.exists'             => 'أحد التصنيفات المختارة غير موجود.',
-            'primary_category_id.required'      => 'يجب تحديد التصنيف الأساسي للمنتج.',
-            'primary_category_id.exists'        => 'التصنيف الأساسي المحدد غير موجود.',
-
-            // ── الصور ───────────────────────────────────────────────────
-            'product_images.max'                => 'لا يمكن رفع أكثر من 20 صورة للمعرض.',
-            'product_images.*.image'            => 'كل ملف في المعرض يجب أن يكون صورة.',
-            'product_images.*.mimes'            => 'صور المعرض يجب أن تكون بصيغة: JPEG أو PNG أو WebP أو AVIF.',
-            'product_images.*.max'              => 'حجم كل صورة يجب ألا يتجاوز 5 ميغابايت.',
-            'delete_media_ids.*.integer'        => 'معرّف الصورة المحذوفة يجب أن يكون رقماً صحيحاً.',
-
-            // ── المتغيرات ───────────────────────────────────────────────
-            'variants.required'                     => 'يجب إضافة متغير واحد على الأقل.',
-            'variants.min'                          => 'يجب إضافة متغير واحد على الأقل.',
-            'variants.*.stock_quantity.required'    => 'كمية المخزون مطلوبة لكل متغير.',
-            'variants.*.stock_quantity.integer'     => 'كمية المخزون يجب أن تكون عدداً صحيحاً.',
-            'variants.*.stock_quantity.min'         => 'كمية المخزون يجب أن تكون صفراً أو أكثر.',
-            'variants.*.price_override.numeric'     => 'سعر المتغير يجب أن يكون رقماً.',
-            'variants.*.price_override.min'         => 'سعر المتغير يجب أن يكون صفراً أو أكثر.',
-            'variants.*.sku.max'                    => 'رمز SKU للمتغير يجب ألا يتجاوز 100 حرف.',
-            'variants.*.attribute_values.*.exists'  => 'قيمة الخاصية المختارة غير موجودة.',
+            'name.ar.required'             => 'اسم المنتج مطلوب.',
+            'name.ar.max'                  => 'اسم المنتج يجب ألا يتجاوز 255 حرفاً.',
+            'short_description.ar.max'     => 'الوصف المختصر يجب ألا يتجاوز 500 حرف.',
+            'base_price.required'          => 'السعر الأساسي مطلوب.',
+            'base_price.numeric'           => 'السعر الأساسي يجب أن يكون رقماً.',
+            'base_price.min'               => 'السعر الأساسي يجب أن يكون صفراً أو أكثر.',
+            'discount_price.numeric'       => 'سعر الخصم يجب أن يكون رقماً.',
+            'discount_price.min'           => 'سعر الخصم يجب أن يكون صفراً أو أكثر.',
+            'discount_price.lt'            => 'سعر الخصم يجب أن يكون أقل من السعر الأساسي.',
+            'sku.unique'                   => 'رمز SKU مستخدم لمنتج آخر.',
+            'category_ids.required'        => 'يجب اختيار تصنيف واحد على الأقل.',
+            'category_ids.min'             => 'يجب اختيار تصنيف واحد على الأقل.',
+            'primary_category_id.required' => 'يجب تحديد التصنيف الأساسي.',
+            'product_images.max'           => 'لا يمكن رفع أكثر من 20 صورة.',
+            'product_images.*.image'       => 'كل ملف يجب أن يكون صورة.',
+            'product_images.*.mimes'       => 'صور المعرض يجب أن تكون بصيغة: JPEG أو PNG أو WebP أو AVIF.',
+            'product_images.*.max'         => 'حجم كل صورة يجب ألا يتجاوز 5 ميغابايت.',
         ]);
 
         DB::transaction(function () use ($request, $product) {
             $newArName = $request->input('name.ar');
-            $newEnName = $request->input('name.en');
 
             if ($newArName !== $product->getTranslation('name', 'ar')) {
-                $product->slug = $this->uniqueSlug($newArName ?: $newEnName, $product->id);
+                $product->slug = $this->uniqueSlug($newArName, $product->id);
             }
 
             $product->update([
-                'name'              => $request->input('name'),
-                'description'       => $request->input('description'),
-                'short_description' => $request->input('short_description'),
+                'name'              => ['ar' => $newArName, 'en' => $product->getTranslation('name', 'en')],
+                'description'       => ['ar' => $request->input('description.ar', ''), 'en' => $product->getTranslation('description', 'en')],
+                'short_description' => ['ar' => $request->input('short_description.ar', ''), 'en' => $product->getTranslation('short_description', 'en')],
                 'base_price'        => $request->base_price,
                 'discount_price'    => $request->discount_price,
                 'sku'               => $request->sku,
@@ -341,6 +246,7 @@ class ProductController extends Controller
                 'is_featured'       => $request->boolean('is_featured'),
             ]);
 
+            // Categories
             $pivot = [];
             foreach ($request->category_ids as $catId) {
                 $pivot[(int) $catId] = [
@@ -349,17 +255,20 @@ class ProductController extends Controller
             }
             $product->categories()->sync($pivot);
 
+            // Delete flagged gallery images
             $deleteIds = $request->input('delete_media_ids', []);
             if (!empty($deleteIds)) {
                 $product->media()->whereIn('id', $deleteIds)->get()->each(fn($m) => $m->delete());
             }
 
+            // Replace main image if a new one was uploaded
             if ($request->hasFile('main_image')) {
                 $product->clearMediaCollection('main');
                 $product->addMedia($request->file('main_image'))
                         ->toMediaCollection('main');
             }
 
+            // Add new gallery images
             if ($request->hasFile('product_images')) {
                 $existingCount = $product->getMedia('products')->count();
                 foreach ($request->file('product_images') as $index => $image) {
@@ -368,53 +277,10 @@ class ProductController extends Controller
                             ->toMediaCollection('products');
                 }
             }
-
-            $product->variants()->forceDelete();
-            foreach ($request->variants as $variantData) {
-                $this->createVariant($product, $variantData);
-            }
         });
 
         return redirect()->route('admin.products.show', $product)
                          ->with('success', 'تم تحديث المنتج بنجاح ✓');
-    }
-
-    // ─── Stock update ─────────────────────────────────────────────────────────
-
-    public function updateStock(Request $request, Product $product)
-    {
-        $request->validate([
-            'variants'                  => 'required|array',
-            'variants.*.id'             => 'required|exists:product_variants,id',
-            'variants.*.stock_quantity' => 'required|integer|min:0',
-            'variants.*.price_override' => 'nullable|numeric|min:0',
-            'variants.*.is_active'      => 'nullable|boolean',
-        ], [
-            'variants.required'                  => 'بيانات المتغيرات مطلوبة.',
-            'variants.*.id.required'             => 'معرّف المتغير مطلوب.',
-            'variants.*.id.exists'               => 'المتغير المحدد غير موجود.',
-            'variants.*.stock_quantity.required' => 'كمية المخزون مطلوبة.',
-            'variants.*.stock_quantity.integer'  => 'كمية المخزون يجب أن تكون عدداً صحيحاً.',
-            'variants.*.stock_quantity.min'      => 'كمية المخزون يجب أن تكون صفراً أو أكثر.',
-            'variants.*.price_override.numeric'  => 'سعر المتغير يجب أن يكون رقماً.',
-            'variants.*.price_override.min'      => 'سعر المتغير يجب أن يكون صفراً أو أكثر.',
-        ]);
-
-        foreach ($request->variants as $data) {
-            ProductVariant::where('id', $data['id'])
-                ->where('product_id', $product->id)
-                ->update([
-                    'stock_quantity' => $data['stock_quantity'],
-                    'price_override' => $data['price_override'] ?: null,
-                    'is_active'      => (bool) ($data['is_active'] ?? true),
-                ]);
-        }
-
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'تم تحديث المخزون بنجاح ✓']);
-        }
-
-        return back()->with('success', 'تم تحديث المخزون بنجاح ✓');
     }
 
     // ─── Destroy ──────────────────────────────────────────────────────────────
@@ -443,25 +309,4 @@ class ProductController extends Controller
         return $slug;
     }
 
-    private function createVariant(Product $product, array $data): ProductVariant
-    {
-        $variant = $product->variants()->create([
-            'sku'            => $data['sku'] ?: strtoupper(Str::random(8)),
-            'price_override' => $data['price_override'] ?: null,
-            'stock_quantity' => (int) ($data['stock_quantity'] ?? 0),
-            'is_active'      => true,
-        ]);
-
-        $avIds = collect($data['attribute_values'] ?? [])
-            ->filter(fn($v) => is_numeric($v))
-            ->map(fn($v) => (int) $v)
-            ->unique()
-            ->toArray();
-
-        if (!empty($avIds)) {
-            $variant->attributeValues()->attach($avIds);
-        }
-
-        return $variant;
-    }
 }

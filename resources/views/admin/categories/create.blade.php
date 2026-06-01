@@ -37,7 +37,6 @@
                     صورة التصنيف
                     <span class="text-gray-400 font-normal text-xs">(تُعرض دائرية في المتجر)</span>
                 </label>
-
                 <div class="flex items-center gap-6">
                     <div class="relative flex-shrink-0">
                         <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-dashed
@@ -54,111 +53,43 @@
                                          a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                         </div>
-                        <span class="absolute bottom-0 left-0 right-0 text-[9px] text-center
-                                     text-gray-400 mt-1">دائري</span>
                     </div>
-
                     <div class="flex-1">
                         <input type="file" name="image" accept="image/*"
-                               id="img-input"
-                               onchange="previewImg(this)"
+                               id="img-input" onchange="previewImg(this)"
                                class="block w-full text-sm text-gray-500
                                       file:ml-4 file:py-2.5 file:px-6 file:rounded-xl
                                       file:border-0 file:bg-brand/10 file:text-brand file:font-bold
                                       hover:file:bg-brand/20 transition cursor-pointer">
-                        <p class="mt-2 text-xs text-gray-400">
-                            PNG، JPG، WebP — مربعة أو دائرية تعمل بشكل أفضل
-                        </p>
+                        <p class="mt-2 text-xs text-gray-400">PNG، JPG، WebP — مربعة أو دائرية تعمل بشكل أفضل</p>
                     </div>
                 </div>
             </div>
 
-            {{-- Name --}}
-         {{-- Replace the Name field --}}
-<div x-data="{ tab: 'ar' }">
+            {{-- Name (Arabic only) --}}
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">
+                    اسم التصنيف <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="name[ar]" value="{{ old('name.ar') }}"
+                       required dir="rtl" oninput="autoSlug(this.value)"
+                       class="w-full border border-gray-200 rounded-xl focus:ring-2
+                              focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition"
+                       placeholder="مثال: نساء">
+                @error('name.ar')
+                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
 
-    {{-- Tab switcher --}}
-    <div class="flex gap-3 mb-4 border-b border-gray-100 pb-1">
-        <button type="button"
-                @click="tab = 'ar'"
-                :class="tab === 'ar'
-                    ? 'border-b-2 border-brand text-gray-900 font-extrabold'
-                    : 'text-gray-400 hover:text-gray-600 font-bold'"
-                class="pb-2 px-1 text-sm transition-colors">
-            العربية 🇸🇦
-        </button>
-        <button type="button"
-                @click="tab = 'en'"
-                :class="tab === 'en'
-                    ? 'border-b-2 border-brand text-gray-900 font-extrabold'
-                    : 'text-gray-400 hover:text-gray-600 font-bold'"
-                class="pb-2 px-1 text-sm transition-colors">
-            English 🇬🇧
-        </button>
-    </div>
-
-    {{-- Arabic fields --}}
-    <div x-show="tab === 'ar'" class="space-y-6">
-        <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">
-                اسم التصنيف (عربي) <span class="text-red-500">*</span>
-            </label>
-            <input type="text"
-                   name="name[ar]"
-                   value="{{ old('name.ar') }}"
-                   required
-                   dir="rtl"
-                   oninput="autoSlug(this.value)"
-                   class="w-full border border-gray-200 rounded-xl focus:ring-2
-                          focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition"
-                   placeholder="مثال: نساء">
-            @error('name.ar')
-                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">الوصف (عربي)</label>
-            <textarea name="description[ar]"
-                      rows="3"
-                      dir="rtl"
-                      class="w-full border border-gray-200 rounded-xl focus:ring-2
-                             focus:ring-brand/30 focus:border-brand p-3 bg-gray-50
-                             text-sm transition resize-none"
-                      placeholder="وصف مختصر يظهر في صفحة التصنيف...">{{ old('description.ar') }}</textarea>
-        </div>
-    </div>
-
-    {{-- English fields --}}
-    <div x-show="tab === 'en'" class="space-y-6">
-        <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">
-                Category Name (English)
-            </label>
-            <input type="text"
-                   name="name[en]"
-                   value="{{ old('name.en') }}"
-                   dir="ltr"
-                   class="w-full border border-gray-200 rounded-xl focus:ring-2
-                          focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 transition"
-                   placeholder="e.g. Women">
-            @error('name.en')
-                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Description (English)</label>
-            <textarea name="description[en]"
-                      rows="3"
-                      dir="ltr"
-                      class="w-full border border-gray-200 rounded-xl focus:ring-2
-                             focus:ring-brand/30 focus:border-brand p-3 bg-gray-50
-                             text-sm transition resize-none"
-                      placeholder="Short description shown on the category page...">{{ old('description.en') }}</textarea>
-        </div>
-    </div>
-</div>
+            {{-- Description (Arabic only) --}}
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">الوصف (اختياري)</label>
+                <textarea name="description[ar]" rows="3" dir="rtl"
+                          class="w-full border border-gray-200 rounded-xl focus:ring-2
+                                 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50
+                                 text-sm transition resize-none"
+                          placeholder="وصف مختصر يظهر في صفحة التصنيف...">{{ old('description.ar') }}</textarea>
+            </div>
 
             {{-- Slug --}}
             <div>
@@ -211,8 +142,10 @@
                             <input type="radio" name="parent_id" value="{{ $sub->id }}"
                                    {{ old('parent_id') == $sub->id ? 'checked' : '' }}
                                    class="w-4 h-4 text-brand border-gray-300 focus:ring-brand">
-                            <svg class="w-3.5 h-3.5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            <svg class="w-3.5 h-3.5 text-gray-300 flex-shrink-0" fill="none"
+                                 stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
                             <span class="text-sm text-gray-700">{{ $sub->name }}</span>
                         </label>
@@ -220,16 +153,6 @@
                     </div>
                     @endforeach
                 </div>
-            </div>
-
-            {{-- Description --}}
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">الوصف (اختياري)</label>
-                <textarea name="description" rows="3"
-                          class="w-full border border-gray-200 rounded-xl focus:ring-2
-                                 focus:ring-brand/30 focus:border-brand p-3 bg-gray-50 text-sm
-                                 transition resize-none"
-                          placeholder="وصف مختصر يظهر في صفحة التصنيف...">{{ old('description') }}</textarea>
             </div>
 
             {{-- Sort order --}}
@@ -261,24 +184,19 @@
                     </svg>
                     بانر صفحة التصنيف
                 </h3>
-                <p class="text-xs text-gray-400 mb-4">
-                    يظهر كصورة كاملة العرض أعلى صفحة التصنيف — لا يوجد نص أو أزرار.
-                </p>
+                <p class="text-xs text-gray-400 mb-4">يظهر كصورة كاملة العرض أعلى صفحة التصنيف — لا يوجد نص أو أزرار.</p>
 
                 <div class="space-y-3">
-
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">
                             صورة البانر
                             <span class="text-gray-400 font-normal">(1400 × 400 px مثالي)</span>
                         </label>
-
                         <div id="banner-preview-wrap"
                              class="hidden mb-2 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
                             <img id="banner-preview" src="" alt="معاينة البانر"
                                  class="w-full h-32 object-cover">
                         </div>
-
                         <input type="file" name="banner_image" id="banner-image-input"
                                accept="image/jpeg,image/png,image/webp,image/gif"
                                class="block w-full text-sm text-gray-500
@@ -297,7 +215,6 @@
                             <p class="text-xs text-gray-400">سيظهر أعلى صفحة هذا التصنيف عند التفعيل</p>
                         </div>
                     </label>
-
                 </div>
             </div>
 
@@ -354,10 +271,8 @@ document.getElementById('banner-image-input')
         if (!this.files?.[0]) return;
         const reader = new FileReader();
         reader.onload = e => {
-            const wrap = document.getElementById('banner-preview-wrap');
-            const img  = document.getElementById('banner-preview');
-            img.src = e.target.result;
-            wrap.classList.remove('hidden');
+            document.getElementById('banner-preview').src = e.target.result;
+            document.getElementById('banner-preview-wrap').classList.remove('hidden');
         };
         reader.readAsDataURL(this.files[0]);
     });
