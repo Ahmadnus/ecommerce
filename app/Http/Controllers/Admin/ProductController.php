@@ -12,8 +12,6 @@ use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    // ─── Index ────────────────────────────────────────────────────────────────
-
     public function index(Request $request)
     {
         $query = Product::with([
@@ -56,8 +54,6 @@ class ProductController extends Controller
         return view('admin.products.index', compact('products', 'categories', 'stats'));
     }
 
-    // ─── Create ───────────────────────────────────────────────────────────────
-
     public function create()
     {
         $categories = Category::active()->roots()
@@ -65,10 +61,6 @@ class ProductController extends Controller
 
         return view('admin.products.create', compact('categories'));
     }
-
-    // ─── Store ────────────────────────────────────────────────────────────────
-    // Variants are NOT submitted from the create form.
-    // A single default variant (no attributes) is created automatically.
 
     public function store(Request $request)
     {
@@ -81,7 +73,7 @@ class ProductController extends Controller
             'sku'                  => 'nullable|string|max:100|unique:products,sku',
             'category_ids'         => 'required|array|min:1',
             'category_ids.*'       => 'exists:categories,id',
-            'primary_category_id'  => 'required|exists:categories,id',
+            'primary_category_id'   => 'required|exists:categories,id',
             'main_image'           => 'required|image|mimes:jpeg,png,jpg,webp,avif|max:5120',
             'product_images'       => 'nullable|array|max:20',
             'product_images.*'     => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
@@ -98,7 +90,7 @@ class ProductController extends Controller
             'sku.unique'                   => 'رمز SKU مستخدم بالفعل، يرجى اختيار رمز آخر.',
             'category_ids.required'        => 'يجب اختيار تصنيف واحد على الأقل.',
             'category_ids.min'             => 'يجب اختيار تصنيف واحد على الأقل.',
-            'primary_category_id.required' => 'يجب تحديد التصنيف الأساسي.',
+            'primary_category_id.required'  => 'يجب تحديد التصنيف الأساسي.',
             'main_image.required'          => 'صورة الغلاف مطلوبة.',
             'main_image.image'             => 'الملف المرفوع يجب أن يكون صورة.',
             'main_image.mimes'             => 'صورة الغلاف يجب أن تكون بصيغة: JPEG أو PNG أو WebP أو AVIF.',
@@ -122,7 +114,6 @@ class ProductController extends Controller
                 'is_featured'       => $request->boolean('is_featured'),
             ]);
 
-            // Categories
             $pivot = [];
             foreach ($request->category_ids as $catId) {
                 $pivot[(int) $catId] = [
@@ -131,35 +122,27 @@ class ProductController extends Controller
             }
             $product->categories()->attach($pivot);
 
-            // Main image
             if ($request->hasFile('main_image')) {
-                $product->addMedia($request->file('main_image'))
-                        ->toMediaCollection('main');
+                $product->addCompressedMedia($request->file('main_image'), 'main');
             }
 
-            // Gallery images
             if ($request->hasFile('product_images')) {
                 foreach ($request->file('product_images') as $index => $image) {
-                    $product->addMedia($image)
-                            ->withCustomProperties(['order' => $index])
-                            ->toMediaCollection('products');
+                    $product->addCompressedMedia($image, 'products');
                 }
             }
 
-            // Auto-create one default variant (no attributes, no stock tracking)
             $product->variants()->create([
                 'sku'            => $request->sku ?: strtoupper(Str::random(8)),
-                'price_override' => null,
-                'stock_quantity' => 0,
-                'is_active'      => true,
+                'price_override'  => null,
+                'stock_quantity'  => 0,
+                'is_active'       => true,
             ]);
         });
 
         return redirect()->route('admin.products.index')
-                         ->with('success', 'تم إضافة المنتج بنجاح ✓');
+            ->with('success', 'تم إضافة المنتج بنجاح ✓');
     }
-
-    // ─── Show ─────────────────────────────────────────────────────────────────
 
     public function show(Product $product)
     {
@@ -167,8 +150,6 @@ class ProductController extends Controller
 
         return view('admin.products.show', compact('product'));
     }
-
-    // ─── Edit ─────────────────────────────────────────────────────────────────
 
     public function edit(Product $product)
     {
@@ -186,8 +167,6 @@ class ProductController extends Controller
             'product', 'categories', 'selectedCatIds', 'primaryCatId'
         ));
     }
-
-    // ─── Update ───────────────────────────────────────────────────────────────
 
     public function update(Request $request, Product $product)
     {
@@ -246,7 +225,6 @@ class ProductController extends Controller
                 'is_featured'       => $request->boolean('is_featured'),
             ]);
 
-            // Categories
             $pivot = [];
             foreach ($request->category_ids as $catId) {
                 $pivot[(int) $catId] = [
@@ -255,58 +233,48 @@ class ProductController extends Controller
             }
             $product->categories()->sync($pivot);
 
-            // Delete flagged gallery images
             $deleteIds = $request->input('delete_media_ids', []);
             if (!empty($deleteIds)) {
                 $product->media()->whereIn('id', $deleteIds)->get()->each(fn($m) => $m->delete());
             }
 
-            // Replace main image if a new one was uploaded
             if ($request->hasFile('main_image')) {
                 $product->clearMediaCollection('main');
-                $product->addMedia($request->file('main_image'))
-                        ->toMediaCollection('main');
+                $product->addCompressedMedia($request->file('main_image'), 'main');
             }
 
-            // Add new gallery images
             if ($request->hasFile('product_images')) {
-                $existingCount = $product->getMedia('products')->count();
-                foreach ($request->file('product_images') as $index => $image) {
-                    $product->addMedia($image)
-                            ->withCustomProperties(['order' => $existingCount + $index])
-                            ->toMediaCollection('products');
+                foreach ($request->file('product_images') as $image) {
+                    $product->addCompressedMedia($image, 'products');
                 }
             }
         });
 
         return redirect()->route('admin.products.show', $product)
-                         ->with('success', 'تم تحديث المنتج بنجاح ✓');
+            ->with('success', 'تم تحديث المنتج بنجاح ✓');
     }
-
-    // ─── Destroy ──────────────────────────────────────────────────────────────
 
     public function destroy(Product $product)
     {
         $product->delete();
 
         return redirect()->route('admin.products.index')
-                         ->with('success', 'تم نقل المنتج إلى سلة المحذوفات');
+            ->with('success', 'تم نقل المنتج إلى سلة المحذوفات');
     }
-
-    // ─── Private helpers ──────────────────────────────────────────────────────
 
     private function uniqueSlug(string $name, ?int $excludeId = null): string
     {
         $slug  = Str::slug($name);
         $query = Product::where('slug', $slug);
+
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
+
         if ($query->exists()) {
             $slug .= '-' . Str::lower(Str::random(4));
         }
 
         return $slug;
     }
-
 }

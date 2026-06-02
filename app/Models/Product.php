@@ -8,71 +8,115 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\Image\Enums\Fit;
+use Spatie\Image\Image;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\Translatable\HasTranslations; // ← ADD
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Spatie\Translatable\HasTranslations;
 
 class Product extends Model implements HasMedia
 {
     use HasFactory, SoftDeletes, InteractsWithMedia;
-    use HasTranslations; // ← ADD
+    use HasTranslations;
 
-    // ── Declare which fields are translatable ──────────────────────────────
     public array $translatable = ['name', 'description', 'short_description'];
 
     protected $fillable = [
-        'name',             // json
-        'slug',
-        'description',      // json
-        'short_description',// json
-        'base_price',
-        'discount_price',
-        'sku',
-        'image',
-        'images',
-        'status',
-        'is_featured',
-        'sort_order',
-        'meta',
+        'name', 'slug', 'description', 'short_description',
+        'base_price', 'discount_price', 'sku',
+        'image', 'images', 'status', 'is_featured', 'sort_order', 'meta',
     ];
 
     protected $casts = [
-        'base_price'      => 'decimal:2',
-        'discount_price'  => 'decimal:2',
-        'is_featured'     => 'boolean',
-        'sort_order'      => 'integer',
-        'images'          => 'array',
-        'meta'            => 'array',
-        // Note: DO NOT cast translatable fields here —
-        // Spatie handles their JSON encoding/decoding internally.
+        'base_price'     => 'decimal:2',
+        'discount_price' => 'decimal:2',
+        'is_featured'    => 'boolean',
+        'sort_order'     => 'integer',
+        'images'         => 'array',
+        'meta'           => 'array',
     ];
 
-    // ─── Boot ─────────────────────────────────────────────────────────────
     protected static function booted(): void
     {
         static::creating(function (self $p): void {
-            // Slug from the Arabic name, fallback to English
-            $p->slug ??= Str::slug($p->getTranslation('name', 'ar')
-                ?: $p->getTranslation('name', 'en'));
+            $p->slug ??= Str::slug(
+                $p->getTranslation('name', 'ar') ?: $p->getTranslation('name', 'en')
+            );
         });
     }
 
-    // ─── Relationships ────────────────────────────────────────────────────
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('main')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
+
+        $this->addMediaCollection('products')
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif']);
+    }
+
+    /**
+     * Compress an uploaded image to a temporary WebP file before saving it in Media Library.
+     * This replaces the big upload with the optimized file itself.
+     */
+    public static function optimizeUploadedImageToTempWebp(
+        UploadedFile $file,
+        int $maxWidth = 1600,
+        int $maxHeight = 1600
+    ): string {
+        $tempBase = tempnam(sys_get_temp_dir(), 'product_media_');
+        $tempPath = $tempBase . '.webp';
+
+        if ($tempBase && is_file($tempBase)) {
+            @unlink($tempBase);
+        }
+
+        Image::load($file->getRealPath())
+            ->fit(Fit::Contain, $maxWidth, $maxHeight)
+            ->optimize()
+            ->save($tempPath);
+
+        return $tempPath;
+    }
+
+    /**
+     * Use this from your store/update controller methods.
+     */
+    public function addCompressedMedia(
+        UploadedFile $file,
+        string $collection = 'main',
+        int $maxWidth = 1600,
+        int $maxHeight = 1600
+    ): Media {
+        $tempPath = self::optimizeUploadedImageToTempWebp($file, $maxWidth, $maxHeight);
+
+        try {
+            return $this->addMedia($tempPath)
+                ->usingFileName(Str::uuid() . '.webp')
+                ->toMediaCollection($collection);
+        } finally {
+            if (is_file($tempPath)) {
+                @unlink($tempPath);
+            }
+        }
+    }
 
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_product')
-                    ->withPivot('is_primary')
-                    ->withTimestamps();
+            ->withPivot('is_primary')
+            ->withTimestamps();
     }
 
     public function primaryCategory(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_product')
-                    ->withPivot('is_primary')
-                    ->wherePivot('is_primary', true);
+            ->withPivot('is_primary')
+            ->wherePivot('is_primary', true);
     }
 
     public function variants(): HasMany
@@ -83,8 +127,8 @@ class Product extends Model implements HasMedia
     public function activeVariants(): HasMany
     {
         return $this->variants()
-                    ->where('is_active', true)
-                    ->where('stock_quantity', '>', 0);
+            ->where('is_active', true)
+            ->where('stock_quantity', '>', 0);
     }
 
     public function attributeValues(): BelongsToMany
@@ -102,8 +146,6 @@ class Product extends Model implements HasMedia
         )->withTimestamps();
     }
 
-    // ─── Accessors ────────────────────────────────────────────────────────
-
     protected function effectivePrice(): Attribute
     {
         return Attribute::make(
@@ -118,7 +160,6 @@ class Product extends Model implements HasMedia
                         return (float) $lowest;
                     }
                 }
-
                 return (float) ($this->discount_price ?? $this->base_price);
             }
         );
@@ -128,7 +169,7 @@ class Product extends Model implements HasMedia
     {
         return Attribute::make(
             get: fn(): bool => $this->discount_price !== null
-                               && $this->discount_price < $this->base_price
+                && $this->discount_price < $this->base_price
         );
     }
 
@@ -138,7 +179,7 @@ class Product extends Model implements HasMedia
             get: fn(): int => $this->is_on_sale
                 ? (int) round(
                     (($this->base_price - $this->discount_price) / $this->base_price) * 100
-                  )
+                )
                 : 0
         );
     }
@@ -166,22 +207,25 @@ class Product extends Model implements HasMedia
                 if ($this->image) {
                     return Storage::url($this->image);
                 }
+
                 if ($this->relationLoaded('variants')) {
                     $variantImage = $this->variants->first()?->variant_image;
                     if ($variantImage) {
                         return Storage::url($variantImage);
                     }
                 }
+
                 return null;
             }
         );
     }
-public function getCategoryAttribute()
-{
-    // يبحث عن القسم المسمّى "أساسي" أولاً، وإذا لم يوجد يأخذ أول قسم مرتبط بالمنتج
-    return $this->categories->where('pivot.is_primary', true)->first() 
-           ?? $this->categories->first();
-}
+
+    public function getCategoryAttribute()
+    {
+        return $this->categories->where('pivot.is_primary', true)->first()
+            ?? $this->categories->first();
+    }
+
     protected function imageUrls(): Attribute
     {
         return Attribute::make(
@@ -190,8 +234,6 @@ public function getCategoryAttribute()
                 ->toArray()
         );
     }
-
-    // ─── Scopes ───────────────────────────────────────────────────────────
 
     public function scopeActive($query): mixed
     {
@@ -203,17 +245,13 @@ public function getCategoryAttribute()
         return $query->where('is_featured', true);
     }
 
-    /**
-     * Search across both locale columns stored in JSON.
-     * Works on MySQL 5.7+ / MariaDB 10.2+.
-     */
     public function scopeSearch($query, string $term): mixed
     {
         return $query->where(function ($q) use ($term) {
             $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(name, '$.ar')) LIKE ?", ["%{$term}%"])
-              ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(name, '$.en')) LIKE ?", ["%{$term}%"])
-              ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(description, '$.ar')) LIKE ?", ["%{$term}%"])
-              ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(description, '$.en')) LIKE ?", ["%{$term}%"]);
+                ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(name, '$.en')) LIKE ?", ["%{$term}%"])
+                ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(description, '$.ar')) LIKE ?", ["%{$term}%"])
+                ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(description, '$.en')) LIKE ?", ["%{$term}%"]);
         });
     }
 
@@ -225,15 +263,10 @@ public function getCategoryAttribute()
         );
     }
 
-    // ─── Helpers ──────────────────────────────────────────────────────────
-
-    /** Convenience: get name in a specific locale without changing app locale */
     public function nameIn(string $locale): string
     {
         return $this->getTranslation('name', $locale) ?: $this->name;
     }
-
-    // ─── Currency helpers (unchanged) ────────────────────────────────────
 
     public function getPriceInCurrency(string $field = 'base_price'): float
     {
