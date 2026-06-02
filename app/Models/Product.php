@@ -286,4 +286,5 @@ class Product extends Model implements HasMedia
         $svc = app(\App\Services\CurrencyService::class);
         return $svc->format($this->is_on_sale ? $this->discount_price : $this->base_price);
     }
+    ///php
 }

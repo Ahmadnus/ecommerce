@@ -34,7 +34,7 @@ class HeroBanner extends Model implements HasMedia
     protected $casts = [
         'is_active'  => 'boolean',
         'sort_order' => 'integer',
-        // DO NOT cast translatable fields — Spatie handles their JSON
+     
     ];
 
     public function registerMediaCollections(): void
