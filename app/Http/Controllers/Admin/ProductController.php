@@ -10,18 +10,17 @@ use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
     private const LOW_STOCK_THRESHOLD = 5;
 
-    // ─── Index (unchanged) ────────────────────────────────────────────────────
-
     public function index(Request $request)
     {
         $query = Product::with([
             'categories',
-            'variants'                     => fn($q) => $q->orderBy('is_active', 'desc'),
+            'variants' => fn($q) => $q->orderBy('is_active', 'desc'),
             'variants.attributeValues.attribute',
             'media',
         ])->withCount('variants');
@@ -31,21 +30,25 @@ class ProductController extends Controller
                 ->where('name', 'like', '%' . $request->search . '%')
                 ->orWhere('sku', 'like', '%' . $request->search . '%'));
         }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
+
         if ($request->filled('stock')) {
             match ($request->stock) {
-                'out'   => $query->whereHas('variants', fn($q) => $q->where('stock_quantity', 0)),
-                'low'   => $query->whereHas('variants', fn($q) => $q
-                               ->where('stock_quantity', '>', 0)
-                               ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)),
+                'out' => $query->whereHas('variants', fn($q) => $q->where('stock_quantity', 0)),
+                'low' => $query->whereHas('variants', fn($q) => $q
+                    ->where('stock_quantity', '>', 0)
+                    ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)),
                 default => null,
             };
         }
+
         if ($request->filled('category')) {
             $query->whereHas('categories', fn($q) => $q->where('categories.id', $request->category));
         }
+
         match ($request->get('sort', 'newest')) {
             'name_asc'   => $query->orderBy('name'),
             'name_desc'  => $query->orderByDesc('name'),
@@ -56,183 +59,100 @@ class ProductController extends Controller
 
         $products   = $query->paginate(20)->withQueryString();
         $categories = Category::active()->orderBy('name')->get();
+
         $stats = [
             'total'  => Product::count(),
             'active' => Product::where('status', 'active')->count(),
             'out'    => ProductVariant::where('stock_quantity', 0)->count(),
             'low'    => ProductVariant::where('stock_quantity', '>', 0)
-                                      ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)->count(),
+                ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)
+                ->count(),
         ];
 
         return view('admin.products.index', compact('products', 'categories', 'stats'));
     }
 
-    // ─── Create ───────────────────────────────────────────────────────────────
-
     public function create()
     {
         $categories = Category::active()->roots()
-            ->with('allActiveChildren')->orderBy('sort_order')->get();
-        $attributes = Attribute::with('values')->orderBy('sort_order')->get();
+            ->with('allActiveChildren')
+            ->orderBy('sort_order')
+            ->get();
+
+        $attributes = Attribute::with('values')
+            ->orderBy('sort_order')
+            ->get();
 
         return view('admin.products.create', compact('categories', 'attributes'));
     }
 
-    // ─── Store ────────────────────────────────────────────────────────────────
-    // CHANGED: accepts `product_images[]` (multiple) instead of `main_image` (single)
-
- // ─── Store ────────────────────────────────────────────────────────────────
-public function store(Request $request)
-{
-    $request->validate([
-        'name.ar'             => 'required|string|max:255',
-        'name.en'             => 'nullable|string|max:255',
-        'description.ar'      => 'nullable|string',
-        'description.en'      => 'nullable|string',
-        'short_description.ar'=> 'nullable|string|max:500',
-        'short_description.en'=> 'nullable|string|max:500',
-        'base_price'          => 'required|numeric|min:0',
-        'discount_price'      => 'nullable|numeric|min:0|lt:base_price',
-        'sku'                 => 'nullable|unique:products,sku',
-        'category_ids'        => 'required|array|min:1',
-        'category_ids.*'      => 'exists:categories,id',
-        'primary_category_id' => 'required|exists:categories,id',
-        'main_image'          => 'required|image|mimes:jpeg,png,jpg,webp,avif|max:5120',
-        'product_images'      => 'nullable|array|max:10',
-        'product_images.*'    => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
-        'variants'                     => 'required|array|min:1',
-        'variants.*.stock_quantity'    => 'required|integer|min:0',
-        'variants.*.price_override'    => 'nullable|numeric|min:0',
-        'variants.*.sku'               => 'nullable|string|max:100',
-        'variants.*.attribute_values'  => 'nullable|array',
-        'variants.*.attribute_values.*'=> 'exists:attribute_values,id',
-    ]);
-
-    DB::transaction(function () use ($request) {
-        $product = Product::create([
-            // Spatie reads the array directly from the request
-            'name'              => $request->input('name'),             // ['ar' => ..., 'en' => ...]
-            'description'       => $request->input('description'),
-            'short_description' => $request->input('short_description'),
-            'slug'              => $this->uniqueSlug(
-                                       $request->input('name.ar') ?: $request->input('name.en')
-                                   ),
-            'base_price'        => $request->base_price,
-            'discount_price'    => $request->discount_price,
-            'sku'               => $request->sku,
-            'status'            => $request->boolean('is_active', true) ? 'active' : 'draft',
-            'is_featured'       => $request->boolean('is_featured'),
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name.ar'               => 'required|string|max:255',
+            'name.en'               => 'nullable|string|max:255',
+            'description.ar'        => 'nullable|string',
+            'description.en'        => 'nullable|string',
+            'short_description.ar'  => 'nullable|string|max:500',
+            'short_description.en'  => 'nullable|string|max:500',
+            'base_price'            => 'required|numeric|min:0',
+            'discount_price'        => 'nullable|numeric|min:0|lt:base_price',
+            'sku'                   => 'nullable|unique:products,sku',
+            'category_ids'          => 'required|array|min:1',
+            'category_ids.*'        => 'exists:categories,id',
+            'primary_category_id'   => 'required|exists:categories,id',
+            'main_image'            => 'required|image|mimes:jpeg,png,jpg,webp,avif|max:5120',
+            'product_images'        => 'nullable|array|max:10',
+            'product_images.*'      => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
+            'variants'                      => 'required|array|min:1',
+            'variants.*.stock_quantity'      => 'required|integer|min:0',
+            'variants.*.price_override'      => 'nullable|numeric|min:0',
+            'variants.*.sku'                 => 'nullable|string|max:100',
+            'variants.*.attribute_values'    => 'nullable|array',
+            'variants.*.attribute_values.*'  => 'exists:attribute_values,id',
         ]);
 
-        $pivot = [];
-        foreach ($request->category_ids as $catId) {
-            $pivot[(int) $catId] = [
-                'is_primary' => (int) $catId === (int) $request->primary_category_id,
-            ];
-        }
-        $product->categories()->attach($pivot);
+        DB::transaction(function () use ($request) {
+            $product = Product::create([
+                'name'              => $request->input('name'),
+                'description'       => $request->input('description'),
+                'short_description' => $request->input('short_description'),
+                'slug'              => $this->uniqueSlug(
+                    $request->input('name.ar') ?: $request->input('name.en')
+                ),
+                'base_price'        => $request->base_price,
+                'discount_price'    => $request->discount_price,
+                'sku'               => $request->sku,
+                'status'            => $request->boolean('is_active', true) ? 'active' : 'draft',
+                'is_featured'       => $request->boolean('is_featured'),
+            ]);
 
-        if ($request->hasFile('main_image')) {
-            $product->addMedia($request->file('main_image'))
-                    ->toMediaCollection('main');
-        }
-
-        if ($request->hasFile('product_images')) {
-            foreach ($request->file('product_images') as $index => $image) {
-                $product->addMedia($image)
-                        ->withCustomProperties(['order' => $index])
-                        ->toMediaCollection('products');
+            $pivot = [];
+            foreach ($request->category_ids as $catId) {
+                $pivot[(int) $catId] = [
+                    'is_primary' => (int) $catId === (int) $request->primary_category_id,
+                ];
             }
-        }
+            $product->categories()->attach($pivot);
 
-        foreach ($request->variants as $variantData) {
-            $this->createVariant($product, $variantData);
-        }
-    });
-
-    return redirect()->route('admin.products.index')
-                     ->with('success', 'تم إضافة المنتج بنجاح');
-}
-
-// ─── Update ───────────────────────────────────────────────────────────────
-public function update(Request $request, Product $product)
-{
-    $request->validate([
-        'name.ar'             => 'required|string|max:255',
-        'name.en'             => 'nullable|string|max:255',
-        'description.ar'      => 'nullable|string',
-        'description.en'      => 'nullable|string',
-        'short_description.ar'=> 'nullable|string|max:500',
-        'short_description.en'=> 'nullable|string|max:500',
-        'base_price'          => 'required|numeric|min:0',
-        'discount_price'      => 'nullable|numeric|min:0|lt:base_price',
-        'category_ids'        => 'required|array|min:1',
-        'category_ids.*'      => 'exists:categories,id',
-        'primary_category_id' => 'required|exists:categories,id',
-        'product_images'      => 'nullable|array|max:10',
-        'product_images.*'    => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
-        'delete_media_ids'    => 'nullable|array',
-        'delete_media_ids.*'  => 'integer',
-        'variants'                      => 'required|array|min:1',
-        'variants.*.stock_quantity'     => 'required|integer|min:0',
-        'variants.*.price_override'     => 'nullable|numeric|min:0',
-        'variants.*.sku'                => 'nullable|string|max:100',
-        'variants.*.attribute_values'   => 'nullable|array',
-        'variants.*.attribute_values.*' => 'exists:attribute_values,id',
-    ]);
-
-    DB::transaction(function () use ($request, $product) {
-        $newArName = $request->input('name.ar');
-        $newEnName = $request->input('name.en');
-
-        // Regenerate slug only if the Arabic name changed
-        if ($newArName !== $product->getTranslation('name', 'ar')) {
-            $product->slug = $this->uniqueSlug($newArName ?: $newEnName, $product->id);
-        }
-
-        $product->update([
-            'name'              => $request->input('name'),
-            'description'       => $request->input('description'),
-            'short_description' => $request->input('short_description'),
-            'base_price'        => $request->base_price,
-            'discount_price'    => $request->discount_price,
-            'status'            => $request->boolean('is_active', true) ? 'active' : 'draft',
-            'is_featured'       => $request->boolean('is_featured'),
-        ]);
-
-        $pivot = [];
-        foreach ($request->category_ids as $catId) {
-            $pivot[(int) $catId] = [
-                'is_primary' => (int) $catId === (int) $request->primary_category_id,
-            ];
-        }
-        $product->categories()->sync($pivot);
-
-        $deleteIds = $request->input('delete_media_ids', []);
-        if (!empty($deleteIds)) {
-            $product->media()->whereIn('id', $deleteIds)->get()->each(fn($m) => $m->delete());
-        }
-
-        if ($request->hasFile('product_images')) {
-            $existingCount = $product->getMedia('products')->count();
-            foreach ($request->file('product_images') as $index => $image) {
-                $product->addMedia($image)
-                        ->withCustomProperties(['order' => $existingCount + $index])
-                        ->toMediaCollection('products');
+            if ($request->hasFile('main_image')) {
+                $product->addCompressedMedia($request->file('main_image'), 'main');
             }
-        }
 
-        $product->variants()->forceDelete();
-        foreach ($request->variants as $variantData) {
-            $this->createVariant($product, $variantData);
-        }
-    });
+            if ($request->hasFile('product_images')) {
+                foreach ($request->file('product_images') as $index => $image) {
+                    $product->addCompressedMedia($image, 'products');
+                }
+            }
 
-    return redirect()->route('admin.products.show', $product)
-                     ->with('success', 'تم تحديث المنتج بنجاح');
-}
+            foreach ($request->variants as $variantData) {
+                $this->createVariant($product, $variantData);
+            }
+        });
 
-    // ─── Show ─────────────────────────────────────────────────────────────────
+        return redirect()->route('admin.products.index')
+            ->with('success', 'تم إضافة المنتج بنجاح');
+    }
 
     public function show(Product $product)
     {
@@ -242,15 +162,18 @@ public function update(Request $request, Product $product)
         return view('admin.products.show', compact('product', 'lowThreshold'));
     }
 
-    // ─── Edit ─────────────────────────────────────────────────────────────────
-
     public function edit(Product $product)
     {
         $product->load(['categories', 'variants.attributeValues.attribute']);
 
         $categories = Category::active()->roots()
-            ->with('allActiveChildren')->orderBy('sort_order')->get();
-        $attributes = Attribute::with('values')->orderBy('sort_order')->get();
+            ->with('allActiveChildren')
+            ->orderBy('sort_order')
+            ->get();
+
+        $attributes = Attribute::with('values')
+            ->orderBy('sort_order')
+            ->get();
 
         $selectedCatIds = $product->categories->pluck('id')->toArray();
         $primaryCatId   = $product->categories
@@ -258,41 +181,114 @@ public function update(Request $request, Product $product)
             ?? $product->categories->first()?->id;
 
         $existingVariants = $product->variants->map(fn($v) => [
-            'id'               => $v->id,
-            'sku'              => $v->sku,
-            'stock_quantity'   => $v->stock_quantity,
-            'price_override'   => $v->price_override,
-            'is_active'        => $v->is_active,
+            'id'              => $v->id,
+            'sku'             => $v->sku,
+            'stock_quantity'  => $v->stock_quantity,
+            'price_override'  => $v->price_override,
+            'is_active'       => $v->is_active,
             'attribute_values' => $v->attributeValues->pluck('id')->toArray(),
         ]);
 
-        // Pass existing media for preview in the edit form
         $existingImages = $product->getMedia('products')->map(fn($m) => [
             'id'  => $m->id,
             'url' => $m->getUrl(),
         ]);
 
         return view('admin.products.edit', compact(
-            'product', 'categories', 'attributes',
-            'selectedCatIds', 'primaryCatId', 'existingVariants', 'existingImages'
+            'product',
+            'categories',
+            'attributes',
+            'selectedCatIds',
+            'primaryCatId',
+            'existingVariants',
+            'existingImages'
         ));
     }
 
-    // ─── Update ───────────────────────────────────────────────────────────────
-    // CHANGED: handles new uploads + deletion of individual existing images
+    public function update(Request $request, Product $product)
+    {
+        $request->validate([
+            'name.ar'               => 'required|string|max:255',
+            'name.en'               => 'nullable|string|max:255',
+            'description.ar'        => 'nullable|string',
+            'description.en'        => 'nullable|string',
+            'short_description.ar'  => 'nullable|string|max:500',
+            'short_description.en'  => 'nullable|string|max:500',
+            'base_price'            => 'required|numeric|min:0',
+            'discount_price'        => 'nullable|numeric|min:0|lt:base_price',
+            'category_ids'          => 'required|array|min:1',
+            'category_ids.*'        => 'exists:categories,id',
+            'primary_category_id'   => 'required|exists:categories,id',
+            'product_images'        => 'nullable|array|max:10',
+            'product_images.*'      => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
+            'delete_media_ids'      => 'nullable|array',
+            'delete_media_ids.*'    => 'integer',
+            'variants'                      => 'required|array|min:1',
+            'variants.*.stock_quantity'      => 'required|integer|min:0',
+            'variants.*.price_override'      => 'nullable|numeric|min:0',
+            'variants.*.sku'                 => 'nullable|string|max:100',
+            'variants.*.attribute_values'    => 'nullable|array',
+            'variants.*.attribute_values.*'  => 'exists:attribute_values,id',
+        ]);
 
-   
+        DB::transaction(function () use ($request, $product) {
+            $newArName = $request->input('name.ar');
+            $newEnName = $request->input('name.en');
 
-    // ─── Stock update (unchanged) ─────────────────────────────────────────────
+            if ($newArName !== $product->getTranslation('name', 'ar')) {
+                $product->slug = $this->uniqueSlug($newArName ?: $newEnName, $product->id);
+            }
+
+            $product->update([
+                'name'              => $request->input('name'),
+                'description'       => $request->input('description'),
+                'short_description' => $request->input('short_description'),
+                'base_price'        => $request->base_price,
+                'discount_price'    => $request->discount_price,
+                'status'            => $request->boolean('is_active', true) ? 'active' : 'draft',
+                'is_featured'       => $request->boolean('is_featured'),
+            ]);
+
+            $pivot = [];
+            foreach ($request->category_ids as $catId) {
+                $pivot[(int) $catId] = [
+                    'is_primary' => (int) $catId === (int) $request->primary_category_id,
+                ];
+            }
+            $product->categories()->sync($pivot);
+
+            $deleteIds = $request->input('delete_media_ids', []);
+            if (!empty($deleteIds)) {
+                $product->media()->whereIn('id', $deleteIds)->get()->each(fn($m) => $m->delete());
+            }
+
+            if ($request->hasFile('product_images')) {
+                $existingCount = $product->getMedia('products')->count();
+
+                foreach ($request->file('product_images') as $index => $image) {
+                    $product->addCompressedMedia($image, 'products');
+                }
+            }
+
+            $product->variants()->forceDelete();
+
+            foreach ($request->variants as $variantData) {
+                $this->createVariant($product, $variantData);
+            }
+        });
+
+        return redirect()->route('admin.products.show', $product)
+            ->with('success', 'تم تحديث المنتج بنجاح');
+    }
 
     public function updateStock(Request $request, Product $product)
     {
         $request->validate([
             'variants'                   => 'required|array',
             'variants.*.id'              => 'required|exists:product_variants,id',
-            'variants.*.stock_quantity'  => 'required|integer|min:0',
-            'variants.*.price_override'  => 'nullable|numeric|min:0',
-            'variants.*.is_active'       => 'nullable|boolean',
+            'variants.*.stock_quantity'   => 'required|integer|min:0',
+            'variants.*.price_override'   => 'nullable|numeric|min:0',
+            'variants.*.is_active'        => 'nullable|boolean',
         ]);
 
         foreach ($request->variants as $data) {
@@ -300,7 +296,7 @@ public function update(Request $request, Product $product)
                 ->where('product_id', $product->id)
                 ->update([
                     'stock_quantity' => $data['stock_quantity'],
-                    'price_override' => $data['price_override'] ?: null,
+                    'price_override'  => $data['price_override'] ?: null,
                     'is_active'      => (bool) ($data['is_active'] ?? true),
                 ]);
         }
@@ -312,27 +308,27 @@ public function update(Request $request, Product $product)
         return back()->with('success', 'تم تحديث المخزون بنجاح');
     }
 
-    // ─── Destroy ──────────────────────────────────────────────────────────────
-
     public function destroy(Product $product)
     {
         $product->delete();
 
         return redirect()->route('admin.products.index')
-                         ->with('success', 'تم نقل المنتج إلى المحذوفات');
+            ->with('success', 'تم نقل المنتج إلى المحذوفات');
     }
-
-    // ─── Private helpers ──────────────────────────────────────────────────────
 
     private function uniqueSlug(string $name, ?int $excludeId = null): string
     {
-        $slug  = Str::slug($name);
-        $query = Product::where('slug', $slug);
-        if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
-        }
-        if ($query->exists()) {
-            $slug .= '-' . Str::lower(Str::random(4));
+        $slug = Str::slug($name);
+        $base = $slug;
+        $i = 1;
+
+        while (
+            Product::withTrashed()
+                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+                ->where('slug', $slug)
+                ->exists()
+        ) {
+            $slug = $base . '-' . $i++;
         }
 
         return $slug;
