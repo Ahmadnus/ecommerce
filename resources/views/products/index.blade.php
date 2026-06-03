@@ -285,95 +285,10 @@ html[lang="en"] {
     object-fit: cover;
     display: block;
 }
-.scrollbar-hide, [x-category-grid] {
-    padding-top: 12px !important;
-    margin-top: -12px !important;
-    padding-bottom: 4px !important; 
-    overflow-y: visible !important;
+@media (max-width: 640px) {
+    .cat-banner-img-wrap { max-height: 160px; border-radius: 14px; }
+    .cat-banner-img-wrap img { max-height: 160px; }
 }
-.max-w-screen-2xl {
-    overflow: visible !important;
-}
-[x-category-grid] .flex, 
-.overflow-x-auto {
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
-    margin-top: -8px !important;
-}
-.category-grid-section .flex.md\:hidden {
-    gap: 4px !important;
-}
-.category-grid-section a[class*="flex-shrink-0"],
-.category-grid-section a[class*="w-20"],
-.category-grid-section a[class*="w-16"],
-.category-grid-section a[class*="w-24"] {
-    min-width: unset !important;
-    width: auto !important;
-}
-.category-grid-section .w-16.rounded-full,
-.category-grid-section .w-14.rounded-full {
-    flex-shrink: 0;
-}
-
-/* ── ضع هذا بدله ── */
-.scrollbar-hide::-webkit-scrollbar { display: none; }
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
-.cat-strip {
-    display: flex;
-    align-items: flex-start;
-    gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    margin-left: -12px;
-    margin-right: -12px;
-    padding-left: 12px;
-    padding-right: 12px;
-}
-.cat-strip::-webkit-scrollbar { display: none; }
-
-@media (min-width: 768px) { .cat-strip { display: none; } }
-
-.cat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-    text-decoration: none;
-}
-
-.cat-circle-wrap {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    ring: 2px;
-    transition: all .2s;
-}
-.cat-circle-active {
-    outline: 2px solid var(--brand-color, #0ea5e9);
-    outline-offset: 2px;
-}
-.cat-circle-idle {
-    outline: 2px solid #e5e7eb;
-}
-
-.cat-label {
-    font-size: 10px;
-    font-weight: 600;
-    text-align: center;
-    line-height: 1.3;
-    max-width: 56px;
-    word-break: break-word;
-}
-
-.cat-desktop-grid {
-    gap: 8px 8px;
-}
-
 </style>
 @endpush
 

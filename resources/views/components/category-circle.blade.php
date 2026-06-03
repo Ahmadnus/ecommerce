@@ -20,11 +20,10 @@
 ])
 
 @php
-   $sizes = [
-        'sm' => ['circle' => 'w-12 h-12', 'text' => 'text-[10px]', 'wrap' => 'w-12'],
-        'md' => ['circle' => 'w-14 h-14', 'text' => 'text-[10px]', 'wrap' => 'w-14'],
-        'lg' => ['circle' => 'w-16 h-16', 'text' => 'text-[11px]', 'wrap' => 'w-16'],
-        'xl' => ['circle' => 'w-20 h-20', 'text' => 'text-xs',     'wrap' => 'w-20'],
+    $sizes = [
+        'sm' => ['circle' => 'w-14 h-14',  'text' => 'text-[10px]', 'wrap' => 'w-16'],
+        'md' => ['circle' => 'w-16 h-16',  'text' => 'text-[11px]', 'wrap' => 'w-20'],
+        'lg' => ['circle' => 'w-20 h-20',  'text' => 'text-xs',     'wrap' => 'w-24'],
     ];
     $s = $sizes[$size] ?? $sizes['md'];
 
