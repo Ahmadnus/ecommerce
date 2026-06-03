@@ -28,14 +28,15 @@
             </div>
 
             {{-- نوع الخط (كان خارج الفورم والآن داخله) --}}
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-600 mr-2">نوع الخط</label>
-                <select name="splash_font_family" class="p-3 border rounded-xl focus:ring-2 focus:ring-black outline-none bg-white font-mono">
-                    <option value="'Montserrat', sans-serif" {{ ($settings['splash_font_family'] ?? '') == "'Montserrat', sans-serif" ? 'selected' : '' }}>Modern (Montserrat)</option>
-                    <option value="'Cairo', sans-serif" {{ ($settings['splash_font_family'] ?? '') == "'Cairo', sans-serif" ? 'selected' : '' }}>Arabic (Cairo)</option>
-                    <option value="serif" {{ ($settings['splash_font_family'] ?? '') == "serif" ? 'selected' : '' }}>Classic (Serif)</option>
-                </select>
-            </div>
+          <div class="flex flex-col gap-1">
+    <label class="text-sm font-bold text-gray-600 mr-2">نوع الخط</label>
+    <select name="splash_font_family" class="p-3 border rounded-xl focus:ring-2 focus:ring-black outline-none bg-white font-mono">
+        <option value="'Montserrat', sans-serif" {{ ($settings['splash_font_family'] ?? '') == "'Montserrat', sans-serif" ? 'selected' : '' }}>Modern (Montserrat)</option>
+        <option value="'Cairo', sans-serif" {{ ($settings['splash_font_family'] ?? '') == "'Cairo', sans-serif" ? 'selected' : '' }}>Arabic (Cairo)</option>
+        <option value="serif" {{ ($settings['splash_font_family'] ?? '') == "serif" ? 'selected' : '' }}>Classic (Serif)</option>
+        <option value="'Curlz MT', cursive" {{ ($settings['splash_font_family'] ?? '') == "'Curlz MT', cursive" ? 'selected' : '' }}>Curlz MT</option>
+    </select>
+</div>
 
             {{-- حجم الخط (كان خارج الفورم والآن داخله) --}}
             <div class="flex flex-col gap-1">

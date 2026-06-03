@@ -231,7 +231,43 @@
                 class="w-full border-gray-200 rounded-xl focus:ring-brand focus:border-brand p-3.5 bg-white shadow-sm transition-all">
 
                 @php $currentEn = \App\Models\Setting::get('font_en', 'Inter'); @endphp
+                
+<option value="Curlz MT" {{ $currentEn == 'Curlz MT' ? 'selected' : '' }}>Curlz MT</option>
+<option value="Curlz MT" {{ $currentEn == 'Curlz MT' ? 'selected' : '' }}>
+    Curlz MT
+</option>
 
+<option value="Edwardian Script ITC" {{ $currentEn == 'Edwardian Script ITC' ? 'selected' : '' }}>
+    Edwardian Script ITC ✨
+</option>
+
+<option value="Kunstler Script" {{ $currentEn == 'Kunstler Script' ? 'selected' : '' }}>
+    Kunstler Script
+</option>
+
+<option value="Vivaldi" {{ $currentEn == 'Vivaldi' ? 'selected' : '' }}>
+    Vivaldi
+</option>
+
+<option value="Bickham Script Pro" {{ $currentEn == 'Bickham Script Pro' ? 'selected' : '' }}>
+    Bickham Script Pro
+</option>
+
+<option value="Mea Culpa" {{ $currentEn == 'Mea Culpa' ? 'selected' : '' }}>
+    Mea Culpa (Very Curly)
+</option>
+
+<option value="Great Vibes" {{ $currentEn == 'Great Vibes' ? 'selected' : '' }}>
+    Great Vibes
+</option>
+
+<option value="Alex Brush" {{ $currentEn == 'Alex Brush' ? 'selected' : '' }}>
+    Alex Brush
+</option>
+
+<option value="Allura" {{ $currentEn == 'Allura' ? 'selected' : '' }}>
+    Allura
+</option>
                 <option value="Inter" {{ $currentEn == 'Inter' ? 'selected' : '' }}>Inter</option>
                 <option value="Roboto" {{ $currentEn == 'Roboto' ? 'selected' : '' }}>Roboto</option>
                 <option value="DM Sans" {{ $currentEn == 'DM Sans' ? 'selected' : '' }}>DM Sans</option>

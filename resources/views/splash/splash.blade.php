@@ -36,8 +36,8 @@
             ?: asset('images/default-logo.png');
 
         // إعدادات النصوص
-        $mainTitle   = $siteSettings['splash_title_main'] ?? 'COOL';
-        $subTitle    = $siteSettings['splash_title_sub'] ?? 'VIBES';
+        $mainTitle = $siteSettings['splash_title_main'] ?? 'COOL';
+        $subTitle  = $siteSettings['splash_title_sub'] ?? 'VIBES';
 
         // إعدادات الألوان
         $mainColor = $siteSettings['splash_color_main'] ?? '#000000';
@@ -45,7 +45,7 @@
 
         // إعدادات الخطوط
         $fontSize   = $siteSettings['splash_font_size'] ?? 'text-6xl';
-        $fontFamily = $siteSettings['splash_font_family'] ?? "'Montserrat', sans-serif";
+        $fontFamily = $siteSettings['splash_font_family'] ?? "'Curlz MT', cursive";
     @endphp
 
     <title>{{ $seoTitle }}</title>

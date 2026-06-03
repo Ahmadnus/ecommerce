@@ -19,18 +19,12 @@
     </div>
     @endif
 
-    {{-- Mobile: horizontal scroll strip --}}
-    <div class="flex md:hidden items-start gap-5 overflow-x-auto pb-4
-                scrollbar-hide -mx-3 px-3">
-
+    {{-- Mobile --}}
+    <div class="cat-strip">
         @if($showAll)
         <a href="{{ route('products.index') }}"
-           class="flex flex-col items-center gap-2 flex-shrink-0 w-20 group">
-            <div class="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0
-                        ring-2 transition-all duration-200
-                        {{ !$current
-                            ? 'ring-[var(--brand-color,#0ea5e9)] ring-offset-2'
-                            : 'ring-gray-200 group-hover:ring-[var(--brand-color,#0ea5e9)]' }}"
+           class="cat-item group">
+            <div class="cat-circle-wrap {{ !$current ? 'cat-circle-active' : 'cat-circle-idle' }}"
                  style="{{ !$current ? 'background:var(--brand-color,#0ea5e9)' : 'background:#f3f4f6' }}">
                 <svg class="w-6 h-6 {{ !$current ? 'text-white' : 'text-gray-500' }}"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,8 +32,7 @@
                           d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
                 </svg>
             </div>
-            <span class="text-[10px] font-semibold text-center leading-snug
-                         {{ !$current ? 'text-[var(--brand-color,#0ea5e9)]' : 'text-gray-600' }}">
+            <span class="cat-label {{ !$current ? 'text-[var(--brand-color,#0ea5e9)]' : 'text-gray-600' }}">
                 {{ __('app.all_categories') }}
             </span>
         </a>
@@ -54,8 +47,8 @@
         @endforeach
     </div>
 
-    {{-- Desktop: responsive grid --}}
-    <div class="hidden md:grid grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-8 gap-y-8">
+    {{-- Desktop --}}
+    <div class="hidden md:grid grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 cat-desktop-grid">
 
         @if($showAll)
         <a href="{{ route('products.index') }}"
@@ -86,7 +79,6 @@
             :active="$current && $current->id === $cat->id"
         />
         @endforeach
-
     </div>
 
 </section>
