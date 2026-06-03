@@ -55,7 +55,8 @@
     </div>
 
     {{-- Desktop: responsive grid --}}
-  <div class="hidden md:grid grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-2 gap-y-4">
+{{-- Even tighter: more columns = less space per cell --}}
+<div class="hidden md:grid grid-cols-5 lg:grid-cols-8 xl:grid-cols-10 gap-x-0 gap-y-4 justify-items-center">
 
         @if($showAll)
         <a href="{{ route('products.index') }}"
