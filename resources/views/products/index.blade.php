@@ -7,12 +7,10 @@
 
 @section('title', $currentCategory ? $currentCategory->name . ($isRtl ? ' — المتجر' : ' — Shop') : __('app.all_products'))
 
-
 @push('head')
 <style>
 /* ═══════════════════════════════════════════════════════════════════
-   LOCAL CSS VARIABLES — read from the global vars set in layouts/app.blade.php
-   DO NOT put hardcoded colors here. Use var(--text-*) references only.
+   LOCAL CSS VARIABLES
    ═══════════════════════════════════════════════════════════════════ */
 :root {
     --brand:       var(--brand-color, #0ea5e9);
@@ -23,35 +21,32 @@
     --sale-red:    #ff3366;
     --border:      #efefef;
     --radius-card: 16px;
- 
-    /* ── Map global typography vars to local aliases used in this file ── */
+
     --ui-text:        var(--text-body);
     --ui-text-strong: var(--text-heading);
     --ui-text-soft:   var(--text-muted);
- 
+
     --card-bg:           var(--card-bg, #ffffff);
     --card-font-color:   var(--text-card);
     --card-font-strong:  var(--text-heading);
     --card-font-muted:   var(--text-muted);
     --card-price-color:  var(--text-price);
     --card-sale-color:   var(--text-price);
- 
-    /* text aliases */
+
     --text-1: var(--text-heading);
     --text-2: var(--text-body);
 }
- 
+
 /* ── Font application ───────────────────────────────────────────── */
 html[lang="ar"], [dir="rtl"] { font-family: var(--font-ar) !important; }
 html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
- 
 .page-shop,
 .page-shop * { font-family: var(--app-font) !important; }
- 
-/* ── Page-level text color ──────────────────────────────────────── */
+
+/* ── Page-level text ────────────────────────────────────────────── */
 .page-shop { color: var(--text-body); }
- 
-/* ── Gray utility overrides scoped to this page ─────────────────── */
+
+/* ── Gray utility overrides ─────────────────────────────────────── */
 .page-shop :is(.text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black) {
     color: var(--text-heading) !important;
 }
@@ -61,27 +56,28 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 .page-shop :is(.text-gray-500, .text-gray-400, .text-gray-300, .text-slate-500, .text-slate-400) {
     color: var(--text-muted) !important;
 }
- 
+
 /* ── Cards ──────────────────────────────────────────────────────── */
-.page-shop :is(.pcard, .featured-card) {
-    color: var(--text-card);
-}
+.page-shop :is(.pcard, .featured-card) { color: var(--text-card); }
 .page-shop :is(.pcard, .featured-card) :is(.text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black) {
     color: var(--text-product-title) !important;
 }
 .page-shop :is(.pcard, .featured-card) :is(.text-gray-500, .text-gray-400, .text-gray-300, .text-slate-500, .text-slate-400) {
     color: var(--text-muted) !important;
 }
-.page-shop :is(.pcard, .featured-card) :is(.text-red-500, .text-red-600, .text-red-700, .text-rose-500, .text-rose-600) {
+
+/* ── PRICE — highest specificity, applied last ──────────────────── */
+/* All elements with class "price-val" render the actual price amount */
+.page-shop .price-val {
     color: var(--text-price) !important;
+    font-size: var(--product-price-font-size) !important;
 }
-.page-shop :is(.pcard, .featured-card) [style*="color:var(--sale-red)"] {
-    color: var(--text-price) !important;
+/* Strikethrough original prices are always muted */
+.page-shop .price-original {
+    color: var(--text-muted) !important;
+    text-decoration: line-through;
 }
-.page-shop :is(.pcard, .featured-card) [style*="background:var(--sale-red)"] {
-    background: var(--text-price) !important;
-}
- 
+
 /* ── Search dropdown + sort drawer ──────────────────────────────── */
 .page-shop :is(.search-dropdown, .sort-drawer) { color: var(--text-body); }
 .page-shop :is(.search-dropdown, .sort-drawer) :is(.text-gray-900, .text-gray-800) {
@@ -90,7 +86,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 .page-shop :is(.search-dropdown, .sort-drawer) :is(.text-gray-500, .text-gray-400, .text-gray-300) {
     color: var(--text-muted) !important;
 }
- 
+
 /* ── Announcement bar ───────────────────────────────────────────── */
 .announce-bar {
     background: var(--brand); color: #fff;
@@ -111,7 +107,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 @media(min-width:768px){.announce-ticker{animation:none;gap:40px}}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .announce-dot { width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);flex-shrink:0; }
- 
+
 /* ── Hero banner ────────────────────────────────────────────────── */
 .hero-banner {
     background: linear-gradient(135deg,
@@ -129,7 +125,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 }
 @keyframes heroFloat{0%,100%{transform:translateY(0) rotate(-2deg) scale(1)}50%{transform:translateY(-10px) rotate(1deg) scale(1.02)}}
 .hero-img{animation:heroFloat 6s ease-in-out infinite}
- 
+
 /* ── Category pills ─────────────────────────────────────────────── */
 .cat-pill {
     white-space:nowrap; padding:7px 17px; border-radius:99px;
@@ -145,7 +141,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 }
 .scrollbar-hide::-webkit-scrollbar{display:none}
 .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
- 
+
 /* ── Featured list ──────────────────────────────────────────────── */
 .featured-list {
     display:flex; gap:12px; overflow-x:auto; padding-bottom:6px;
@@ -168,7 +164,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     color:#fff;font-size:9px;font-weight:800;padding:3px 9px 3px 7px;
     border-bottom-left-radius:9px;z-index:5;letter-spacing:.04em;
 }
- 
+
 /* ── Product card (grid) ────────────────────────────────────────── */
 .pcard {
     background-color:var(--card-bg, #fff)!important;
@@ -185,26 +181,14 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     color:#fff;font-size:9px;font-weight:800;padding:2px 8px 2px 5px;
     border-bottom-right-radius:8px;letter-spacing:.04em;line-height:1.7;z-index:5;
 }
- 
-/* ── Product title & price inside cards ─────────────────────────── */
-.pcard .pcard-name,
-.featured-card .fc-name {
-    color: var(--text-product-title) !important;
-    font-size: var(--product-title-font-size) !important;
-}
-.pcard .pcard-price,
-.featured-card .fc-price {
-    color: var(--text-price) !important;
-    font-size: var(--product-price-font-size) !important;
-}
- 
+
 /* ── Shimmer ────────────────────────────────────────────────────── */
 @keyframes shimmer{0%{background-position:-900px 0}100%{background-position:900px 0}}
 .shimmer{
     background:linear-gradient(90deg,#f4f4f4 25%,#ececec 50%,#f4f4f4 75%);
     background-size:1800px 100%;animation:shimmer 1.8s ease-in-out infinite;
 }
- 
+
 /* ── Heart / wishlist ───────────────────────────────────────────── */
 .heart-btn {
     width:30px;height:30px;background:rgba(255,255,255,.93);
@@ -215,7 +199,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 }
 .heart-btn:hover{transform:scale(1.18);background:#fff}
 .heart-btn svg{width:15px;height:15px}
- 
+
 /* ── Share button ───────────────────────────────────────────────── */
 .share-btn {
     width:30px;height:30px;background:rgba(255,255,255,.93);
@@ -226,7 +210,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 }
 .share-btn:hover{transform:scale(1.18);background:#fff}
 .share-btn svg{width:14px;height:14px}
- 
+
 /* ── Scroll reveal ──────────────────────────────────────────────── */
 .reveal{
     opacity:0;transform:translateY(22px);
@@ -235,7 +219,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 }
 .reveal.visible{opacity:1;transform:translateY(0)}
 .reveal{transition-delay:calc(var(--i,0) * 60ms)}
- 
+
 /* ── Sort drawer ────────────────────────────────────────────────── */
 .sort-drawer-overlay{
     position:fixed;inset:0;background:rgba(0,0,0,.42);
@@ -258,7 +242,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 }
 .sort-option:hover,.sort-option.chosen{color:var(--brand)}
 .pb-bar{padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}
- 
+
 /* ── Live search dropdown ───────────────────────────────────────── */
 .search-dropdown {
     position:absolute;top:calc(100% + 6px);left:0;right:0;
@@ -279,7 +263,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     width:44px;height:44px;border-radius:10px;object-fit:cover;
     flex-shrink:0;background:#f3f4f6;
 }
- 
+
 .scrollbar-hide, [x-category-grid] {
     padding-top: 12px !important;
     margin-top: -12px !important;
@@ -293,7 +277,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     padding-bottom: 8px !important;
     margin-top: -8px !important;
 }
- 
+
 /* ── Category banner ────────────────────────────────────────────── */
 .cat-banner { border-radius: 20px; overflow: hidden; position: relative; margin-bottom: 20px; }
 .cat-banner-inner { display: flex; align-items: center; gap: 24px; padding: 36px 28px; position: relative; z-index: 10; }
@@ -320,6 +304,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 
 @section('content')
 <div class="page-shop">
+
 {{-- ── Announcement banners ──────────────────────────────────────────── --}}
 @php
     $announcements = \App\Models\Announcement::where('is_active', true)
@@ -390,89 +375,70 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     </div>
 </div>
 
-
 @include('partials.bottombar')
+
 {{-- ════════════════════════════════════════════════════════════════════
      PAGE BODY
 ════════════════════════════════════════════════════════════════════════ --}}
 <div class="bg-gray-50 pb-bar md:pb-12" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <div class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
 
-    {{-- ── Hero banners (top position) ─────────────────────────────── --}}
- @if(!$currentCategory)
+    {{-- ── Hero banners (top) ───────────────────────────────────────── --}}
+    @if(!$currentCategory)
     @php
         $banners = \App\Models\HeroBanner::where('is_active', true)->orderBy('sort_order')->get();
     @endphp
-
     @foreach($banners as $banner)
         @if($banner->position === 'top')
-          @php
-    $layout = $banner->layout ?? 'text_image';
-    $image = $banner->getFirstMediaUrl('banner_image');
-    $hasImage = !empty($image);
-    $isImageOnly = $layout === 'image_only';
-    $hasText = in_array($layout, ['text_image', 'text_only']);
-@endphp
-
-<div class="hero-banner mt-4 mb-5 reveal relative overflow-hidden"
-     style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
-
-    {{-- ✅ صورة فقط --}}
-    @if($isImageOnly && $hasImage)
-        <img src="{{ $image }}"
-             class="w-full h-40 sm:h-52 md:h-64 object-cover rounded-2xl">
-    @else
-
-        <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
-                    {{ $hasImage ? '' : 'justify-center text-center' }}">
-
-            {{-- ✅ النص --}}
-            @if($hasText)
-                <div class="{{ $hasImage ? 'flex-1 ' . ($isRtl ? 'text-right' : 'text-left') : 'max-w-xl mx-auto text-center' }}">
-
-                    @if($banner->badge)
+        @php
+            $layout      = $banner->layout ?? 'text_image';
+            $image       = $banner->getFirstMediaUrl('banner_image');
+            $hasImage    = !empty($image);
+            $isImageOnly = $layout === 'image_only';
+            $hasText     = in_array($layout, ['text_image', 'text_only']);
+        @endphp
+        <div class="hero-banner mt-4 mb-5 reveal relative overflow-hidden"
+             style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
+            @if($isImageOnly && $hasImage)
+                <img src="{{ $image }}" class="w-full h-40 sm:h-52 md:h-64 object-cover rounded-2xl">
+            @else
+                <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
+                            {{ $hasImage ? '' : 'justify-center text-center' }}">
+                    @if($hasText)
+                    <div class="{{ $hasImage ? 'flex-1 ' . ($isRtl ? 'text-right' : 'text-left') : 'max-w-xl mx-auto text-center' }}">
+                        @if($banner->badge)
                         <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
                               style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
                             {{ $banner->badge }}
                         </span>
-                    @endif
-
-                    <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
-                        style="color: {{ $banner->text_color ?? '#fff' }};">
-                        {{ $banner->title }}
-                        @if($banner->subtitle)
-                            <br><span>{{ $banner->subtitle }}</span>
                         @endif
-                    </h2>
-
-                    <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
-                       style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
-                        {{ $banner->description }}
-                    </p>
-
-                    <a href="{{ $banner->button_url ?? '#' }}"
-                       class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
-                       style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
-                        {{ $banner->button_text }}
-                    </a>
+                        <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
+                            style="color: {{ $banner->text_color ?? '#fff' }};">
+                            {{ $banner->title }}
+                            @if($banner->subtitle)<br><span>{{ $banner->subtitle }}</span>@endif
+                        </h2>
+                        <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
+                           style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
+                            {{ $banner->description }}
+                        </p>
+                        <a href="{{ $banner->button_url ?? '#' }}"
+                           class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
+                           style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
+                            {{ $banner->button_text }}
+                        </a>
+                    </div>
+                    @endif
+                    @if($hasImage && !$isImageOnly)
+                    <div class="w-32 sm:w-40 md:w-52 flex-shrink-0">
+                        <img src="{{ $image }}" class="w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+                    </div>
+                    @endif
                 </div>
             @endif
-
-            {{-- ✅ الصورة مع النص --}}
-            @if($hasImage && !$isImageOnly)
-                <div class="w-32 sm:w-40 md:w-52 flex-shrink-0">
-                    <img src="{{ $image }}"
-                         class="w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
-                </div>
-            @endif
-
         </div>
-
-    @endif
-</div>
         @endif
     @endforeach
-@endif
+    @endif
 
     {{-- ── Category grid ────────────────────────────────────────────── --}}
     @php
@@ -484,7 +450,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
         <x-category-grid :categories="$topCategories" :current="$currentCategory ?? null" :show-all="true" />
     </div>
 
-    {{-- ── Toolbar: search + sort ───────────────────────────────────── --}}
+    {{-- ── Toolbar ──────────────────────────────────────────────────── --}}
     <div class="flex items-center justify-between mb-4 gap-3 mt-4">
         <div>
             @if($currentCategory && !$currentCategory->shouldShowBanner())
@@ -492,36 +458,29 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
             @endif
             <p class="text-xs text-gray-400 {{ $currentCategory ? 'mt-0.5' : '' }}">
                 {{ __('app.products_count', ['count' => $products->total()]) }}
-                @if(request('search'))
-                    {{ __('app.search_for', ['term' => request('search')]) }}
-                @endif
+                @if(request('search')){{ __('app.search_for', ['term' => request('search')]) }}@endif
             </p>
         </div>
 
         <div class="flex items-center gap-2">
 
-            {{-- Live search (Alpine.js) --}}
+            {{-- Live search --}}
             <div class="hidden sm:block relative"
-                 x-data="liveSearch()"
-                 x-init="init()"
-                 @click.outside="close()"
-                 @keydown.escape="close()">
-
+                 x-data="liveSearch()" x-init="init()"
+                 @click.outside="close()" @keydown.escape="close()">
                 <div class="relative">
-                    <input
-                        type="text"
-                        x-model="query"
-                        @input="onInput()"
-                        @keydown.arrow-down.prevent="moveDown()"
-                        @keydown.arrow-up.prevent="moveUp()"
-                        @keydown.enter.prevent="followActive()"
-                        @focus="query.length >= 2 && open()"
-                        placeholder="{{ __('app.search_placeholder_short') }}"
-                        autocomplete="off"
-                        class="pe-9 ps-3 py-2 text-xs border border-gray-200 rounded-xl
-                               focus:ring-2 focus:border-transparent outline-none w-40 bg-white
-                               transition-all focus:w-56 {{ $isRtl ? 'text-right' : 'text-left' }}"
-                        style="--tw-ring-color:var(--brand-color)">
+                    <input type="text" x-model="query"
+                           @input="onInput()"
+                           @keydown.arrow-down.prevent="moveDown()"
+                           @keydown.arrow-up.prevent="moveUp()"
+                           @keydown.enter.prevent="followActive()"
+                           @focus="query.length >= 2 && open()"
+                           placeholder="{{ __('app.search_placeholder_short') }}"
+                           autocomplete="off"
+                           class="pe-9 ps-3 py-2 text-xs border border-gray-200 rounded-xl
+                                  focus:ring-2 focus:border-transparent outline-none w-40 bg-white
+                                  transition-all focus:w-56 {{ $isRtl ? 'text-right' : 'text-left' }}"
+                           style="--tw-ring-color:var(--brand-color)">
                     <div class="absolute inset-y-0 end-0 flex items-center pe-2.5 pointer-events-none">
                         <svg x-show="!loading" class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -533,16 +492,14 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                     </div>
                 </div>
 
-                {{-- Results dropdown --}}
                 <div x-show="isOpen && (results.length > 0 || query.length >= 2)"
                      x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0 translate-y-1 scale-98"
-                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     x-transition:enter-start="opacity-0 translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
                      x-transition:leave="transition ease-in duration-100"
                      x-transition:leave-start="opacity-100"
                      x-transition:leave-end="opacity-0"
-                     class="search-dropdown"
-                     style="display:none">
+                     class="search-dropdown" style="display:none">
 
                     <template x-if="results.length === 0 && !loading && query.length >= 2">
                         <div class="px-4 py-6 text-center">
@@ -552,11 +509,9 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                     </template>
 
                     <template x-for="(item, index) in results" :key="item.id">
-                        <a :href="item.url"
-                           class="search-result-item"
+                        <a :href="item.url" class="search-result-item"
                            :class="activeIndex === index ? 'bg-gray-50' : ''"
-                           @mouseenter="activeIndex = index"
-                           @click="close()">
+                           @mouseenter="activeIndex = index" @click="close()">
                             <template x-if="item.image">
                                 <img :src="item.image" :alt="item.name" class="search-result-img">
                             </template>
@@ -571,15 +526,10 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                                 <p class="text-sm font-semibold text-gray-800 line-clamp-1" x-text="item.name"></p>
                                 <p x-show="item.category" class="text-[10px] text-gray-400 font-medium mt-0.5" x-text="item.category"></p>
                                 <div class="flex items-center gap-2 mt-0.5">
-                                    <span class="text-sm font-black tabular-nums"
-                                          :style="item.is_on_sale ? 'color:var(--sale-red)' : 'color:var(--card-font-color)'"
-                                          x-text="item.price_formatted"></span>
-                                    <span x-show="item.is_on_sale"
-                                          class="text-[10px] text-gray-400 line-through tabular-nums"
-                                          x-text="item.original_price"></span>
+                                    <span class="text-sm font-black tabular-nums price-val" x-text="item.price_formatted"></span>
+                                    <span x-show="item.is_on_sale" class="text-[10px] tabular-nums price-original" x-text="item.original_price"></span>
                                 </div>
                             </div>
-                            {{-- Arrow flips for LTR --}}
                             <svg class="w-4 h-4 text-gray-300 flex-shrink-0 {{ $isRtl ? '' : 'rotate-180' }}"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -591,8 +541,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                         <a :href="'{{ route('products.index') }}?search=' + encodeURIComponent(query)"
                            class="flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold
                                   bg-gray-50 hover:bg-gray-100 transition-colors"
-                           style="color:var(--brand-color)"
-                           @click="close()">
+                           style="color:var(--brand-color)" @click="close()">
                             {{ __('app.view_all_results') }} (<span x-text="results.length"></span>)
                             <svg class="w-3.5 h-3.5 {{ $isRtl ? 'rotate-180' : '' }}"
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -603,7 +552,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                 </div>
             </div>
 
-            {{-- Desktop sort select --}}
+            {{-- Desktop sort --}}
             <div class="hidden sm:block">
                 <select onchange="window.location.href=this.value"
                         class="text-xs border border-gray-200 rounded-xl px-3 py-2 bg-white cursor-pointer outline-none focus:ring-2"
@@ -623,9 +572,10 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                 </select>
             </div>
 
-            {{-- Mobile sort button --}}
+            {{-- Mobile sort --}}
             <button onclick="openSortDrawer()"
-                    class="flex sm:hidden items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-gray-600 shadow-sm active:scale-95 transition-transform">
+                    class="flex sm:hidden items-center gap-1.5 bg-white border border-gray-200 rounded-xl
+                           px-3 py-2 text-xs font-bold text-gray-600 shadow-sm active:scale-95 transition-transform">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M7 8h10m-7 4h4"/>
                 </svg>
@@ -637,9 +587,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     {{-- ── Category banner image ────────────────────────────────────── --}}
     @if($currentCategory && $currentCategory->shouldShowBanner())
     <div class="cat-banner-img-wrap reveal">
-        <img src="{{ $currentCategory->getBannerImageUrl() }}"
-             alt="{{ $currentCategory->name }}"
-             loading="eager">
+        <img src="{{ $currentCategory->getBannerImageUrl() }}" alt="{{ $currentCategory->name }}" loading="eager">
     </div>
     @endif
 
@@ -660,7 +608,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     @endif
 
     {{-- ══════════════════════════════════════════════════════════════
-         DYNAMIC HOME SECTIONS
+         HOME SECTIONS
     ══════════════════════════════════════════════════════════════════ --}}
     @if(!$currentCategory && !request('search') && !request('sort'))
 
@@ -682,8 +630,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
         <div class="featured-list">
             @foreach($sectionProducts as $sp)
             @php $spWishlisted = in_array($sp->id, $wishlistedIds ?? []); @endphp
-            <div class="featured-card group"
-                 onclick="window.location='{{ route('products.show', $sp->slug) }}'">
+            <div class="featured-card group" onclick="window.location='{{ route('products.show', $sp->slug) }}'">
                 <div class="relative overflow-hidden bg-gray-100" style="padding-top:126%">
                     <div class="shimmer absolute inset-0 z-0" id="fsk-{{ $sp->id }}"></div>
                     <img src="{{ $sp->getFirstMediaUrl('main') ?: ($sp->image_url ?? 'https://picsum.photos/seed/'.$sp->id.'/300/390') }}"
@@ -721,14 +668,23 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                         @endauth
                     </div>
                 </div>
+                {{-- Featured card info --}}
                 <div class="px-2.5 pt-2 pb-3 {{ $isRtl ? 'text-right' : 'text-left' }}">
-                    <p class="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-1">{{ $sp->name }}</p>
+                    <p class="text-xs font-semibold line-clamp-2 leading-snug mb-1"
+                       style="color: var(--text-product-title);">
+                        {{ $sp->name }}
+                    </p>
                     <div class="flex items-center gap-1.5">
                         @if($sp->is_on_sale)
-                        <x-price :amount="$sp->discount_price" class="text-sm font-black leading-none tabular-nums" style="color:var(--sale-red)" />
-                        <x-price :amount="$sp->base_price" class="text-[10px] text-gray-400 line-through tabular-nums" />
+                            {{-- ✅ Sale price uses price-val class → --text-price --}}
+                            <x-price :amount="$sp->discount_price"
+                                     class="price-val text-sm font-black leading-none tabular-nums" />
+                            {{-- ✅ Original price uses price-original → --text-muted --}}
+                            <x-price :amount="$sp->base_price"
+                                     class="price-original text-[10px] tabular-nums" />
                         @else
-                        <x-price :amount="$sp->base_price" class="text-sm font-black text-gray-900 leading-none tabular-nums" />
+                            <x-price :amount="$sp->base_price"
+                                     class="price-val text-sm font-black leading-none tabular-nums" />
                         @endif
                     </div>
                 </div>
@@ -742,32 +698,25 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     {{-- After-featured banners --}}
     @foreach($banners as $banner)
         @if($banner->position === 'after_featured')
-        @php
-            $image    = $banner->getFirstMediaUrl('banner_image');
-            $hasImage = !empty($image);
-        @endphp
+        @php $image = $banner->getFirstMediaUrl('banner_image'); $hasImage = !empty($image); @endphp
         <div class="hero-banner mt-4 mb-5 reveal"
              style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
             <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
                         {{ $hasImage ? '' : 'justify-center text-center' }}">
                 <div class="{{ $hasImage ? 'flex-1 ' . ($isRtl ? 'text-right' : 'text-left') : 'max-w-xl mx-auto text-center' }}">
                     @if($banner->badge)
-                        <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
-                              style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
-                            {{ $banner->badge }}
-                        </span>
+                    <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
+                          style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
+                        {{ $banner->badge }}
+                    </span>
                     @endif
                     <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
                         style="color: {{ $banner->text_color ?? '#fff' }};">
                         {{ $banner->title }}
-                        @if($banner->subtitle)
-                            <br><span style="color: {{ $banner->text_color ?? '#fff' }};">{{ $banner->subtitle }}</span>
-                        @endif
+                        @if($banner->subtitle)<br><span style="color: {{ $banner->text_color ?? '#fff' }};">{{ $banner->subtitle }}</span>@endif
                     </h2>
                     <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
-                       style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
-                        {{ $banner->description }}
-                    </p>
+                       style="color: {{ $banner->text_color ?? '#ffffffcc' }};">{{ $banner->description }}</p>
                     <a href="{{ $banner->button_url ?? '#' }}"
                        class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
                        style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
@@ -775,9 +724,9 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                     </a>
                 </div>
                 @if($hasImage)
-                    <div class="w-32 sm:w-40 md:w-52 flex-shrink-0 relative">
-                        <img src="{{ $image }}" class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
-                    </div>
+                <div class="w-32 sm:w-40 md:w-52 flex-shrink-0 relative">
+                    <img src="{{ $image }}" class="hero-img w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+                </div>
                 @endif
             </div>
         </div>
@@ -806,6 +755,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
             {{ __('app.show_all') }}
         </a>
     </div>
+
     @else
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
         @foreach($products as $i => $product)
@@ -868,30 +818,45 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                 @endif
             </div>
 
+            {{-- ✅ Card info — all price classes replaced with price-val / price-original --}}
             <div class="px-2 pt-2 pb-2.5 flex flex-col gap-1 {{ $isRtl ? 'text-right' : 'text-left' }}">
+
                 @if($product->categories->first())
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide leading-none truncate">
+                <p class="text-[10px] font-bold uppercase tracking-wide leading-none truncate"
+                   style="color: var(--text-muted);">
                     {{ $product->categories->first()->name }}
                 </p>
                 @endif
-                <p class="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">
+
+                <p class="text-xs font-semibold line-clamp-2 leading-snug"
+                   style="color: var(--text-product-title);">
                     {{ $product->name }}
                 </p>
+
                 <div class="flex flex-col">
                     @if($product->discount_price && $product->discount_price < $product->base_price)
-                    <span class="text-xs text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded w-fit mb-1">
+                    {{-- Sale badge --}}
+                    <span class="text-xs font-bold px-1.5 py-0.5 rounded w-fit mb-1"
+                          style="color: var(--text-price); background: color-mix(in srgb, var(--text-price) 10%, #fff);">
                         {{ __('app.sale_badge') }}
                     </span>
                     <div class="flex items-center gap-2">
-                        <x-price :amount="$product->discount_price" class="font-bold text-gray-900 text-sm" />
-                        <x-price :amount="$product->base_price" class="text-xs text-gray-400 line-through" />
+                        {{-- ✅ Sale price --}}
+                        <x-price :amount="$product->discount_price"
+                                 class="price-val font-bold text-sm" />
+                        {{-- ✅ Original strikethrough --}}
+                        <x-price :amount="$product->base_price"
+                                 class="price-original text-xs" />
                     </div>
                     @else
-                    <x-price :amount="$product->base_price" class="font-bold text-gray-900 text-sm" />
+                    {{-- ✅ Regular price --}}
+                    <x-price :amount="$product->base_price"
+                             class="price-val font-bold text-sm" />
                     @endif
                 </div>
+
                 @if($product->variants->where('is_active',true)->count() > 1)
-                <p class="text-[10px] text-gray-400 leading-none">
+                <p class="text-[10px] leading-none" style="color: var(--text-muted);">
                     {{ __('app.variants_count', ['count' => $product->variants->where('is_active',true)->count()]) }}
                 </p>
                 @endif
@@ -924,7 +889,7 @@ function closeSortDrawer() {
     document.body.style.overflow = '';
 }
 
-/* ── Scroll-reveal ────────────────────────────────────────────────── */
+/* ── Scroll reveal ────────────────────────────────────────────────── */
 (function () {
     var targets = document.querySelectorAll('.reveal');
     if (!targets.length) return;
@@ -945,93 +910,52 @@ document.querySelectorAll('.pcard button, .featured-card button').forEach(functi
 
 /* ── Share product ────────────────────────────────────────────────── */
 function shareProduct(url, title) {
-    var shareData = {
-        title: title,
-        text:  '{{ addslashes(__('app.share_text', ['name' => ''])) }}'.replace(':name', title),
-        url:   url,
-    };
-
+    var shareData = { title: title, text: '{{ addslashes(__('app.share_text', ['name' => ''])) }}'.replace(':name', title), url: url };
     if (navigator.share) {
-        navigator.share(shareData).catch(function(err) {
-            if (err.name !== 'AbortError') console.warn('Share failed:', err);
-        });
+        navigator.share(shareData).catch(function(err) { if (err.name !== 'AbortError') console.warn('Share failed:', err); });
         return;
     }
-
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(function() {
-            showShareToast('{{ __('app.share_copied') }}');
-        }).catch(function() {
-            showSharePrompt(url);
-        });
+        navigator.clipboard.writeText(url).then(function() { showShareToast('{{ __('app.share_copied') }}'); }).catch(function() { showSharePrompt(url); });
         return;
     }
-
     showSharePrompt(url);
 }
-
 function showShareToast(message) {
-    if (typeof Cart !== 'undefined' && Cart.toast) {
-        Cart.toast(message, 'success');
-        return;
-    }
+    if (typeof Cart !== 'undefined' && Cart.toast) { Cart.toast(message, 'success'); return; }
     var toast = document.createElement('div');
     toast.textContent = message;
-    toast.style.cssText = [
-        'position:fixed','top:20px','right:20px','z-index:9999',
-        'background:#111827','color:#fff','font-size:13px','font-weight:600',
-        'padding:10px 18px','border-radius:12px','box-shadow:0 8px 30px rgba(0,0,0,.2)',
-        'transition:opacity .3s','pointer-events:none'
-    ].join(';');
+    toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;background:#111827;color:#fff;font-size:13px;font-weight:600;padding:10px 18px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.2);transition:opacity .3s;pointer-events:none';
     document.body.appendChild(toast);
     setTimeout(function() { toast.style.opacity = '0'; }, 2000);
     setTimeout(function() { document.body.removeChild(toast); }, 2400);
 }
+function showSharePrompt(url) { window.prompt('{{ __('app.share_prompt') }}', url); }
 
-function showSharePrompt(url) {
-    window.prompt('{{ __('app.share_prompt') }}', url);
-}
-
-/* ── Alpine.js liveSearch component ──────────────────────────────── */
+/* ── Alpine.js liveSearch ─────────────────────────────────────────── */
 document.addEventListener('alpine:init', function () {
     Alpine.data('liveSearch', function () {
         return {
             query: '', results: [], isOpen: false,
             loading: false, activeIndex: -1, timer: null,
-
             init() {},
-
             onInput() {
                 clearTimeout(this.timer);
                 this.activeIndex = -1;
-                if (this.query.length < 2) {
-                    this.results = [];
-                    this.isOpen  = false;
-                    return;
-                }
+                if (this.query.length < 2) { this.results = []; this.isOpen = false; return; }
                 this.timer = setTimeout(() => { this.fetch(); }, 280);
             },
-
             async fetch() {
-                this.loading = true;
-                this.isOpen  = true;
+                this.loading = true; this.isOpen = true;
                 try {
-                    var res  = await window.fetch('/api/search?q=' + encodeURIComponent(this.query), {
-                        headers: { 'Accept': 'application/json' },
-                    });
+                    var res  = await window.fetch('/api/search?q=' + encodeURIComponent(this.query), { headers: { 'Accept': 'application/json' } });
                     var data = await res.json();
                     this.results = data.results || [];
-                } catch (e) {
-                    console.warn('Live search error:', e);
-                    this.results = [];
-                } finally {
-                    this.loading = false;
-                }
+                } catch (e) { console.warn('Live search error:', e); this.results = []; }
+                finally { this.loading = false; }
             },
-
             open()  { this.isOpen = true; },
             close() { this.isOpen = false; this.activeIndex = -1; },
-
             moveDown() { if (this.activeIndex < this.results.length - 1) this.activeIndex++; },
             moveUp()   { if (this.activeIndex > 0) this.activeIndex--; },
             followActive() {
