@@ -89,7 +89,7 @@ window.ZONE_PAGE = {
     subtotalJod:  {{ (float) $order->subtotal }},
     rate:         {{ $rate }},
     symbol:       '{{ $sym }}',
-    zonesApiBase: '{{ url('/api/shipping/zones') }}',
+   zonesApiBase: '{{ url('/shipping/zones') }}'
 };
 </script>
 

@@ -80,7 +80,7 @@
         subtotalJod:  {{ (float) $summary['subtotal'] }},
         rate:         {{ $rate }},
         symbol:       '{{ $sym }}',
-        zonesApiBase: '{{ url('/api/shipping/zones') }}',
+   zonesApiBase: '{{ url('/shipping/zones') }}',
     };
 
 </script>
@@ -517,98 +517,185 @@
 </div>
 @endsection
 
+
+
 @push('scripts')
 <script>
-
  
 window.COUNTRY_CODES = {
     @foreach($countries as $country)
     "{{ $country->id }}": "{{ $country->calling_code }}",
     @endforeach
 };
-
-/* Shipping zone loader — unchanged from your original */
+ 
+/* ── Label helpers ────────────────────────────────────────────────── */
+ 
+function deliveryLabel(days) {
+    if (!days || days <= 0) return null;
+    if (days === 1)         return 'يوم عمل واحد';
+    if (days === 2)         return 'يومَا عمل';
+    return days + ' أيام عمل';
+}
+ 
+function daysListLabel(availableDays) {
+    if (!availableDays || !availableDays.length) return null;
+    if (availableDays.length > 10) {
+        return availableDays.length + ' يوماً متاحاً هذا الشهر';
+    }
+    return 'الأيام المتاحة: ' + availableDays.join('، ');
+}
+ 
+/* ── Shipping zone loader ─────────────────────────────────────────── */
+ 
 const Shipping = {
+ 
     fmt(jod) {
         const val = Math.round((jod || 0) * window.CHECKOUT.rate * 100) / 100;
         return new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2, maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
         }).format(val) + ' ' + window.CHECKOUT.symbol;
     },
-
+ 
     async loadZones(countryId) {
         const wrapper   = document.getElementById('zone-wrapper');
         const container = document.getElementById('zones-container');
         const spinner   = document.getElementById('zones-loading');
         const zoneInput = document.getElementById('zone-id-input');
-
+ 
         zoneInput.value = '';
-        this.updateSummary(null, null, null);
-
+        this.updateSummary(null, null, null, null, null);
+ 
         if (!countryId) { wrapper.classList.add('hidden'); return; }
-
+ 
         wrapper.classList.remove('hidden');
         spinner.classList.add('active');
         container.innerHTML = '';
-
+ 
         try {
-            const res   = await fetch(`${window.CHECKOUT.zonesApiBase}/${countryId}`, {
+            const res  = await fetch(`${window.CHECKOUT.zonesApiBase}/${countryId}`, {
                 headers: { 'Accept': 'application/json' },
             });
-            const data  = await res.json();
-            const zones = data.zones;
+            const data = await res.json();
+            const zones = data.zones || [];
+ 
             spinner.classList.remove('active');
-
+ 
             if (!zones.length) {
-                container.innerHTML = '<p class="text-sm text-[#9a9793] text-center py-3">لا توجد مناطق توصيل متاحة لهذه الدولة حالياً.</p>';
+                container.innerHTML = `
+                    <p class="text-sm text-[#9a9793] text-center py-3">
+                        لا توجد مناطق توصيل متاحة لهذه الدولة حالياً.
+                    </p>`;
                 return;
             }
-
+ 
             zones.forEach(zone => {
+                const days      = parseInt(zone.delivery_days) || 0;
+                const dayLabel  = deliveryLabel(days);
+                const isFree    = parseFloat(zone.shipping_price) === 0;
+                const schedule  = zone.schedule;
+                const hasDays   = schedule && schedule.available_days && schedule.available_days.length;
+                const daysLabel = hasDays ? daysListLabel(schedule.available_days) : null;
+                const noSchedule= !zone.has_schedule;
+ 
                 const card = document.createElement('label');
                 card.className = 'zone-option';
                 card.innerHTML = `
                     <input type="radio" name="_zone_radio" value="${zone.id}" class="sr-only zone-radio"
-                           data-id="${zone.id}" data-price="${zone.shipping_price}"
-                           data-days="${zone.delivery_days ?? ''}" data-name="${zone.name}"
+                           data-id="${zone.id}"
+                           data-price="${zone.shipping_price}"
+                           data-days="${days}"
+                           data-name="${zone.name}"
+                           data-days-label="${daysLabel || ''}"
+                           data-schedule-month="${zone.schedule_month || ''}"
                            onchange="Shipping.selectZone(this)">
-                    <div class="flex items-center gap-2.5 flex-1">
-                        <div class="w-7 h-7 rounded-full border-2 border-[#e5e3df] flex-shrink-0 flex items-center justify-center zone-radio-ring">
+ 
+                    <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                        <div class="w-7 h-7 rounded-full border-2 border-[#e5e3df] flex-shrink-0
+                                    flex items-center justify-center zone-radio-ring">
                             <div class="w-3 h-3 rounded-full bg-transparent zone-radio-dot"></div>
                         </div>
-                        <div>
+                        <div class="min-w-0 space-y-0.5">
                             <p class="text-sm font-semibold text-[#1a1917]">${zone.name}</p>
-                            ${zone.delivery_days ? `<p class="text-[10px] text-[#9a9793] mt-0.5">التوصيل خلال ${zone.delivery_days} أيام عمل</p>` : ''}
+ 
+                            ${dayLabel ? `
+                            <p class="text-[11px] text-[#9a9793] flex items-center gap-1">
+                                <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                التوصيل خلال ${dayLabel}
+                            </p>` : ''}
+ 
+                            ${daysLabel ? `
+                            <p class="text-[11px] text-[#9a9793] flex items-center gap-1">
+                                <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                ${daysLabel}
+                            </p>` : ''}
+ 
+                            ${noSchedule ? `
+                            <p class="text-[11px] text-amber-600 flex items-center gap-1">
+                                <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                          clip-rule="evenodd"/>
+                                </svg>
+                                لا توجد أيام محددة لهذا الشهر
+                            </p>` : ''}
                         </div>
                     </div>
+ 
                     <div class="flex items-center gap-2 flex-shrink-0">
-                        <span class="text-sm font-black text-[#1a1917] tabular-nums">${this.fmt(zone.shipping_price)}</span>
-                        ${parseFloat(zone.shipping_price) === 0 ? '<span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">مجاني</span>' : ''}
+                        <span class="text-sm font-black text-[#1a1917] tabular-nums">
+                            ${this.fmt(zone.shipping_price)}
+                        </span>
+                        ${isFree ? `
+                        <span class="text-[10px] font-bold text-emerald-600
+                                     bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                            مجاني
+                        </span>` : ''}
                     </div>`;
+ 
                 container.appendChild(card);
             });
-
+ 
+            // Restore previously selected zone after validation failure
             const oldZoneId = '{{ old("zone_id") }}';
             if (oldZoneId) {
                 const radio = container.querySelector(`input[data-id="${oldZoneId}"]`);
                 if (radio) { radio.checked = true; this.selectZone(radio); }
             }
+ 
         } catch (e) {
             spinner.classList.remove('active');
-            container.innerHTML = '<p class="text-sm text-red-500 text-center py-3">تعذّر تحميل المناطق. يرجى المحاولة مجدداً.</p>';
+            container.innerHTML = `
+                <p class="text-sm text-red-500 text-center py-3">
+                    تعذّر تحميل المناطق. يرجى المحاولة مجدداً.
+                </p>`;
         }
     },
-
+ 
     selectZone(radio) {
         document.getElementById('zone-id-input').value = radio.dataset.id;
+ 
         document.querySelectorAll('.zone-radio-ring').forEach(r => r.style.borderColor = '#e5e3df');
-        document.querySelectorAll('.zone-radio-dot').forEach(d => d.style.background = 'transparent');
+        document.querySelectorAll('.zone-radio-dot').forEach(d => d.style.background   = 'transparent');
+ 
         radio.closest('.zone-option').querySelector('.zone-radio-ring').style.borderColor = 'var(--brand-color,#0ea5e9)';
         radio.closest('.zone-option').querySelector('.zone-radio-dot').style.background   = 'var(--brand-color,#0ea5e9)';
-        this.updateSummary(parseFloat(radio.dataset.price), radio.dataset.days, radio.dataset.name);
+ 
+        this.updateSummary(
+            parseFloat(radio.dataset.price),
+            parseInt(radio.dataset.days) || 0,
+            radio.dataset.name,
+            radio.dataset.daysLabel || null
+        );
     },
-
-    updateSummary(priceJod, days, zoneName) {
+ 
+    updateSummary(priceJod, days, zoneName, daysLabel) {
         const deliveryEl = document.getElementById('summary-delivery');
         const totalEl    = document.getElementById('summary-total');
         const zoneNameEl = document.getElementById('summary-zone-name');
@@ -616,70 +703,108 @@ const Shipping = {
         const daysText   = document.getElementById('delivery-days-text');
         const placeBtn   = document.getElementById('place-btn');
         const hint       = document.getElementById('btn-hint');
-
+ 
         if (priceJod === null) {
-            deliveryEl.textContent = 'اختر المنطقة';
-            deliveryEl.className   = 'font-semibold tabular-nums text-[#b5b2ab]';
-            totalEl.textContent    = this.fmt(window.CHECKOUT.subtotalJod);
-            zoneNameEl.textContent = '';
-            if (badge) badge.classList.add('hidden');
-            if (placeBtn) placeBtn.disabled = true;
-            if (hint) hint.textContent = 'اختر منطقة التوصيل لتفعيل الزر';
+            if (deliveryEl) { deliveryEl.textContent = 'اختر المنطقة'; deliveryEl.className = 'font-semibold tabular-nums text-[#b5b2ab]'; }
+            if (totalEl)    totalEl.textContent = this.fmt(window.CHECKOUT.subtotalJod);
+            if (zoneNameEl) zoneNameEl.textContent = '';
+            if (badge)      badge.classList.add('hidden');
+            if (placeBtn)   placeBtn.disabled = true;
+            if (hint)       hint.textContent  = 'اختر منطقة التوصيل لتفعيل الزر';
             return;
         }
-
-        const total = window.CHECKOUT.subtotalJod + priceJod;
-        deliveryEl.textContent = priceJod === 0 ? 'مجاني 🎉' : this.fmt(priceJod);
-        deliveryEl.className   = 'font-semibold tabular-nums ' + (priceJod === 0 ? 'text-emerald-600' : 'text-[#1a1917]');
-        totalEl.textContent    = this.fmt(total);
-        zoneNameEl.textContent = zoneName ? `— ${zoneName}` : '';
-        if (badge && days) { badge.classList.remove('hidden'); daysText.textContent = `التوصيل إلى ${zoneName} خلال ${days} أيام عمل`; }
-        else if (badge) badge.classList.add('hidden');
+ 
+        const total  = window.CHECKOUT.subtotalJod + priceJod;
+        const isFree = priceJod === 0;
+        const dayLbl = deliveryLabel(days);
+ 
+        if (deliveryEl) {
+            deliveryEl.textContent = isFree ? 'مجاني 🎉' : this.fmt(priceJod);
+            deliveryEl.className   = 'font-semibold tabular-nums ' + (isFree ? 'text-emerald-600' : 'text-[#1a1917]');
+        }
+        if (totalEl)    totalEl.textContent    = this.fmt(total);
+        if (zoneNameEl) zoneNameEl.textContent = zoneName ? `— ${zoneName}` : '';
+ 
+        // Delivery info badge
+        if (badge && daysText) {
+            const lines = [];
+            if (dayLbl) {
+                lines.push(`التوصيل إلى <strong>${zoneName}</strong> خلال <strong>${dayLbl}</strong>`);
+            }
+            if (daysLabel) {
+                lines.push(`<span class="text-blue-600">${daysLabel}</span>`);
+            }
+ 
+            if (lines.length) {
+                daysText.innerHTML = lines.map(l =>
+                    `<span class="flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0 text-blue-400" fill="none"
+                             stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        ${l}
+                    </span>`
+                ).join('');
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+ 
         if (placeBtn) placeBtn.disabled = false;
-        if (hint) hint.textContent = '';
+        if (hint)     hint.textContent  = '';
     },
 };
-
+ 
+/* ── Init ─────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-    const oldCountry = document.getElementById('country-select').value;
+    const oldCountry = document.getElementById('country-select')?.value;
     if (oldCountry) Shipping.loadZones(oldCountry);
 });
-
+ 
+/* ── Form submit ──────────────────────────────────────────────────── */
 document.getElementById('checkout-form')?.addEventListener('submit', function () {
     const btn = document.getElementById('place-btn');
     if (btn.disabled) return false;
-    PhoneSync.prepareSubmit(); // ← add this
-    btn.disabled = true;
-    btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg> {{ __("app.checkout.placing_order_text") }}`;
+    PhoneSync.prepareSubmit();
+    btn.disabled  = true;
+    btn.innerHTML = `
+        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+        {{ __("app.checkout.placing_order_text") }}`;
 });
+ 
+/* ── Phone sync ───────────────────────────────────────────────────── */
 const PhoneSync = {
     update(countryId) {
-        const badge    = document.getElementById('phone-prefix-badge');
-        const codeInput = document.getElementById('shipping-phone-code');
+        const badge      = document.getElementById('phone-prefix-badge');
+        const codeInput  = document.getElementById('shipping-phone-code');
         const phoneInput = document.getElementById('shipping-phone-input');
-        const hint     = document.getElementById('phone-hint');
-
+        const hint       = document.getElementById('phone-hint');
+ 
         if (!countryId || !window.COUNTRY_CODES[countryId]) {
-            badge.textContent = '+';
+            badge.textContent       = '+';
             badge.style.borderColor = '#e5e3df';
-            badge.style.color = '#6b6966';
-            codeInput.value = '';
-            phoneInput.placeholder = '{{ __("app.checkout.field_phone_ph") }}';
-            hint.textContent = '{{ __("app.checkout.phone_select_country_first") }}';
+            badge.style.color       = '#6b6966';
+            codeInput.value         = '';
+            phoneInput.placeholder  = '{{ __("app.checkout.field_phone_ph") }}';
+            hint.textContent        = '{{ __("app.checkout.phone_select_country_first") }}';
             return;
         }
-
-        const code = window.COUNTRY_CODES[countryId];
-        badge.textContent = '+' + code;
-        badge.style.borderColor = 'var(--brand-color, #0ea5e9)';
-        badge.style.color = 'var(--brand-color, #0ea5e9)';
-        codeInput.value = code;
+ 
+        const code             = window.COUNTRY_CODES[countryId];
+        badge.textContent      = '+' + code;
+        badge.style.borderColor= 'var(--brand-color, #0ea5e9)';
+        badge.style.color      = 'var(--brand-color, #0ea5e9)';
+        codeInput.value        = code;
         phoneInput.placeholder = '9xxxxxxxx';
         phoneInput.focus();
-        hint.textContent = '{{ __("app.checkout.phone_hint_prefix") }}' + ' +' + code;
+        hint.textContent       = '{{ __("app.checkout.phone_hint_prefix") }}' + ' +' + code;
     },
-
-    // Strip prefix from value before submit so backend gets clean number
+ 
     prepareSubmit() {
         const code  = document.getElementById('shipping-phone-code').value;
         const input = document.getElementById('shipping-phone-input');
@@ -689,7 +814,8 @@ const PhoneSync = {
         if (code && input.value.startsWith('0')) {
             input.value = input.value.slice(1);
         }
-    }
+    },
 };
+ 
 </script>
 @endpush

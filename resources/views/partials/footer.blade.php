@@ -1,30 +1,14 @@
 @php
-    $locale = app()->getLocale();
-    $isRtl = $locale === 'ar';
+    $locale  = app()->getLocale();
+    $isRtl   = $locale === 'ar';
 
     $footerTexts = \App\Models\FooterText::where('is_active', true)
-        ->orderBy('sort_order')
-        ->get()
-        ->keyBy('slug');
+        ->orderBy('sort_order')->get()->keyBy('slug');
 
     $socialLinks = \App\Models\SocialLink::where('is_active', true)
-        ->orderBy('sort_order')
-        ->get();
+        ->orderBy('sort_order')->get();
 
     $pages = \App\Models\Page::active()->ordered()->get();
-
-    $getFooterText = function (?\App\Models\FooterText $item, string $fallback = '') use ($locale) {
-        if (!$item) {
-            return $fallback;
-        }
-
-        return $item->text[$locale]
-            ?? $item->text[config('app.fallback_locale', 'en')]
-            ?? $fallback;
-    };
-
-    $brandText = $footerTexts->get('footer_brand');
-    $taglineText = $footerTexts->get('footer_tagline');
 
     $companyInfo = \App\Models\FooterCompanyInfo::active()->first();
 
@@ -44,7 +28,7 @@
         : '';
 
     $companyPhone = $companyInfo?->phone ?? '';
-    $phoneHref = $companyInfo?->tel_href ?? '';
+    $phoneHref    = $companyInfo?->tel_href ?? '';
 
     $flagUrl = null;
     if ($companyInfo) {
@@ -54,133 +38,134 @@
         }
     }
 
-    $footerBgColor = \App\Models\Setting::get('footer_bg_color', '#111827');
-    $footerTextColor = \App\Models\Setting::get('footer_text_color', '#9ca3af');
-    $footerLinkColor = \App\Models\Setting::get('footer_link_color', '#ffffff');
+    // Settings-based colors (existing dedicated footer settings stay supported)
+    $footerBgColor         = \App\Models\Setting::get('footer_bg_color', '#111827');
+    $footerLinkColor       = \App\Models\Setting::get('footer_link_color', '#ffffff');
     $footerBottomTextColor = \App\Models\Setting::get('footer_bottom_text_color', '#6b7280');
-    $footerTextSize = (int) \App\Models\Setting::get('footer_text_size', 14);
+
+    // Font size: prefer the new CSS var, fall back to the legacy DB value
+    $legacySize   = (int) \App\Models\Setting::get('footer_text_size', 14);
+    $footerFontSz = 'var(--footer-font-size, ' . $legacySize . 'px)';
+
+    // Text color: prefer the new CSS var, fall back to the legacy DB value
+    $legacyColor   = \App\Models\Setting::get('footer_text_color', '#9ca3af');
+    $footerTextClr = 'var(--text-footer, ' . $legacyColor . ')';
 @endphp
 
 <footer
     class="py-14 border-t border-white border-opacity-5"
     dir="{{ $isRtl ? 'rtl' : 'ltr' }}"
-    style="background-color: {{ $footerBgColor }};"
->
+    style="background-color: {{ $footerBgColor }};">
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
 
-            {{-- العمود الأول: معلومات الشركة --}}
+            {{-- Column 1: Company info --}}
+            <div class="{{ $isRtl ? 'text-right' : 'text-left' }}">
+                @if($companyName)
+                <span class="font-display font-bold block mb-4"
+                      style="color: {{ $footerTextClr }}; font-size: {{ $footerFontSz }};">
+                    {{ $companyName }}
+                </span>
+                @endif
+
+                @if($companyDescription)
+                <p class="leading-relaxed mb-4"
+                   style="color: {{ $footerTextClr }}; font-size: {{ $footerFontSz }};">
+                    {{ $companyDescription }}
+                </p>
+                @endif
+
+                @if($companyLocation)
+                <p class="mb-1" style="color: {{ $footerTextClr }}; font-size: {{ $footerFontSz }};">
+                    {{ $companyLocation }}
+                </p>
+                @endif
+
+                @if($companyPhone)
+                <p class="flex items-center gap-2 {{ $isRtl ? 'justify-end' : 'justify-start' }}">
+                    @if($flagUrl)
+                        <img src="{{ $flagUrl }}" alt="flag" class="inline-block w-5 h-auto">
+                    @endif
+                    <a href="{{ $phoneHref }}" dir="ltr" class="select-all hover:underline"
+                       style="color: {{ $footerLinkColor }}; font-size: {{ $footerFontSz }};">
+                        {{ $companyPhone }}
+                    </a>
+                </p>
+                @endif
+            </div>
+
+            {{-- Column 2: Quick links --}}
             <div>
-                <div class="{{ $isRtl ? 'text-right' : 'text-left' }}">
-                    @if($companyName)
-                        <span class="font-display font-bold block mb-4"
-                              style="font-size: {{ $footerTextSize + 4 }}px; color: {{ $footerTextColor }};">
-                            {{ $companyName }}
-                        </span>
-                    @endif
-
-                    @if($companyDescription)
-                        <p class="leading-relaxed mb-4"
-                           style="font-size: {{ $footerTextSize }}px; color: {{ $footerTextColor }};">
-                            {{ $companyDescription }}
-                        </p>
-                    @endif
-
-                    @if($companyLocation)
-                        <p class="mb-1"
-                           style="font-size: {{ $footerTextSize }}px; color: {{ $footerTextColor }};">
-                            {{ $companyLocation }}
-                        </p>
-                    @endif
-
-                    @if($companyPhone)
-                        <p class="flex items-center gap-2 {{ $isRtl ? 'justify-end' : 'justify-start' }}"
-                           style="font-size: {{ $footerTextSize }}px;">
-                            @if($flagUrl)
-                                <img src="{{ $flagUrl }}" alt="flag" class="inline-block w-5 h-auto">
-                            @endif
-
-                            <a href="{{ $phoneHref }}" dir="ltr" class="select-all hover:underline"
-                               style="color: {{ $footerLinkColor }};">
-                                {{ $companyPhone }}
-                            </a>
-                        </p>
-                    @endif
+                <h4 class="font-bold mb-4"
+                    style="color: {{ $footerTextClr }}; font-size: {{ $footerFontSz }};">
+                    {{ $isRtl ? 'روابط سريعة' : 'Quick Links' }}
+                </h4>
+                <div class="flex flex-col gap-3">
+                    @forelse($pages as $page)
+                    <a href="{{ route('pages.show', $page->slug) }}"
+                       class="hover:underline transition-all"
+                       style="color: {{ $footerLinkColor }}; font-size: {{ $footerFontSz }};">
+                        {{ $page->name ?? $page->title ?? $page->slug }}
+                    </a>
+                    @empty
+                    <span style="color: {{ $footerTextClr }}; font-size: {{ $footerFontSz }};">
+                        {{ $isRtl ? 'لا توجد صفحات متاحة' : 'No pages available' }}
+                    </span>
+                    @endforelse
                 </div>
             </div>
 
-            {{-- العمود الثاني: الصفحات --}}
-          <div>
-    <h4 class="font-bold mb-4" style="color: {{ $footerTextColor }}; font-size: {{ $footerTextSize + 2 }}px;">
-        {{ $isRtl ? 'روابط سريعة' : 'Quick Links' }}
-    </h4>
-
-    <div class="flex flex-col gap-3">
-        @forelse($pages as $page)
-            @php
-                $pageLabel = $page->name ?? $page->title ?? $page->slug;
-            @endphp
-
-            <a href="{{ route('pages.show', $page->slug) }}"
-               class="hover:underline transition-all"
-               style="font-size: {{ $footerTextSize }}px; color: {{ $footerLinkColor }};">
-                {{ $pageLabel }}
-            </a>
-        @empty
-            <span class="text-sm" style="color: {{ $footerTextColor }};">
-                {{ $isRtl ? 'لا توجد صفحات متاحة' : 'No pages available' }}
-            </span>
-        @endforelse
-    </div>
-</div>
-
-            {{-- العمود الثالث: السوشال ميديا --}}
+            {{-- Column 3: Social --}}
             <div>
-                <h4 class="font-bold mb-4" style="color: {{ $footerTextColor }}; font-size: {{ $footerTextSize + 2 }}px;">
+                <h4 class="font-bold mb-4"
+                    style="color: {{ $footerTextClr }}; font-size: {{ $footerFontSz }};">
                     {{ $isRtl ? 'تابعنا على' : 'Follow Us' }}
                 </h4>
-            <div class="flex flex-wrap items-center gap-3">
-    @forelse($socialLinks as $slink)
-        <a href="{{ $slink->url ?? '#' }}"
-           target="_blank"
-           rel="noopener noreferrer"
-           class="w-9 h-9 rounded-full bg-white flex items-center justify-center hover:opacity-80 transition-all group shadow-sm"
-           title="{{ $slink->platform_name }}">
-
-            @if($slink->icon_svg)
-                <i class="{{ $slink->icon_svg }} text-lg text-gray-700"></i>
-            @else
-                <span class="text-sm font-bold text-gray-700">
-                    {{ mb_substr($slink->platform_name, 0, 1) }}
-                </span>
-            @endif
-        </a>
-    @empty
-        <span class="text-sm text-gray-500" style="font-size: {{ $footerTextSize }}px;">
-            No social links available.
-        </span>
-    @endforelse
-</div>
+                <div class="flex flex-wrap items-center gap-3">
+                    @forelse($socialLinks as $slink)
+                    <a href="{{ $slink->url ?? '#' }}"
+                       target="_blank" rel="noopener noreferrer"
+                       class="w-9 h-9 rounded-full bg-white flex items-center justify-center
+                              hover:opacity-80 transition-all shadow-sm"
+                       title="{{ $slink->platform_name }}">
+                        @if($slink->icon_svg)
+                            <i class="{{ $slink->icon_svg }} text-lg text-gray-700"></i>
+                        @else
+                            <span class="text-sm font-bold text-gray-700">
+                                {{ mb_substr($slink->platform_name, 0, 1) }}
+                            </span>
+                        @endif
+                    </a>
+                    @empty
+                    <span style="color: {{ $footerTextClr }}; font-size: {{ $footerFontSz }};">
+                        No social links available.
+                    </span>
+                    @endforelse
+                </div>
             </div>
 
-            {{-- العمود الرابع: اتصل بنا --}}
+            {{-- Column 4: Support --}}
             <div>
-                <h4 class="font-bold mb-4" style="color: {{ $footerTextColor }}; font-size: {{ $footerTextSize + 2 }}px;">
+                <h4 class="font-bold mb-4"
+                    style="color: {{ $footerTextClr }}; font-size: {{ $footerFontSz }};">
                     {{ $isRtl ? 'الدعم الفني' : 'Support' }}
                 </h4>
                 <a href="{{ route('contact.create') }}"
                    class="hover:underline transition-colors block"
-                   style="font-size: {{ $footerTextSize }}px; color: {{ $footerLinkColor }};">
+                   style="color: {{ $footerLinkColor }}; font-size: {{ $footerFontSz }};">
                     {{ __('app.contact_us') ?: 'اتصل بنا' }}
                 </a>
             </div>
+
         </div>
 
-        {{-- الحقوق --}}
-        <div class="mt-10 border-t border-white border-opacity-5 pt-6 text-center text-xs"
-             style="color: {{ $footerBottomTextColor }}; font-size: {{ max($footerTextSize - 2, 10) }}px;">
+        {{-- Copyright --}}
+        <div class="mt-10 border-t border-white border-opacity-5 pt-6 text-center"
+             style="color: {{ $footerBottomTextColor }}; font-size: {{ $footerFontSz }};">
             {{ __('app.footer_copyright', ['year' => date('Y')]) }}
         </div>
 
         <div style="height: 30px"></div>
     </div>
+</footer>

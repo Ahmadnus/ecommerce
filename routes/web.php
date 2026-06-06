@@ -185,8 +185,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('pages', AdminPageController::class);
     Route::resource('countries', CountryController::class);
  Route::resource('currencies', AdminCurrencyController::class);
-    
-    Route::resource('countries.zones', ZoneController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::get('settings/typography',  [\App\Http\Controllers\Admin\TypographySettingsController::class, 'index'])
+         ->name('settings.typography');
+    Route::post('settings/typography', [\App\Http\Controllers\Admin\TypographySettingsController::class, 'update'])
+         ->name('settings.typography.update');
+   
 });
 
 Route::post('/set-user-currency', function (Illuminate\Http\Request $request) {
@@ -394,3 +397,88 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/password', [AdminPasswordController::class, 'edit'])->name('password.edit');
     Route::put('/password', [AdminPasswordController::class, 'update'])->name('password.update');
 });
+
+
+
+// Paste these two lines inside your existing admin middleware group in routes/web.php
+// Example location:
+//
+//   Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+//       ...your other settings routes...
+//
+//       Route::get('/settings/typography',  [\App\Http\Controllers\Admin\TypographySettingsController::class, 'index'])->name('settings.typography');
+//       Route::post('/settings/typography', [\App\Http\Controllers\Admin\TypographySettingsController::class, 'update'])->name('settings.typography.update');
+//   });
+
+Route::get('/settings/typography',  [\App\Http\Controllers\Admin\TypographySettingsController::class, 'index'])
+     ->name('settings.typography');
+
+Route::post('/settings/typography', [\App\Http\Controllers\Admin\TypographySettingsController::class, 'update'])
+     ->name('settings.typography.update');
+
+  
+
+/*
+|--------------------------------------------------------------------------
+| ADD TO routes/web.php — inside your admin middleware group
+|--------------------------------------------------------------------------
+|
+| Place these after your existing zones routes.
+|
+*/
+
+// Admin: Monthly delivery schedule management
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
+    // ... all your existing routes ...
+
+    Route::resource('countries.zones', ZoneController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // ── ADD THESE 7 LINES ────────────────────────────────────────────────────
+    Route::get('zones/{zone}/schedules',                       [\App\Http\Controllers\Admin\ZoneScheduleController::class, 'index'])     ->name('zones.schedules.index');
+    Route::get('zones/{zone}/schedules/create',                [\App\Http\Controllers\Admin\ZoneScheduleController::class, 'create'])    ->name('zones.schedules.create');
+    Route::post('zones/{zone}/schedules',                      [\App\Http\Controllers\Admin\ZoneScheduleController::class, 'store'])     ->name('zones.schedules.store');
+    Route::get('zones/{zone}/schedules/{schedule}/edit',       [\App\Http\Controllers\Admin\ZoneScheduleController::class, 'edit'])      ->name('zones.schedules.edit');
+    Route::put('zones/{zone}/schedules/{schedule}',            [\App\Http\Controllers\Admin\ZoneScheduleController::class, 'update'])    ->name('zones.schedules.update');
+    Route::delete('zones/{zone}/schedules/{schedule}',         [\App\Http\Controllers\Admin\ZoneScheduleController::class, 'destroy'])   ->name('zones.schedules.destroy');
+    Route::post('zones/{zone}/schedules/{schedule}/duplicate', [\App\Http\Controllers\Admin\ZoneScheduleController::class, 'duplicate'])->name('zones.schedules.duplicate');
+
+});
+/*
+ * Because these are inside your admin group with ->name('admin.'), the full names are:
+ *   admin.zones.schedules.index
+ *   admin.zones.schedules.create
+ *   admin.zones.schedules.store
+ *   admin.zones.schedules.edit
+ *   admin.zones.schedules.update
+ *   admin.zones.schedules.destroy
+ *   admin.zones.schedules.duplicate
+ */
+
+
+/*
+|--------------------------------------------------------------------------
+| ADD TO routes/api.php (if not already there)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/shipping/zones/{country}', [\App\Http\Controllers\Api\ShippingZoneApiController::class, 'index'])
+     ->name('api.shipping.zones');
+
+
+/*
+|--------------------------------------------------------------------------
+| ALSO: Add a "Manage Schedules" link in admin/zones/index.blade.php
+|--------------------------------------------------------------------------
+|
+| Inside the zone row actions, alongside the edit/delete buttons, add:
+|
+|   <a href="{{ route('admin.zones.schedules.index', $zone) }}"
+|      class="p-1.5 text-brand hover:bg-brand/10 rounded-lg transition-colors"
+|      title="جداول التوصيل الشهرية">
+|       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+|           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+|                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+|       </svg>
+|   </a>
+*/

@@ -7,8 +7,13 @@
 
 @section('title', $currentCategory ? $currentCategory->name . ($isRtl ? ' — المتجر' : ' — Shop') : __('app.all_products'))
 
+
 @push('head')
 <style>
+/* ═══════════════════════════════════════════════════════════════════
+   LOCAL CSS VARIABLES — read from the global vars set in layouts/app.blade.php
+   DO NOT put hardcoded colors here. Use var(--text-*) references only.
+   ═══════════════════════════════════════════════════════════════════ */
 :root {
     --brand:       var(--brand-color, #0ea5e9);
     --brand-dark:  color-mix(in srgb, var(--brand) 75%, #000);
@@ -17,37 +22,76 @@
     --surface-2:   var(--bg-color, #f8f8f8);
     --sale-red:    #ff3366;
     --border:      #efefef;
-    --text-1:      #111827;
-    --text-2:      #6b7280;
     --radius-card: 16px;
-
-    /* غيّر الخط من هنا فقط */
  
-    
+    /* ── Map global typography vars to local aliases used in this file ── */
+    --ui-text:        var(--text-body);
+    --ui-text-strong: var(--text-heading);
+    --ui-text-soft:   var(--text-muted);
+ 
+    --card-bg:           var(--card-bg, #ffffff);
+    --card-font-color:   var(--text-card);
+    --card-font-strong:  var(--text-heading);
+    --card-font-muted:   var(--text-muted);
+    --card-price-color:  var(--text-price);
+    --card-sale-color:   var(--text-price);
+ 
+    /* text aliases */
+    --text-1: var(--text-heading);
+    --text-2: var(--text-body);
 }
-html[lang="ar"], [dir="rtl"] {
-    font-family: var(--font-ar) !important;
-}
-
-html[lang="en"], [dir="ltr"] {
-    font-family: var(--font-en) !important;
-}
-
-/* لو بدك كل الصفحة داخل هذا الملف */
-.page-shop {
-    font-family: var(--font-ar);
-}
-html[lang="en"] .page-shop,
-[dir="ltr"] .page-shop {
-    font-family: var(--font-en) !important;
-}
-/* تطبيق الخط على الصفحة كلها */
+ 
+/* ── Font application ───────────────────────────────────────────── */
+html[lang="ar"], [dir="rtl"] { font-family: var(--font-ar) !important; }
+html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
+ 
 .page-shop,
-.page-shop * {
-    font-family: var(--app-font) !important;
+.page-shop * { font-family: var(--app-font) !important; }
+ 
+/* ── Page-level text color ──────────────────────────────────────── */
+.page-shop { color: var(--text-body); }
+ 
+/* ── Gray utility overrides scoped to this page ─────────────────── */
+.page-shop :is(.text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black) {
+    color: var(--text-heading) !important;
 }
-
-/* ── Announcement bar ─────────────────────────────────────────────────── */
+.page-shop :is(.text-gray-700, .text-gray-600, .text-slate-700, .text-slate-600) {
+    color: var(--text-body) !important;
+}
+.page-shop :is(.text-gray-500, .text-gray-400, .text-gray-300, .text-slate-500, .text-slate-400) {
+    color: var(--text-muted) !important;
+}
+ 
+/* ── Cards ──────────────────────────────────────────────────────── */
+.page-shop :is(.pcard, .featured-card) {
+    color: var(--text-card);
+}
+.page-shop :is(.pcard, .featured-card) :is(.text-gray-900, .text-gray-800, .text-slate-900, .text-slate-800, .text-black) {
+    color: var(--text-product-title) !important;
+}
+.page-shop :is(.pcard, .featured-card) :is(.text-gray-500, .text-gray-400, .text-gray-300, .text-slate-500, .text-slate-400) {
+    color: var(--text-muted) !important;
+}
+.page-shop :is(.pcard, .featured-card) :is(.text-red-500, .text-red-600, .text-red-700, .text-rose-500, .text-rose-600) {
+    color: var(--text-price) !important;
+}
+.page-shop :is(.pcard, .featured-card) [style*="color:var(--sale-red)"] {
+    color: var(--text-price) !important;
+}
+.page-shop :is(.pcard, .featured-card) [style*="background:var(--sale-red)"] {
+    background: var(--text-price) !important;
+}
+ 
+/* ── Search dropdown + sort drawer ──────────────────────────────── */
+.page-shop :is(.search-dropdown, .sort-drawer) { color: var(--text-body); }
+.page-shop :is(.search-dropdown, .sort-drawer) :is(.text-gray-900, .text-gray-800) {
+    color: var(--text-heading) !important;
+}
+.page-shop :is(.search-dropdown, .sort-drawer) :is(.text-gray-500, .text-gray-400, .text-gray-300) {
+    color: var(--text-muted) !important;
+}
+ 
+/* ── Announcement bar ───────────────────────────────────────────── */
 .announce-bar {
     background: var(--brand); color: #fff;
     font-size: 12px; font-weight: 700; letter-spacing: .04em;
@@ -59,7 +103,7 @@ html[lang="en"] .page-shop,
     width:120px; height:120px; border-radius:50%;
     background:rgba(255,255,255,.06); pointer-events:none;
 }
-.announce-bar::before{left:-30px}.announce-bar::after{right:-30px}
+.announce-bar::before{left:-30px} .announce-bar::after{right:-30px}
 .announce-ticker {
     display:flex; align-items:center; gap:28px;
     animation:ticker 18s linear infinite; white-space:nowrap;
@@ -67,8 +111,8 @@ html[lang="en"] .page-shop,
 @media(min-width:768px){.announce-ticker{animation:none;gap:40px}}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .announce-dot { width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);flex-shrink:0; }
-
-/* ── Hero banner ──────────────────────────────────────────────────────── */
+ 
+/* ── Hero banner ────────────────────────────────────────────────── */
 .hero-banner {
     background: linear-gradient(135deg,
         color-mix(in srgb, var(--brand-color) 40%, #000) 0%,
@@ -85,12 +129,12 @@ html[lang="en"] .page-shop,
 }
 @keyframes heroFloat{0%,100%{transform:translateY(0) rotate(-2deg) scale(1)}50%{transform:translateY(-10px) rotate(1deg) scale(1.02)}}
 .hero-img{animation:heroFloat 6s ease-in-out infinite}
-
-/* ── Category pills ───────────────────────────────────────────────────── */
+ 
+/* ── Category pills ─────────────────────────────────────────────── */
 .cat-pill {
     white-space:nowrap; padding:7px 17px; border-radius:99px;
     font-size:12px; font-weight:700; border:1.5px solid var(--border);
-    background:var(--surface); color:var(--text-2); cursor:pointer;
+    background:var(--surface); color:var(--text-body); cursor:pointer;
     flex-shrink:0; text-decoration:none; display:inline-block;
     transition:all .15s;
 }
@@ -101,8 +145,8 @@ html[lang="en"] .page-shop,
 }
 .scrollbar-hide::-webkit-scrollbar{display:none}
 .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
-
-/* ── Featured horizontal list ─────────────────────────────────────────── */
+ 
+/* ── Featured list ──────────────────────────────────────────────── */
 .featured-list {
     display:flex; gap:12px; overflow-x:auto; padding-bottom:6px;
     scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
@@ -111,7 +155,7 @@ html[lang="en"] .page-shop,
 .featured-list::-webkit-scrollbar{display:none}
 .featured-card {
     min-width:148px; max-width:148px; flex-shrink:0;
-    scroll-snap-align:start; background:var(--card-bg)!important;
+    scroll-snap-align:start; background:var(--card-bg, #fff)!important;
     border-radius:var(--radius-card); overflow:hidden; cursor:pointer;
     transition:transform .15s, box-shadow .15s; position:relative;
 }
@@ -124,10 +168,10 @@ html[lang="en"] .page-shop,
     color:#fff;font-size:9px;font-weight:800;padding:3px 9px 3px 7px;
     border-bottom-left-radius:9px;z-index:5;letter-spacing:.04em;
 }
-
-/* ── Regular grid ─────────────────────────────────────────────────────── */
+ 
+/* ── Product card (grid) ────────────────────────────────────────── */
 .pcard {
-    background-color:var(--card-bg)!important;
+    background-color:var(--card-bg, #fff)!important;
     border-radius:var(--radius-card); overflow:hidden;
     cursor:pointer; position:relative;
     border:1px solid rgba(0,0,0,.05);
@@ -141,15 +185,27 @@ html[lang="en"] .page-shop,
     color:#fff;font-size:9px;font-weight:800;padding:2px 8px 2px 5px;
     border-bottom-right-radius:8px;letter-spacing:.04em;line-height:1.7;z-index:5;
 }
-
-/* ── Shimmer ──────────────────────────────────────────────────────────── */
+ 
+/* ── Product title & price inside cards ─────────────────────────── */
+.pcard .pcard-name,
+.featured-card .fc-name {
+    color: var(--text-product-title) !important;
+    font-size: var(--product-title-font-size) !important;
+}
+.pcard .pcard-price,
+.featured-card .fc-price {
+    color: var(--text-price) !important;
+    font-size: var(--product-price-font-size) !important;
+}
+ 
+/* ── Shimmer ────────────────────────────────────────────────────── */
 @keyframes shimmer{0%{background-position:-900px 0}100%{background-position:900px 0}}
 .shimmer{
     background:linear-gradient(90deg,#f4f4f4 25%,#ececec 50%,#f4f4f4 75%);
     background-size:1800px 100%;animation:shimmer 1.8s ease-in-out infinite;
 }
-
-/* ── Heart / wishlist ─────────────────────────────────────────────────── */
+ 
+/* ── Heart / wishlist ───────────────────────────────────────────── */
 .heart-btn {
     width:30px;height:30px;background:rgba(255,255,255,.93);
     border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -159,17 +215,8 @@ html[lang="en"] .page-shop,
 }
 .heart-btn:hover{transform:scale(1.18);background:#fff}
 .heart-btn svg{width:15px;height:15px}
-.page-shop * {
-    font-family: var(--app-font) !important;
-}
-html[lang="ar"] {
-    --app-font: var(--font-ar);
-}
-
-html[lang="en"] {
-    --app-font: var(--font-en);
-}
-/* ── Share button ─────────────────────────────────────────────────────── */
+ 
+/* ── Share button ───────────────────────────────────────────────── */
 .share-btn {
     width:30px;height:30px;background:rgba(255,255,255,.93);
     border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -179,8 +226,8 @@ html[lang="en"] {
 }
 .share-btn:hover{transform:scale(1.18);background:#fff}
 .share-btn svg{width:14px;height:14px}
-
-/* ── Scroll reveal ────────────────────────────────────────────────────── */
+ 
+/* ── Scroll reveal ──────────────────────────────────────────────── */
 .reveal{
     opacity:0;transform:translateY(22px);
     transition:opacity .55s cubic-bezier(.22,1,.36,1),transform .55s cubic-bezier(.22,1,.36,1);
@@ -188,8 +235,8 @@ html[lang="en"] {
 }
 .reveal.visible{opacity:1;transform:translateY(0)}
 .reveal{transition-delay:calc(var(--i,0) * 60ms)}
-
-/* ── Sort drawer ──────────────────────────────────────────────────────── */
+ 
+/* ── Sort drawer ────────────────────────────────────────────────── */
 .sort-drawer-overlay{
     position:fixed;inset:0;background:rgba(0,0,0,.42);
     z-index:60;opacity:0;pointer-events:none;transition:opacity .25s;
@@ -206,13 +253,13 @@ html[lang="en"] {
 .sort-option{
     display:flex;align-items:center;justify-content:space-between;
     padding:14px 0;border-bottom:1px solid #f5f5f5;
-    font-size:13.5px;font-weight:600;color:var(--text-2);
+    font-size:13.5px;font-weight:600;color:var(--text-body);
     cursor:pointer;transition:color .15s;text-decoration:none;
 }
 .sort-option:hover,.sort-option.chosen{color:var(--brand)}
 .pb-bar{padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}
-
-/* ── Live search dropdown ─────────────────────────────────────────────── */
+ 
+/* ── Live search dropdown ───────────────────────────────────────── */
 .search-dropdown {
     position:absolute;top:calc(100% + 6px);left:0;right:0;
     background:#fff;border:1px solid #e5e7eb;border-radius:16px;
@@ -232,36 +279,25 @@ html[lang="en"] {
     width:44px;height:44px;border-radius:10px;object-fit:cover;
     flex-shrink:0;background:#f3f4f6;
 }
+ 
 .scrollbar-hide, [x-category-grid] {
-    padding-top: 12px !important;   /* نعطي مساحة داخلية للبوردر */
-    margin-top: -12px !important;   /* نسحب الكومبوننت لفوق ليعوض المساحة */
-    padding-bottom: 4px !important; 
-    overflow-y: visible !important; /* السماح بظهور العناصر الخارجة عمودياً */
+    padding-top: 12px !important;
+    margin-top: -12px !important;
+    padding-bottom: 4px !important;
+    overflow-y: visible !important;
 }
-
-/* تأكد أن الحاوية الأب لا تقص المحتوى */
-.max-w-screen-2xl {
-    overflow: visible !important;
+.max-w-screen-2xl { overflow: visible !important; }
+[x-category-grid] .flex,
+.overflow-x-auto {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    margin-top: -8px !important;
 }
-/* بنعطي مساحة "تنفّس" داخل حاوية الكاتيغوري عشان البوردر ما ينقص */
-    [x-category-grid] .flex, 
-    .overflow-x-auto {
-        padding-top: 8px !important;
-        padding-bottom: 8px !important;
-        margin-top: -8px !important;
-    }
-    .cat-banner {
-    border-radius: 20px; overflow: hidden; position: relative;
-    margin-bottom: 20px;
-}
-.cat-banner-inner {
-    display: flex; align-items: center; gap: 24px;
-    padding: 36px 28px;
-    position: relative; z-index: 10;
-}
-@media(min-width: 768px) {
-    .cat-banner-inner { padding: 48px 56px; gap: 40px; }
-}
+ 
+/* ── Category banner ────────────────────────────────────────────── */
+.cat-banner { border-radius: 20px; overflow: hidden; position: relative; margin-bottom: 20px; }
+.cat-banner-inner { display: flex; align-items: center; gap: 24px; padding: 36px 28px; position: relative; z-index: 10; }
+@media(min-width: 768px) { .cat-banner-inner { padding: 48px 56px; gap: 40px; } }
 .cat-banner-img {
     width: 120px; height: 120px; flex-shrink: 0;
     border-radius: 16px; object-fit: cover;
@@ -271,20 +307,10 @@ html[lang="en"] {
 @media(min-width: 640px) { .cat-banner-img { width: 160px; height: 160px; } }
 @media(min-width: 768px) { .cat-banner-img { width: 200px; height: 200px; } }
 .cat-banner-img-wrap {
-    width: 100%;
-    max-height: 320px;
-    overflow: hidden;
-    border-radius: 20px;
-    margin-bottom: 20px;
-    background: #f3f4f6;
+    width: 100%; max-height: 320px; overflow: hidden;
+    border-radius: 20px; margin-bottom: 20px; background: #f3f4f6;
 }
-.cat-banner-img-wrap img {
-    width: 100%;
-    height: 100%;
-    max-height: 320px;
-    object-fit: cover;
-    display: block;
-}
+.cat-banner-img-wrap img { width: 100%; height: 100%; max-height: 320px; object-fit: cover; display: block; }
 @media (max-width: 640px) {
     .cat-banner-img-wrap { max-height: 160px; border-radius: 14px; }
     .cat-banner-img-wrap img { max-height: 160px; }
@@ -546,7 +572,7 @@ html[lang="en"] {
                                 <p x-show="item.category" class="text-[10px] text-gray-400 font-medium mt-0.5" x-text="item.category"></p>
                                 <div class="flex items-center gap-2 mt-0.5">
                                     <span class="text-sm font-black tabular-nums"
-                                          :style="item.is_on_sale ? 'color:var(--sale-red)' : 'color:#111827'"
+                                          :style="item.is_on_sale ? 'color:var(--sale-red)' : 'color:var(--card-font-color)'"
                                           x-text="item.price_formatted"></span>
                                     <span x-show="item.is_on_sale"
                                           class="text-[10px] text-gray-400 line-through tabular-nums"
