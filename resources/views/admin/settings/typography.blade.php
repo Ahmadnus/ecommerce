@@ -4,222 +4,223 @@
 
 @push('styles')
 <style>
-.typo-section-title {
-    font-size: 11px; font-weight: 800; letter-spacing: .08em;
-    text-transform: uppercase; color: #6b7280;
-    padding-bottom: 10px; border-bottom: 1px solid #f3f4f6; margin-bottom: 20px;
-}
-.typo-field-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 4px;
-}
-@media(max-width:640px){ .typo-field-grid { grid-template-columns: 1fr; } }
+    .typo-section-title {
+        font-size: 11px;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        font-weight: 800;
+        color: rgb(100 116 139);
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgb(226 232 240);
+    }
 
-.typo-field label {
-    display: block; font-size: 12px; font-weight: 600;
-    color: #374151; margin-bottom: 6px;
-}
-.typo-field .hint { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+    .typo-color-input {
+        width: 48px;
+        height: 44px;
+        border-radius: 14px;
+        border: 1px solid rgb(226 232 240);
+        padding: 3px;
+        background: #fff;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
 
-.typo-font-input {
-    width: 100%; border: 1px solid #e5e7eb; border-radius: 8px;
-    padding: 8px 12px; font-size: 13px; color: #111827; outline: none;
-    transition: border-color .15s, box-shadow .15s;
-}
-.typo-font-input:focus {
-    border-color: var(--brand-color, #364851);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color,#364851) 15%, transparent);
-}
-
-.color-row { display: flex; align-items: center; gap: 10px; }
-.color-row input[type="color"] {
-    width: 42px; height: 36px; border: 1px solid #e5e7eb;
-    border-radius: 8px; padding: 2px; cursor: pointer; flex-shrink: 0;
-}
-.color-row input[type="text"] {
-    flex: 1; border: 1px solid #e5e7eb; border-radius: 8px;
-    padding: 8px 12px; font-size: 13px; font-family: monospace;
-    color: #111827; outline: none; transition: border-color .15s;
-}
-.color-row input[type="text"]:focus { border-color: var(--brand-color,#364851); }
-
-.swatch-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 3px 8px 3px 5px; border-radius: 99px;
-    border: 1px solid #e5e7eb; font-size: 11px; font-weight: 600;
-    white-space: nowrap; flex-shrink: 0;
-}
-.swatch-dot {
-    width: 13px; height: 13px; border-radius: 50%;
-    border: 1px solid rgba(0,0,0,.08); display: inline-block;
-}
+    .typo-swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 9999px;
+        border: 1px solid rgba(0,0,0,.08);
+        display: inline-block;
+    }
 </style>
 @endpush
 
 @section('admin-content')
-<div class="max-w-5xl mx-auto px-4 py-8">
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
+    <div class="max-w-6xl mx-auto px-4 py-8">
 
-    {{-- Header --}}
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Typography &amp; Text Colors</h1>
-            <p class="text-sm text-gray-500 mt-1">Control all font sizes and text colors — no code editing needed.</p>
+        {{-- Header --}}
+        <div class="mb-8 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Typography &amp; Text Colors</h1>
+                    <p class="mt-1 text-sm text-slate-500">Control all font sizes and text colors — no code editing needed.</p>
+                </div>
+
+                <a href="{{ route('admin.settings') }}"
+                   class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Back to Settings
+                </a>
+            </div>
+
+            @if(session('success'))
+                <div class="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <svg class="h-5 w-5 flex-shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    {{ session('success') }}
+                </div>
+            @endif
         </div>
-        <a href="{{ route('admin.settings') }}"
-           class="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Back to Settings
-        </a>
-    </div>
 
-    {{-- Flash --}}
-    @if(session('success'))
-    <div class="flex items-center gap-3 bg-green-50 border border-green-200 text-green-800
-                px-4 py-3 rounded-xl text-sm mb-6">
-        <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-        </svg>
-        {{ session('success') }}
-    </div>
-    @endif
+        <form method="POST" action="{{ route('admin.settings.typography.update') }}">
+            @csrf
 
-    <form method="POST" action="{{ route('admin.settings.typography.update') }}">
-        @csrf
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {{-- Left --}}
+                <div class="space-y-6 lg:col-span-2">
 
-            {{-- LEFT: Font sizes + Colors ──────────────────────────────── --}}
-            <div class="lg:col-span-2 space-y-6">
+                    {{-- Font Sizes --}}
+                    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <p class="typo-section-title">Font Sizes</p>
 
-                {{-- Font Sizes ────────────────────────────────────────── --}}
-                <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                    <p class="typo-section-title">Font Sizes</p>
-                    <div class="typo-field-grid">
-                        @foreach($fontLabels as $key => $label)
-                        <div class="typo-field">
-                            <label for="f_{{ $key }}">{{ $label }}</label>
-                            <input type="text"
-                                   id="f_{{ $key }}"
-                                   name="{{ $key }}"
-                                   value="{{ $current[$key] ?? $fontKeys[$key] }}"
-                                   placeholder="{{ $fontKeys[$key] }}"
-                                   class="typo-font-input"
-                                   autocomplete="off">
-                            <p class="hint">e.g. 16px · 1rem · 1.2em</p>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            @foreach($fontLabels as $key => $label)
+                                <div>
+                                    <label for="f_{{ $key }}" class="mb-2 block text-sm font-semibold text-slate-700">
+                                        {{ $label }}
+                                    </label>
+
+                                    <input type="text"
+                                           id="f_{{ $key }}"
+                                           name="{{ $key }}"
+                                           value="{{ $current[$key] ?? $fontKeys[$key] }}"
+                                           placeholder="{{ $fontKeys[$key] }}"
+                                           class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                                           autocomplete="off">
+
+                                    <p class="mt-2 text-xs text-slate-500">e.g. 16px · 1rem · 1.2em</p>
+                                </div>
+                            @endforeach
                         </div>
-                        @endforeach
+                    </div>
+
+                    {{-- Text Colors --}}
+                    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <p class="typo-section-title">Text Colors</p>
+
+                        <div class="space-y-4">
+                            @foreach($colorLabels as $key => $label)
+                                @php $val = $current[$key] ?? $colorKeys[$key]; @endphp
+
+                                <div>
+                                    <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                        {{ $label }}
+                                    </label>
+
+                                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                        <input type="color"
+                                               id="cp_{{ $key }}"
+                                               value="{{ $val }}"
+                                               class="typo-color-input"
+                                               oninput="syncText(this,'ct_{{ $key }}','sw_{{ $key }}','sl_{{ $key }}')">
+
+                                        <input type="text"
+                                               id="ct_{{ $key }}"
+                                               name="{{ $key }}"
+                                               value="{{ $val }}"
+                                               maxlength="50"
+                                               placeholder="{{ $colorKeys[$key] }}"
+                                               class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                                               oninput="syncPicker(this,'cp_{{ $key }}','sw_{{ $key }}','sl_{{ $key }}')"
+                                               autocomplete="off">
+
+                                        <span class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+                                            <span class="typo-swatch" id="sw_{{ $key }}" style="background:{{ $val }}"></span>
+                                            <span id="sl_{{ $key }}">{{ $val }}</span>
+                                        </span>
+                                    </div>
+
+                                    @error($key)
+                                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
-                {{-- Text Colors ───────────────────────────────────────── --}}
-                <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                    <p class="typo-section-title">Text Colors</p>
-                    <div class="space-y-4">
-                        @foreach($colorLabels as $key => $label)
-                        @php $val = $current[$key] ?? $colorKeys[$key]; @endphp
-                        <div class="typo-field">
-                            <label>{{ $label }}</label>
-                            <div class="color-row">
-                                <input type="color"
-                                       id="cp_{{ $key }}"
-                                       value="{{ $val }}"
-                                       oninput="syncText(this,'ct_{{ $key }}','sw_{{ $key }}','sl_{{ $key }}')">
+                {{-- Right --}}
+                <div class="space-y-6 lg:sticky lg:top-6 lg:self-start">
 
-                                <input type="text"
-                                       id="ct_{{ $key }}"
-                                       name="{{ $key }}"
-                                       value="{{ $val }}"
-                                       maxlength="50"
-                                       placeholder="{{ $colorKeys[$key] }}"
-                                       oninput="syncPicker(this,'cp_{{ $key }}','sw_{{ $key }}','sl_{{ $key }}')"
-                                       autocomplete="off">
+                    {{-- Save --}}
+                    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <p class="mb-4 text-sm font-bold text-slate-900">Save Changes</p>
 
-                                <span class="swatch-badge">
-                                    <span class="swatch-dot" id="sw_{{ $key }}" style="background:{{ $val }}"></span>
-                                    <span id="sl_{{ $key }}">{{ $val }}</span>
+                        <button type="submit"
+                                class="w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition hover:brightness-110 active:scale-[.99]">
+                            Save Typography Settings
+                        </button>
+
+                        <p class="mt-3 text-center text-xs text-slate-500">
+                            Changes apply instantly to the storefront.
+                        </p>
+                    </div>
+
+                    {{-- Live Preview --}}
+                    <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <p class="typo-section-title">Live Preview</p>
+
+                        <div class="space-y-4">
+                            <p id="pv-heading"
+                               class="border-b border-slate-200 pb-3 font-bold leading-tight text-slate-900"
+                               style="font-size:{{ $current['heading_font_size'] }}; color:{{ $current['heading_text_color'] }}">
+                                Product Heading
+                            </p>
+
+                            <p id="pv-body"
+                               class="border-b border-slate-200 pb-3 text-slate-700"
+                               style="font-size:{{ $current['base_font_size'] }}; color:{{ $current['body_text_color'] }}">
+                                Body text — how paragraphs and descriptions look.
+                            </p>
+
+                            <p id="pv-muted"
+                               class="border-b border-slate-200 pb-3"
+                               style="font-size:{{ $current['card_font_size'] }}; color:{{ $current['muted_text_color'] }}">
+                                Muted text — categories, timestamps, hints.
+                            </p>
+
+                            <div class="border-b border-slate-200 pb-3">
+                                <span id="pv-price"
+                                      class="font-black tabular-nums"
+                                      style="font-size:{{ $current['product_price_font_size'] }}; color:{{ $current['price_text_color'] }}">
+                                    $49.99
+                                </span>
+                                <span class="ml-3 text-xs text-slate-400 line-through">$79.99</span>
+                            </div>
+
+                            <div class="border-b border-slate-200 pb-3">
+                                <span id="pv-badge"
+                                      class="inline-block rounded-full px-3 py-1 text-xs font-bold"
+                                      style="background:var(--brand-color,#364851); color:{{ $current['badge_text_color'] }}; font-size:{{ $current['button_font_size'] }}">
+                                    SALE
                                 </span>
                             </div>
-                            @error($key)
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
+
+                            <div>
+                                <input id="pv-input"
+                                       type="text"
+                                       value="Input field example"
+                                       readonly
+                                       class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-900 outline-none"
+                                       style="color:{{ $current['input_text_color'] }}">
+                            </div>
                         </div>
-                        @endforeach
                     </div>
                 </div>
-
             </div>
-
-            {{-- RIGHT: Save + Live Preview ──────────────────────────────── --}}
-            <div class="space-y-5">
-
-                {{-- Save ────────────────────────────────────────────────── --}}
-                <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm sticky top-5">
-                    <p class="text-sm font-bold text-gray-700 mb-4">Save Changes</p>
-                    <button type="submit"
-                            class="w-full text-white font-bold text-sm px-5 py-3 rounded-xl
-                                   hover:opacity-90 active:scale-[.98] transition-all shadow-sm"
-                            style="background: var(--brand-color, #364851)">
-                        Save Typography Settings
-                    </button>
-                    <p class="text-xs text-gray-400 mt-3 text-center">
-                        Changes apply instantly to the storefront.
-                    </p>
-                </div>
-
-                {{-- Live Preview ─────────────────────────────────────────── --}}
-                <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-                    <p class="typo-section-title">Live Preview</p>
-                    <div class="space-y-3">
-
-                        <p id="pv-heading" class="font-bold leading-tight"
-                           style="font-size:{{ $current['heading_font_size'] }};color:{{ $current['heading_text_color'] }}">
-                            Product Heading
-                        </p>
-
-                        <p id="pv-body"
-                           style="font-size:{{ $current['base_font_size'] }};color:{{ $current['body_text_color'] }}">
-                            Body text — how paragraphs and descriptions look.
-                        </p>
-
-                        <p id="pv-muted"
-                           style="font-size:{{ $current['card_font_size'] }};color:{{ $current['muted_text_color'] }}">
-                            Muted text — categories, timestamps, hints.
-                        </p>
-
-                        <div class="flex items-center gap-3">
-                            <span id="pv-price" class="font-black tabular-nums"
-                                  style="font-size:{{ $current['product_price_font_size'] }};color:{{ $current['price_text_color'] }}">
-                                $49.99
-                            </span>
-                            <span class="text-xs text-gray-400 line-through">$79.99</span>
-                        </div>
-
-                        <div>
-                            <span id="pv-badge"
-                                  class="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full"
-                                  style="background:var(--brand-color,#364851);
-                                         color:{{ $current['badge_text_color'] }};
-                                         font-size:{{ $current['button_font_size'] }}">
-                                SALE
-                            </span>
-                        </div>
-
-                        <input id="pv-input" type="text" value="Input field example" readonly
-                               class="border border-gray-200 rounded-lg px-3 py-1.5 text-xs w-full"
-                               style="color:{{ $current['input_text_color'] }}">
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-// picker → text input + swatch
 function syncText(picker, textId, swId, slId) {
     var h = picker.value;
     document.getElementById(textId).value = h;
@@ -228,7 +229,6 @@ function syncText(picker, textId, swId, slId) {
     updatePreview();
 }
 
-// text input → picker + swatch
 function syncPicker(input, pickerId, swId, slId) {
     var v = input.value.trim();
     document.getElementById(swId).style.background = v;
@@ -257,13 +257,12 @@ function updatePreview() {
     Object.entries(map).forEach(function([id, ids]) {
         var el = document.getElementById(id);
         if (!el) return;
-        if (ids.color) el.style.color    = get(ids.color);
-        if (ids.size)  el.style.fontSize = get(ids.size);
+        if (ids.color) el.style.color = get(ids.color);
+        if (ids.size) el.style.fontSize = get(ids.size);
     });
 }
 
-// Attach live preview to font size inputs
-document.querySelectorAll('.typo-font-input').forEach(function(el) {
+document.querySelectorAll('input[id^="f_"], input[id^="ct_"]').forEach(function(el) {
     el.addEventListener('input', updatePreview);
 });
 </script>
