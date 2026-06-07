@@ -482,3 +482,38 @@ Route::get('/shipping/zones/{country}', [\App\Http\Controllers\Api\ShippingZoneA
 |       </svg>
 |   </a>
 */
+
+
+
+
+/*
+|--------------------------------------------------------------------------
+| ADD TO routes/web.php
+|--------------------------------------------------------------------------
+*/
+
+// ── Public: submit a review (authenticated or guest) ─────────────────────────
+// Add in the public routes section (no auth middleware needed):
+
+Route::post('/products/{product:slug}/reviews', [\App\Http\Controllers\ProductReviewController::class, 'store'])
+     ->name('products.reviews.store');
+
+
+// ── Admin: review management ──────────────────────────────────────────────────
+// Add INSIDE your admin middleware group:
+//
+//   Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(...):
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
+    // ... your existing routes ...
+
+    // ── Product Reviews ───────────────────────────────────────────────────────
+    Route::get(   'reviews',                   [\App\Http\Controllers\Admin\ReviewController::class, 'index'])     ->name('reviews.index');
+    Route::get(   'reviews/{review}',          [\App\Http\Controllers\Admin\ReviewController::class, 'show'])      ->name('reviews.show');
+    Route::patch( 'reviews/{review}/approve',  [\App\Http\Controllers\Admin\ReviewController::class, 'approve'])   ->name('reviews.approve');
+    Route::patch( 'reviews/{review}/reject',   [\App\Http\Controllers\Admin\ReviewController::class, 'reject'])    ->name('reviews.reject');
+    Route::patch( 'reviews/{review}/pin',      [\App\Http\Controllers\Admin\ReviewController::class, 'pin'])       ->name('reviews.pin');
+    Route::delete('reviews/{review}',          [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])   ->name('reviews.destroy');
+    Route::get(   'products/{product}/reviews',[\App\Http\Controllers\Admin\ReviewController::class, 'forProduct'])->name('products.reviews');
+
+});

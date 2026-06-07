@@ -183,6 +183,9 @@
                         الدول والمناطق
                     </x-admin-nav-link>
 
+
+
+                    
                     <x-admin-nav-link href="{{ route('admin.currencies.index') }}" icon="currency-dollar"
                         :active="request()->routeIs('admin.currencies.*')">
                         العملات
@@ -210,11 +213,18 @@
                         إعدادات الدفع
                     </x-admin-nav-link>
 
-                    <x-admin-nav-link href="{{ route('admin.settings.sms') }}" icon="device-mobile"
-                        :active="request()->is('admin/settings/sms')">
-                        إعدادات الرسائل
-                    </x-admin-nav-link>
-
+                    <x-admin-nav-link href="{{ route('admin.reviews.index') }}" icon="star"
+    :active="request()->routeIs('admin.reviews.*')">
+    تقييمات المنتجات
+    @php $pendingReviews = \App\Models\ProductReview::where('status','pending')->count(); @endphp
+    @if($pendingReviews > 0)
+        <span x-show="sidebarOpen"
+              class="mr-auto text-[10px] px-1.5 py-0.5 rounded-full animate-pulse"
+              style="background:#f59e0b; color:#ffffff;">
+            {{ $pendingReviews }}
+        </span>
+    @endif
+</x-admin-nav-link>
                     <x-admin-nav-link href="{{ route('admin.locale-mode') }}" icon="translate"
                         :active="request()->is('admin/locale-mode')">
                         اللغة

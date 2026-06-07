@@ -242,7 +242,7 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
             <div>
                 <label class="cc-label">اسم المنتج (AR) <span style="color:#dc2626;">*</span></label>
                 <input type="text" name="name[ar]"
-                       value="{{ old('name.ar', $product->getTranslation('name', 'ar')) }}" required
+                       value="{{ old('name.ar', $product->getTranslation('name', 'ar')) }}" 
                        class="cc-input @error('name.ar') has-error @enderror">
                 @error('name.ar')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -252,7 +252,7 @@ body { font-family:var(--cc-sans); background:#ffffff; color:#000000; }
             <div>
                 <label class="cc-label">اسم المنتج (EN) <span style="color:#dc2626;">*</span></label>
                 <input type="text" name="name[en]"
-                       value="{{ old('name.en', $product->getTranslation('name', 'en')) }}" required
+                       value="{{ old('name.en', $product->getTranslation('name', 'en')) }}" 
                        class="cc-input @error('name.en') has-error @enderror">
                 @error('name.en')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>

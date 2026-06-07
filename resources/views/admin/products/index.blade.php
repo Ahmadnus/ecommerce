@@ -134,10 +134,54 @@ body { font-family: var(--cc-sans); background: #ffffff; color: #000000; }
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
 </style>
 @endpush
 
 @section('admin-content')
+
+{{-- ── Low stock toast ─────────────────────────────────────────── --}}
+@php
+    $lowStockProducts = $products->filter(fn($p) => $p->total_stock === 1);
+@endphp
+@if($lowStockProducts->isNotEmpty())
+<div id="low-stock-toast"
+     style="position:fixed; bottom:24px; left:24px; z-index:50; display:flex; flex-direction:column; gap:8px; max-width:320px;">
+    @foreach($lowStockProducts->take(3) as $lp)
+    <div class="toast-item" style="
+        display:flex; align-items:flex-start; gap:10px;
+        background:#fffbeb;
+        border:1px solid #fde68a;
+        border-right:4px solid #d97706;
+        border-radius:10px;
+        padding:12px 14px;
+        box-shadow:0 4px 12px rgba(0,0,0,0.08);
+        animation: slideIn .3s ease;
+    ">
+        <svg style="width:18px;height:18px;flex-shrink:0;margin-top:1px;color:#d97706;" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <div style="flex:1; min-width:0;">
+            <p style="font-size:12px; font-weight:700; color:#92400e; margin:0 0 2px;">تحذير: مخزون منخفض</p>
+            <p style="font-size:11px; color:#b45309; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                {{ $lp->name }} — قطعة واحدة فقط
+            </p>
+        </div>
+        <button type="button"
+                onclick="this.closest('.toast-item').remove(); if(!document.querySelectorAll('.toast-item').length) document.getElementById('low-stock-toast').remove();"
+                style="background:none; border:none; cursor:pointer; color:#b45309; font-size:14px; line-height:1; flex-shrink:0;">✕</button>
+    </div>
+    @endforeach
+    @if($lowStockProducts->count() > 3)
+    <p style="font-size:11px; color:#b45309; text-align:center; margin:0;">
+        + {{ $lowStockProducts->count() - 3 }} منتجات أخرى بمخزون منخفض
+    </p>
+    @endif
+</div>
+@endif
 <div class="cc-page p-4 sm:p-6 lg:p-8" dir="rtl" style="background:#ffffff;">
 
     {{-- ══ Header ═════════════════════════════════════════════════════════ --}}

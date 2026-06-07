@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    private const LOW_STOCK_THRESHOLD = 5;
+    private const LOW_STOCK_THRESHOLD = 1;
 
     public function index(Request $request)
     {

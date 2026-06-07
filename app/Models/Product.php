@@ -295,4 +295,37 @@ class Product extends Model implements HasMedia
 
         return $svc->format($this->is_on_sale ? $this->discount_price : $this->base_price);
     }
+
+    public function reviews(): \Illuminate\Database\Eloquent\Relations\HasMany
+{
+    return $this->hasMany(\App\Models\ProductReview::class);
+}
+
+public function approvedReviews(): \Illuminate\Database\Eloquent\Relations\HasMany
+{
+    return $this->hasMany(\App\Models\ProductReview::class)
+                ->where('status', 'approved')
+                ->orderByDesc('is_pinned')
+                ->orderByDesc('created_at');
+}
+
+public function averageRating(): float
+{
+    return (float) $this->reviews()
+        ->where('status', 'approved')
+        ->avg('rating') ?? 0.0;
+}
+
+public function reviewCount(): int
+{
+    return $this->reviews()
+        ->where('status', 'approved')
+        ->count();
+}
+
+public function ratingStars(): array
+{
+    $avg = $this->averageRating();
+    return array_map(fn(int $i) => $i <= round($avg), range(1, 5));
+}
 }
