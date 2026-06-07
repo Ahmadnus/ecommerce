@@ -80,13 +80,13 @@ class ProductController extends Controller
     /**
      * Single product detail page.
      */
-   public function show(string $slug): View
+  public function show(string $slug): View
 {
     $product = Product::where('slug', $slug)
         ->active()
         ->with([
             'categories.parent',
-            'media',                          // ← ADD THIS
+            'media',
             'variants' => fn($q) => $q->with('attributeValues.attribute')
                                       ->orderBy('is_active', 'desc')
                                       ->orderBy('price_override'),
@@ -100,7 +100,7 @@ class ProductController extends Controller
             ->inCategory($primaryCategory->id)
             ->where('id', '!=', $product->id)
             ->with([
-                'media',                      // ← ADD THIS too
+                'media',
                 'variants' => fn($q) => $q->where('is_active', true),
             ])
             ->limit(4)
@@ -112,18 +112,33 @@ class ProductController extends Controller
         ->unique('id')
         ->groupBy(fn(AttributeValue $av) => $av->attribute->name);
 
-    // ← ADD isWishlisted
     $isWishlisted = auth()->check()
         ? auth()->user()->wishlistedProducts()
                         ->where('product_id', $product->id)
                         ->exists()
         : false;
 
+    // Reviews
+    $reviews = $product->reviews()
+        ->where('status', 'approved')
+        ->orderByDesc('is_pinned')
+        ->orderByDesc('created_at')
+        ->paginate(10, ['*'], 'review_page')
+        ->withQueryString();
+
+    $userHasReviewed = auth()->check()
+        ? \App\Models\ProductReview::where('product_id', $product->id)
+            ->where('user_id', auth()->id())
+            ->exists()
+        : false;
+
     return view('products.show', [
         'product'           => $product,
         'related'           => $related,
         'variantAttributes' => $variantAttributes,
-        'isWishlisted'      => $isWishlisted,   // ← ADD THIS
+        'isWishlisted'      => $isWishlisted,
+        'reviews'           => $reviews,
+        'userHasReviewed'   => $userHasReviewed,
     ]);
 }
 
