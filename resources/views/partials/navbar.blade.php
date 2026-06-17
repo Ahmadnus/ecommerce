@@ -70,7 +70,12 @@
                        style="color: var(--text-navbar); font-size: var(--navbar-font-size);">
                         {{ __('app.shop') }}
                     </a>
-
+<a href="{{ route('customize.index') }}"
+   class="px-3 py-2 rounded-xl font-bold transition-all
+          {{ request()->routeIs('customize.index') ? 'bg-gray-100' : 'hover:bg-gray-50' }}"
+   style="color: var(--text-navbar); font-size: var(--navbar-font-size);">
+    تصميمي الخاص
+</a>
                     @foreach(\App\Models\Category::whereNull('parent_id')->where('is_active', true)->take(6)->get() as $parent)
                     <div class="relative group">
                         <a href="{{ route('products.index', ['category' => $parent->slug]) }}"
@@ -363,7 +368,12 @@
                style="color: var(--text-navbar);">
                 {{ __('app.all_products') }}
             </a>
-
+<a href="{{ route('customize.index') }}"
+   class="block px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50
+          {{ request()->routeIs('customize.index') ? 'bg-gray-100' : '' }}"
+   style="color: var(--text-navbar);">
+    تصميمي الخاص
+</a>
             @foreach(\App\Models\Category::where('is_active', true)->take(6)->get() as $cat)
             <a href="{{ route('products.index', ['category' => $cat->id]) }}"
                class="block px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50"

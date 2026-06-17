@@ -128,7 +128,11 @@
                             </span>
                         @endif
                     </x-admin-nav-link>
-
+<x-admin-nav-link href="{{ route('admin.customizations.index') }}"
+    icon="color-swatch"
+    :active="request()->routeIs('admin.order-customizations.*')">
+    طلبات التخصيص
+</x-admin-nav-link>
                     <x-admin-nav-link href="{{ route('admin.contact-messages.index') }}" icon="mail"
                         :active="request()->routeIs('admin.contact-messages.*')">
                         رسائل العملاء
@@ -212,6 +216,7 @@
                         :active="request()->is('admin/settings/checkout')">
                         إعدادات الدفع
                     </x-admin-nav-link>
+                    
 
                     <x-admin-nav-link href="{{ route('admin.reviews.index') }}" icon="star"
     :active="request()->routeIs('admin.reviews.*')">

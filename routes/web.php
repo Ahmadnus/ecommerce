@@ -21,6 +21,11 @@ use App\Http\Controllers\Admin\{
     SplashSettingsController
 };
 
+use App\Http\Controllers\CustomizableProductsController;
+use App\Http\Controllers\CustomizationController;
+use App\Http\Controllers\Admin\OrderCustomizationController;
+
+
 // ─── Public Routes ──────────────────────────────────────────────────────────
 Route::get('/', function () {
     return view('splash.splash');
@@ -516,4 +521,35 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('reviews/{review}',          [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])   ->name('reviews.destroy');
     Route::get(   'products/{product}/reviews',[\App\Http\Controllers\Admin\ReviewController::class, 'forProduct'])->name('products.reviews');
 
+});
+
+Route::prefix('customize')->name('customize.')->group(function () {
+ 
+    // Product picker listing
+    Route::get('/', [CustomizableProductsController::class, 'index'])
+         ->name('index');
+ 
+    // Customization UI — accepts slug OR numeric ID
+    // {garment} is a plain string parameter, not model-bound
+    Route::get('/{garment}', [CustomizationController::class, 'show'])
+         ->name('show')
+         ->where('garment', '[a-zA-Z0-9_-]+');  // allows slugs and IDs
+ 
+    // Save customization
+    Route::post('/{garment}', [CustomizationController::class, 'store'])
+         ->name('store')
+         ->where('garment', '[a-zA-Z0-9_-]+');
+ 
+});
+ 
+// ── Admin routes (add inside your existing admin middleware group) ────────────
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    Route::get('/customizations', [OrderCustomizationController::class, 'index'])
+        ->name('customizations.index');
+
+    Route::get('/customizations/{customization}', [OrderCustomizationController::class, 'show'])
+        ->name('customizations.show');
+
+    Route::get('/orders/{orderId}/customization', [OrderCustomizationController::class, 'embedded'])
+        ->name('orders.customization.show');
 });

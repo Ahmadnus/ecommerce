@@ -17,6 +17,9 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Translatable\HasTranslations;
+// الإضافات الجديدة الخاصة بالتخصيص
+use App\Models\OrderCustomization;
+use App\Models\ProductCustomization; 
 
 class Product extends Model implements HasMedia
 {
@@ -39,15 +42,19 @@ class Product extends Model implements HasMedia
         'is_featured',
         'sort_order',
         'meta',
+        'is_customizable',      // تمت إضافته
+        'customization_config', // تمت إضافته
     ];
 
     protected $casts = [
-        'base_price'     => 'decimal:2',
-        'discount_price' => 'decimal:2',
-        'is_featured'    => 'boolean',
-        'sort_order'     => 'integer',
-        'images'         => 'array',
-        'meta'           => 'array',
+        'base_price'           => 'decimal:2',
+        'discount_price'       => 'decimal:2',
+        'is_featured'          => 'boolean',
+        'sort_order'           => 'integer',
+        'images'               => 'array',
+        'meta'                 => 'array',
+        'is_customizable'      => 'boolean', // تمت إضافته
+        'customization_config' => 'array',   // تمت إضافته
     ];
 
     protected static function booted(): void
@@ -296,36 +303,69 @@ class Product extends Model implements HasMedia
         return $svc->format($this->is_on_sale ? $this->discount_price : $this->base_price);
     }
 
-    public function reviews(): \Illuminate\Database\Eloquent\Relations\HasMany
-{
-    return $this->hasMany(\App\Models\ProductReview::class);
-}
+    // ─────────────────────────────────────────────────────────────────────────────
+    // قسم التقييمات والمراجعات (تم تصحيح الأقواس لتصبح داخل الكلاس)
+    // ─────────────────────────────────────────────────────────────────────────────
+    
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(\App\Models\ProductReview::class);
+    }
 
-public function approvedReviews(): \Illuminate\Database\Eloquent\Relations\HasMany
-{
-    return $this->hasMany(\App\Models\ProductReview::class)
-                ->where('status', 'approved')
-                ->orderByDesc('is_pinned')
-                ->orderByDesc('created_at');
-}
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(\App\Models\ProductReview::class)
+                    ->where('status', 'approved')
+                    ->orderByDesc('is_pinned')
+                    ->orderByDesc('created_at');
+    }
 
-public function averageRating(): float
-{
-    return (float) $this->reviews()
-        ->where('status', 'approved')
-        ->avg('rating') ?? 0.0;
-}
+    public function averageRating(): float
+    {
+        return (float) $this->reviews()
+            ->where('status', 'approved')
+            ->avg('rating') ?? 0.0;
+    }
 
-public function reviewCount(): int
-{
-    return $this->reviews()
-        ->where('status', 'approved')
-        ->count();
-}
+    public function reviewCount(): int
+    {
+        return $this->reviews()
+            ->where('status', 'approved')
+            ->count();
+    }
 
-public function ratingStars(): array
-{
-    $avg = $this->averageRating();
-    return array_map(fn(int $i) => $i <= round($avg), range(1, 5));
-}
+    public function ratingStars(): array
+    {
+        $avg = $this->averageRating();
+        return array_map(fn(int $i) => $i <= round($avg), range(1, 5));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // قسم التخصيصات (Customizations) - الإضافات المطلوبة
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * All order-level customizations placed for this product.
+     */
+    public function orderCustomizations(): HasMany
+    {
+        return $this->hasMany(OrderCustomization::class);
+    }
+
+    /**
+     * Returns a typed wrapper around the raw customization_config JSON.
+     * Returns an empty (but usable) config object if not set.
+     */
+    public function customizationConfig(): ProductCustomization
+    {
+        return new ProductCustomization($this->customization_config ?? []);
+    }
+
+    /**
+     * Scope: only products that are marked customizable.
+     */
+    public function scopeCustomizable(\Illuminate\Database\Eloquent\Builder $query): void
+    {
+        $query->where('is_customizable', true);
+    }
 }
