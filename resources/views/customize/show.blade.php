@@ -69,10 +69,116 @@
 body { font-family: var(--font-body); }
 
 /* ─── Layout ─────────────────────────────────────────────────────────────── */
-.customizer { display: grid; grid-template-columns: 1fr 380px; gap: 28px; }
-@media (max-width: 1100px) { .customizer { grid-template-columns: 1fr; } }
+.customizer {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 28px;
+    align-items: start;
+}
 
-/* ─── Garment stage ──────────────────────────────────────────────────────── */
+/* ── Tablet: single column, stage stays sticky ──────────────────────────── */
+@media (max-width: 1100px) {
+    .customizer {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Mobile: full-page scroll layout ───────────────────────────────────────
+   The page body scrolls naturally. The SVG preview sits at the top as a
+   compact fixed-height card. The controls panel flows below it and scrolls
+   with the page. No overflow clipping anywhere.
+────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+
+    /* Remove horizontal padding so cards go edge-to-edge */
+    .max-w-7xl { padding-left: 12px !important; padding-right: 12px !important; }
+
+    /* Stack: SVG first, controls below — both scroll with the page */
+    .customizer {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* SVG preview card: compact height, no sticky, centered SVG */
+    .garment-stage {
+        position: static !important;    /* cancel sticky on mobile */
+        padding: 16px 12px 12px;
+        border-radius: 16px;
+        max-height: none;
+        overflow: visible;
+    }
+
+    /* Make the SVG itself smaller so it fits in viewport */
+    #garment-wrapper {
+        max-width: 240px !important;
+        margin: 0 auto;
+    }
+
+    /* Controls panel: normal block flow, scrolls with the page */
+    .controls-panel {
+        gap: 10px;
+    }
+
+    /* Cards slightly tighter on mobile */
+    .card {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    /* Zone buttons wrap cleanly */
+    .zone-btn {
+        font-size: 11px;
+        padding: 7px 10px;
+    }
+
+    /* Submit button: full width, easier tap target */
+    .submit-btn {
+        width: 100%;
+        text-align: center;
+        bottom: 16px;
+        left: 12px;
+        right: 12px;
+        transform: none;
+        border-radius: 14px;
+    }
+
+    /* Breadcrumb: smaller on mobile */
+    nav.flex.items-center.gap-2 {
+        font-size: 12px;
+        margin-bottom: 12px !important;
+    }
+
+    /* Sub-controls grid: 2 cols instead of 3 */
+    .sub-controls {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    /* Image upload preview: contained */
+    .upload-preview {
+        max-height: 80px;
+    }
+
+    /* Color palette: wrap naturally */
+    .palette {
+        max-width: none !important;
+        flex-wrap: wrap;
+    }
+
+    /* Color row: tighter */
+    .color-row {
+        padding: 12px 14px;
+    }
+
+    /* py-10 outer wrapper: reduce vertical breathing room on mobile */
+    .max-w-7xl.mx-auto {
+        padding-top: 12px !important;
+        padding-bottom: 80px !important; /* leave room for fixed submit btn */
+    }
+
+}
+
+/* ─── Garment stage — desktop/tablet ────────────────────────────────────── */
 .garment-stage {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -341,6 +447,7 @@ body { font-family: var(--font-body); }
 /* ─── Toast ───────────────────────────────────────────────────────────────── */
 .toast {
     position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    max-width: calc(100vw - 24px);  /* don't overflow on tiny screens */
     background: var(--ink); color: #fff;
     font-size: 13px; font-weight: 500;
     padding: 12px 24px; border-radius: 999px;
@@ -538,6 +645,7 @@ body { font-family: var(--font-body); }
 
 {{-- Alpine root ─────────────────────────────────────────────────────────── --}}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10"
+     style="padding-bottom: max(80px, env(safe-area-inset-bottom, 80px));"
      x-data="designEngine()"
      x-init="init()"
      @zone-open.window="openZone($event.detail.key)">
