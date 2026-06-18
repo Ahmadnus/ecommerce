@@ -358,35 +358,6 @@ body { font-family: var(--font-body); }
     background: var(--accent); width: 0%;
     z-index: 9999; transition: width .4s;
 }
-@media (max-width: 1100px) {
-    .customizer {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-}
-
-@media (max-width: 768px) {
-    .garment-stage {
-        position: static;
-        top: auto;
-        align-self: stretch;
-        padding: 18px 14px;
-    }
-
-    .controls-panel {
-        position: relative;
-        z-index: 1;
-    }
-
-    #garment-wrapper {
-        max-width: 100%;
-    }
-
-    .garment-stage,
-    .controls-panel {
-        width: 100%;
-    }
-}
 </style>
 @endpush
 
@@ -473,6 +444,46 @@ body { font-family: var(--font-body); }
         $zoneCoords['G'] = $zoneCoords['G_hoodie'];  // back panel
     }
 
+    if ($garmentType === 'stole') {
+        /*
+         * Stole — 500×780 viewBox
+         * Both panels: straight top at y=20, vertical sides, sharp tip bottom.
+         * V-neck opens from (200,20)→(250,160)→(300,20)
+         *
+         * Zone rects (from stole.blade.php):
+         *   A: left upper  — x=76,  y=36,  w=108, h=130  → svgs=['front']
+         *   B: left lower  — x=76,  y=480, w=108, h=155  → svgs=['front']
+         *   C: right upper — x=316, y=36,  w=108, h=130  → svgs=['front']
+         *   D: right lower — x=316, y=480, w=108, h=155  → svgs=['front']
+         *
+         * cx/cy = center of each rect for text placement
+         */
+        $zoneCoords['A'] = ['cx'=>130,'cy'=>101,'imgX'=>76, 'imgY'=>36, 'imgW'=>108,'imgH'=>130,'rotate'=>null,'svgs'=>['front']];
+        $zoneCoords['B'] = ['cx'=>130,'cy'=>557,'imgX'=>76, 'imgY'=>480,'imgW'=>108,'imgH'=>155,'rotate'=>null,'svgs'=>['front']];
+        $zoneCoords['C'] = ['cx'=>370,'cy'=>101,'imgX'=>316,'imgY'=>36, 'imgW'=>108,'imgH'=>130,'rotate'=>null,'svgs'=>['front']];
+        $zoneCoords['D'] = ['cx'=>370,'cy'=>557,'imgX'=>316,'imgY'=>480,'imgW'=>108,'imgH'=>155,'rotate'=>null,'svgs'=>['front']];
+    }
+
+    if ($garmentType === 'tshirt') {
+        /*
+         * T-shirt zones — 400×500 viewBox, same as hoodie coordinate space.
+         *
+         * Zone SVG coords (from tshirt.blade.php):
+         *   A  — left chest:   rect(118,110, 72×72),   front only
+         *   B  — right chest:  rect(210,110, 72×72),   front only
+         *   C  — front panel:  rect(140,220, 120×120), front only  (large print area)
+         *   D1 — left sleeve:  rect(34,133,  42×42),   rotate(-20 55 155), front+back
+         *   E1 — right sleeve: rect(324,133, 42×42),   rotate(20 345 155), front+back
+         *   F  — back panel:   rect(130,150, 140×160), back only  (large print area)
+         */
+        $zoneCoords['A']  = ['cx'=>154,'cy'=>146,'imgX'=>118,'imgY'=>110,'imgW'=>72, 'imgH'=>72, 'rotate'=>null,                    'svgs'=>['front']];
+        $zoneCoords['B']  = ['cx'=>246,'cy'=>146,'imgX'=>210,'imgY'=>110,'imgW'=>72, 'imgH'=>72, 'rotate'=>null,                    'svgs'=>['front']];
+        $zoneCoords['C']  = ['cx'=>200,'cy'=>280,'imgX'=>140,'imgY'=>220,'imgW'=>120,'imgH'=>120,'rotate'=>null,                    'svgs'=>['front']];
+        $zoneCoords['D1'] = ['cx'=>55, 'cy'=>154,'imgX'=>34, 'imgY'=>133,'imgW'=>42, 'imgH'=>42, 'rotate'=>'rotate(-20 55 154)',   'svgs'=>['front']];
+        $zoneCoords['E1'] = ['cx'=>345,'cy'=>154,'imgX'=>324,'imgY'=>133,'imgW'=>42, 'imgH'=>42, 'rotate'=>'rotate(20 345 154)',    'svgs'=>['front']];
+        $zoneCoords['F']  = ['cx'=>200,'cy'=>230,'imgX'=>130,'imgY'=>150,'imgW'=>140,'imgH'=>160,'rotate'=>null,                    'svgs'=>['back']];
+    }
+
     if ($garmentType === 'graduation_robe') {
         /*
          * Robe zones use SVG transform="translate(x,y) rotate(deg)" on their <g> groups.
@@ -512,6 +523,11 @@ body { font-family: var(--font-body); }
         'yoke2'  => 'الشريط الثاني (الأوسط)',
         'yoke3'  => 'الشريط الثالث (الداخلي)',
         'line'   => 'لون التحديد',
+        // T-Shirt
+        'collar' => 'الياقة',
+        'stitch' => 'الخيط',
+        // Stole
+        'border' => 'الحدود',
     ];
 
     // CSS var prefix differs per garment:
@@ -644,6 +660,9 @@ body { font-family: var(--font-body); }
             </div>
             @endif
 
+            {{-- ── Size selector ──────────────────────────────────────────── --}}
+            @include('customize.partials.size-selector', ['garmentType' => $config->garmentType()])
+
             {{-- ── Zone editor ────────────────────────────────────────────── --}}
             <div class="card">
                 <span class="card__label">مناطق التخصيص</span>
@@ -765,41 +784,42 @@ body { font-family: var(--font-body); }
                     @endif
 
                     {{-- ── Image upload ─────────────────────────────────────── --}}
-                @if(in_array($type, ['image', 'both']))
-<div>
-    <label class="field-label">صورة مخصصة</label>
+                    @if(in_array($type, ['image', 'both']))
+                    <div>
+                        <label class="field-label">صورة مخصصة</label>
 
-    <div x-data="{ fileInput: null }" x-init="$refs.fileInput && (fileInput = $refs.fileInput)">
-        <input type="file"
-               x-ref="fileInput"
-               class="hidden"
-               accept="image/*"
-               @change="handleFileInput('{{ $key }}', $event)">
+                        {{-- No image yet --}}
+                        <label class="upload-zone"
+                               :class="{ 'is-dragging': dragZone === '{{ $key }}' }"
+                               x-show="! designState.zones['{{ $key }}']?.imageDataUrl"
+                               @dragover.prevent="dragZone = '{{ $key }}'"
+                               @dragleave="dragZone = null"
+                               @drop.prevent="handleDrop('{{ $key }}', $event)">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.3" style="margin:0 auto 8px;display:block;opacity:.4;">
+                                <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <p style="font-size:12px;color:var(--muted);margin:0;">اسحب أو انقر لرفع صورة</p>
+                            <p style="font-size:11px;color:var(--border);margin:4px 0 0;">PNG, JPG, WebP — حد أقصى 10 ميغا</p>
+                            <input type="file"
+                                   class="sr-only"
+                                   accept="image/*"
+                                   @change="handleFileInput('{{ $key }}', $event)">
+                        </label>
 
-        <button type="button"
-                class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-sm font-medium transition-colors"
-                @click="$refs.fileInput.click()">
-            رفع صورة
-        </button>
-
-        <p style="font-size:11px;color:var(--muted);margin-top:6px;">
-            PNG, JPG, WebP — حد أقصى 10 ميغا
-        </p>
-    </div>
-
-    {{-- Image preview --}}
-    <div x-show="designState.zones['{{ $key }}']?.imageDataUrl" style="position:relative;margin-top:12px;">
-        <img :src="designState.zones['{{ $key }}']?.imageDataUrl"
-             class="upload-zone__preview"
-             alt="معاينة">
-        <button type="button"
-                class="upload-zone__clear"
-                @click="clearImage('{{ $key }}')">
-            حذف الصورة
-        </button>
-    </div>
-</div>
-@endif
+                        {{-- Image preview --}}
+                        <div x-show="designState.zones['{{ $key }}']?.imageDataUrl" style="position:relative;">
+                            <img :src="designState.zones['{{ $key }}']?.imageDataUrl"
+                                 class="upload-zone__preview"
+                                 alt="معاينة">
+                            <button type="button"
+                                    class="upload-zone__clear"
+                                    @click="clearImage('{{ $key }}')">
+                                حذف الصورة
+                            </button>
+                        </div>
+                    </div>
+                    @endif
 
                 </div>
                 @endforeach
@@ -912,6 +932,7 @@ function designEngine() {
             activeZoneKey: null,
             view: 'front',
             notes: '{{ old('notes') }}',
+            size:  '{{ old('size') }}',
         },
         isSubmitting: false,
         dragZone: null,
@@ -1291,6 +1312,9 @@ function designEngine() {
             // Notes
             fd.append('notes', this.designState.notes || '');
 
+            // Size
+            fd.append('size', this.designState.size || '');
+
             // Zones
             // NOTE: key is always a String from Object.entries(), e.g. '1','2','A','G'
             // We explicitly convert to ensure PHP receives string keys in $_FILES
@@ -1359,6 +1383,7 @@ function designEngine() {
             const snap = {
                 product_id: {{ is_object($product) && isset($product->id) ? (int)$product->id : 0 }},
                 colors: { ...this.designState.colors },
+                size:   this.designState.size || null,
                 zones: {},
                 notes: this.designState.notes,
                 generated_at: new Date().toISOString(),

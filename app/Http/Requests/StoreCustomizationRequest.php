@@ -70,6 +70,9 @@ class StoreCustomizationRequest extends FormRequest
             'selected_zones'    => ['nullable', 'array'],
             'selected_zones.*'  => ['nullable', 'string', 'max:8'],
 
+            // Size — validated against the garment's valid sizes in the controller
+            'size'              => ['nullable', 'string', 'max:10'],
+
             // Image uploads — images[A], images[1], images[G], etc.
             'images'            => ['nullable', 'array'],
             'images.*'          => [

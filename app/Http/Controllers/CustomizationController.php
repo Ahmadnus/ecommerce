@@ -106,6 +106,48 @@ class CustomizationController extends Controller
                 ],
             ],
         ],
+        'tshirt' => [
+            'id'          => 0,
+            'name'        => 'T-Shirt',
+            'price'       => 99,
+            'description' => 'تيشيرت قطني بقصة مريحة — 6 مناطق تصميم',
+            'config'      => [
+                'garment_type' => 'tshirt',
+                'zones'        => [
+                    ['key' => 'A',  'label' => 'الصدر الأيسر',   'type' => 'both'],
+                    ['key' => 'B',  'label' => 'الصدر الأيمن',   'type' => 'both'],
+                    ['key' => 'C',  'label' => 'الواجهة الكاملة','type' => 'both'],
+                    ['key' => 'D1', 'label' => 'الكم الأيسر',    'type' => 'text'],
+                    ['key' => 'E1', 'label' => 'الكم الأيمن',    'type' => 'text'],
+                    ['key' => 'F',  'label' => 'الظهر الكبير',   'type' => 'both'],
+                ],
+                'available_colors' => [
+                    'body'   => ['#f3f4f6', '#ffffff', '#141414', '#1d2b53', '#7a0c1f', '#0f3d2e', '#c9a227', '#4a1942'],
+                    'sleeve' => ['#f3f4f6', '#ffffff', '#141414', '#1d2b53', '#7a0c1f', '#c8102e'],
+                    'collar' => ['#e5e7eb', '#ffffff', '#141414', '#1d2b53', '#c8102e', '#c9a227'],
+                    'stitch' => ['#9ca3af', '#ffffff', '#141414', '#c9a227', '#60a5fa'],
+                ],
+            ],
+        ],
+        'stole' => [
+            'id'          => 0,
+            'name'        => 'Graduation Stole',
+            'price'       => 79,
+            'description' => 'وشاح تخرج بحدود ذهبية — 4 مناطق تخصيص',
+            'config'      => [
+                'garment_type' => 'stole',
+                'zones'        => [
+                    ['key' => 'A', 'label' => 'اللوحة اليسرى العلوية',  'type' => 'both'],
+                    ['key' => 'B', 'label' => 'اللوحة اليسرى السفلية',  'type' => 'both'],
+                    ['key' => 'C', 'label' => 'اللوحة اليمنى العلوية',  'type' => 'both'],
+                    ['key' => 'D', 'label' => 'اللوحة اليمنى السفلية',  'type' => 'both'],
+                ],
+                'available_colors' => [
+                    'main'   => ['#111111', '#ffffff', '#1d2b53', '#7a0c1f', '#0f3d2e', '#4a1942'],
+                    'border' => ['#d4a017', '#c8102e', '#1d2b53', '#ffffff', '#0f3d2e', '#111111'],
+                ],
+            ],
+        ],
     ];
 
     // ── Slug ↔ numeric-ID map ─────────────────────────────────────────────────
@@ -115,6 +157,8 @@ class CustomizationController extends Controller
         1 => 'varsity_jacket',
         2 => 'hoodie',
         3 => 'graduation_robe',
+        4 => 'tshirt',
+        5 => 'stole',
     ];
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -169,6 +213,12 @@ class CustomizationController extends Controller
             ];
         }
 
+        // ── Size ──────────────────────────────────────────────────────────────
+        $garmentType    = $config->garmentType();
+        $validSizes     = array_keys(config("garment_sizes.charts.{$garmentType}", []));
+        $requestedSize  = $request->input('size', '');
+        $size           = in_array($requestedSize, $validSizes, true) ? $requestedSize : null;
+
         // ── Selected zones ────────────────────────────────────────────────────
         $rawZones      = array_map('strval', $request->input('selected_zones', []));
         $selectedZones = array_values(array_intersect($rawZones, $validZoneKeys));
@@ -187,10 +237,12 @@ class CustomizationController extends Controller
             $customization = OrderCustomization::create([
                 'order_id'       => 0,
                 'product_id'     => $isDemo ? 0 : $product->id,
+                'garment_type'   => $garmentType,   // ← THE FIX: always save the type
                 'colors'         => $colors    ?: null,
                 'texts'          => $richTexts ?: null,
                 'selected_zones' => $selectedZones ?: null,
                 'notes'          => $request->input('notes'),
+                'size'           => $size,
                 'status'         => 'pending',
             ]);
 

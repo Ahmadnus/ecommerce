@@ -74,6 +74,36 @@ class OrderCustomizationController extends Controller
                 'line'  => ['#111111', '#444444', '#c9a227', '#c8102e'],
             ],
         ],
+        'tshirt' => [
+            'garment_type' => 'tshirt',
+            'zones' => [
+                ['key' => 'A',  'label' => 'الصدر الأيسر',   'type' => 'both'],
+                ['key' => 'B',  'label' => 'الصدر الأيمن',   'type' => 'both'],
+                ['key' => 'C',  'label' => 'الواجهة الكاملة','type' => 'both'],
+                ['key' => 'D1', 'label' => 'الكم الأيسر',    'type' => 'text'],
+                ['key' => 'E1', 'label' => 'الكم الأيمن',    'type' => 'text'],
+                ['key' => 'F',  'label' => 'الظهر الكبير',   'type' => 'both'],
+            ],
+            'available_colors' => [
+                'body'   => ['#f3f4f6', '#ffffff', '#141414', '#1d2b53', '#7a0c1f', '#0f3d2e'],
+                'sleeve' => ['#f3f4f6', '#ffffff', '#141414', '#1d2b53', '#7a0c1f', '#c8102e'],
+                'collar' => ['#e5e7eb', '#ffffff', '#141414', '#1d2b53', '#c8102e', '#c9a227'],
+                'stitch' => ['#9ca3af', '#ffffff', '#141414', '#c9a227', '#60a5fa'],
+            ],
+        ],
+        'stole' => [
+            'garment_type' => 'stole',
+            'zones' => [
+                ['key' => 'A', 'label' => 'اللوحة اليسرى العلوية', 'type' => 'both'],
+                ['key' => 'B', 'label' => 'اللوحة اليسرى السفلية', 'type' => 'both'],
+                ['key' => 'C', 'label' => 'اللوحة اليمنى العلوية', 'type' => 'both'],
+                ['key' => 'D', 'label' => 'اللوحة اليمنى السفلية', 'type' => 'both'],
+            ],
+            'available_colors' => [
+                'main'   => ['#111111', '#ffffff', '#1d2b53', '#7a0c1f', '#0f3d2e', '#4a1942'],
+                'border' => ['#d4a017', '#c8102e', '#1d2b53', '#ffffff', '#0f3d2e', '#111111'],
+            ],
+        ],
     ];
 
     // ── Garment type label map ─────────────────────────────────────────────────
@@ -81,6 +111,8 @@ class OrderCustomizationController extends Controller
         'varsity_jacket'  => 'جاكيت رياضي',
         'hoodie'          => 'هودي',
         'graduation_robe' => 'ثوب تخرج',
+        'tshirt'          => 'تيشيرت',
+        'stole'           => 'وشاح التخرج',
     ];
 
     // ── index() ────────────────────────────────────────────────────────────────
@@ -144,23 +176,45 @@ class OrderCustomizationController extends Controller
 
     private function resolveConfig(OrderCustomization $customization): ProductCustomization
     {
-        // 1. Real product in DB
+        // ── Priority 1: Real product in DB with customization config ──────────
         if ($customization->product && method_exists($customization->product, 'customizationConfig')) {
             return $customization->product->customizationConfig();
         }
 
-        // 2. Demo order — infer garment type from selected zones
-        $garmentType = null;
-        $zones = $customization->selected_zones ?? [];
+        // ── Priority 2: garment_type column (THE FIX — stored since the fix) ─
+        // This is the correct, unambiguous source. Used for all new orders.
+        $garmentType = $customization->garment_type ?? null;
 
-        if (! empty(array_intersect($zones, ['1', '2', '4', '5', '6']))) {
-            $garmentType = 'graduation_robe';
-        } elseif (! empty(array_intersect($zones, ['D1', 'D2', 'D3', 'F']))) {
-            $garmentType = 'hoodie';
-        } elseif (! empty(array_intersect($zones, ['A', 'B', 'C', 'D', 'E1', 'E2', 'E3', 'F1', 'F2', 'F3', 'G', 'H']))) {
-            $garmentType = 'varsity_jacket';
-        } else {
-            $garmentType = 'varsity_jacket';
+        // ── Priority 3: Legacy fallback — zone-key inference ──────────────────
+        // Only used for old records created before the garment_type column existed.
+        // Zone-key inference is inherently ambiguous (A/B/G exist in both jacket
+        // and hoodie) which is exactly why Priority 2 was added.
+        if (! $garmentType) {
+            $zones = $customization->selected_zones ?? [];
+
+            if (! empty(array_intersect($zones, ['1', '2', '4', '5', '6']))) {
+                // Robe: numeric zone keys — unambiguous
+                $garmentType = 'graduation_robe';
+            } elseif (! empty(array_intersect($zones, ['A','B','C','D'])) && empty(array_intersect($zones, ['D1','E1','F','G','H','1','2','4','5','6']))) {
+                // Stole: has only A/B/C/D zones (no tshirt D1/E1/F, no robe numerics, no jacket zones)
+                $garmentType = 'stole';
+            } elseif (in_array('C', $zones) && (in_array('D1', $zones) || in_array('E1', $zones) || in_array('F', $zones))) {
+                // T-shirt: has zone C (large front panel) + sleeve D1/E1 or back F
+                $garmentType = 'tshirt';
+            } elseif (! empty(array_intersect($zones, ['D1', 'D2', 'D3'])) && ! in_array('C', $zones)) {
+                // Hoodie: D1-D3 sleeve zones, no C
+                $garmentType = 'hoodie';
+            } elseif (! empty(array_intersect($zones, ['F1', 'F2', 'F3', 'H']))) {
+                // Jacket: F1/F2/F3 right-sleeve or H back yoke are jacket-only
+                $garmentType = 'varsity_jacket';
+            } else {
+                // Cannot determine — log it and use jacket as last resort
+                \Illuminate\Support\Facades\Log::warning(
+                    "OrderCustomization #{$customization->id} has no garment_type and zone inference failed. " .
+                    "Zones: " . implode(',', $zones) . ". Defaulting to varsity_jacket."
+                );
+                $garmentType = 'varsity_jacket';
+            }
         }
 
         if (isset(self::GARMENT_CONFIGS[$garmentType])) {

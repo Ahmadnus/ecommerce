@@ -69,11 +69,11 @@ body { font-family: var(--ff-body); background: var(--cream); color: var(--ink);
 /* Cards grid */
 .cards-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 28px; max-width: 1100px; margin: 0 auto;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px; max-width: 1200px; margin: 0 auto;
 }
-@media (max-width: 900px) { .cards-grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 580px) { .cards-grid { grid-template-columns: 1fr; max-width: 400px; } }
+@media (max-width: 1100px) { .cards-grid { grid-template-columns: repeat(2, 1fr); max-width: 800px; } }
+@media (max-width: 580px)  { .cards-grid { grid-template-columns: 1fr; max-width: 420px; } }
 
 /* Card */
 .garment-card {
@@ -85,9 +85,10 @@ body { font-family: var(--ff-body); background: var(--cream); color: var(--ink);
     opacity: 0; transform: translateY(28px);
     animation: card-in .55s cubic-bezier(.22,1,.36,1) forwards;
 }
-.garment-card:nth-child(1) { animation-delay: .10s; }
-.garment-card:nth-child(2) { animation-delay: .22s; }
-.garment-card:nth-child(3) { animation-delay: .34s; }
+.garment-card:nth-child(1) { animation-delay: .08s; }
+.garment-card:nth-child(2) { animation-delay: .18s; }
+.garment-card:nth-child(3) { animation-delay: .28s; }
+.garment-card:nth-child(4) { animation-delay: .38s; }
 @keyframes card-in { to { opacity: 1; transform: translateY(0); } }
 .garment-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: var(--shadow-lg); }
 
@@ -197,6 +198,10 @@ body { font-family: var(--ff-body); background: var(--cream); color: var(--ink);
                     @include('customize.index-svgs.jacket-thumb')
                 @elseif($card['svg_key'] === 'hoodie')
                     @include('customize.index-svgs.hoodie-thumb')
+                @elseif($card['svg_key'] === 'tshirt')
+                    @include('customize.index-svgs.tshirt-thumb')
+                @elseif($card['svg_key'] === 'stole')
+                    @include('customize.index-svgs.stole-thumb')
                 @else
                     @include('customize.index-svgs.robe-thumb')
                 @endif
@@ -242,6 +247,8 @@ body { font-family: var(--ff-body); background: var(--cream); color: var(--ink);
             $svgKey = match($gType) {
                 'hoodie'          => 'hoodie',
                 'graduation_robe' => 'robe',
+                'tshirt'          => 'tshirt',
+                'stole'           => 'stole',
                 default           => 'jacket',
             };
             $staticCard = collect($garmentCards)->firstWhere('key', $gType) ?? $garmentCards[0];
@@ -260,6 +267,10 @@ body { font-family: var(--ff-body); background: var(--cream); color: var(--ink);
                     @include('customize.index-svgs.jacket-thumb')
                 @elseif($svgKey === 'hoodie')
                     @include('customize.index-svgs.hoodie-thumb')
+                @elseif($svgKey === 'tshirt')
+                    @include('customize.index-svgs.tshirt-thumb')
+                @elseif($svgKey === 'stole')
+                    @include('customize.index-svgs.stole-thumb')
                 @else
                     @include('customize.index-svgs.robe-thumb')
                 @endif

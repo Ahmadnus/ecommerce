@@ -71,13 +71,23 @@
                 'ready'      => ['class' => 'bg-green-100 text-green-800',  'label' => 'جاهز'],
                 'error'      => ['class' => 'bg-red-100 text-red-800',      'label' => 'خطأ'],
             ];
-            $sm = $statusMeta[$customization->status] ?? ['class' => 'bg-gray-100 text-gray-700', 'label' => $customization->status];
+            $sm = $statusMeta[$customization->status]
+                ?? ['class' => 'bg-gray-100 text-gray-700', 'label' => $customization->status];
 
-            // Guess garment type for badge from zones
-            $zones = $customization->selected_zones ?? [];
-            $garmentBadge = 'جاكيت';
-            if (! empty(array_intersect($zones, ['1','2','4','5','6']))) $garmentBadge = 'ثوب تخرج';
-            elseif (! empty(array_intersect($zones, ['D1','D2','D3','F']))) $garmentBadge = 'هودي';
+            // ── Garment type: read directly from DB column (THE FIX) ────────
+            // Never infer from zone keys — that was the original bug.
+            $garmentType = $customization->garment_type
+                ?? 'varsity_jacket'; // fallback for pre-fix legacy rows only
+
+            // Label + colour per garment type
+            $garmentMeta = [
+                'varsity_jacket'  => ['label' => 'جاكيت رياضي',  'class' => 'bg-indigo-100 text-indigo-700'],
+                'hoodie'          => ['label' => 'هودي',          'class' => 'bg-sky-100 text-sky-700'],
+                'graduation_robe' => ['label' => 'ثوب تخرج',     'class' => 'bg-purple-100 text-purple-700'],
+                'tshirt'          => ['label' => 'تيشيرت',        'class' => 'bg-emerald-100 text-emerald-700'],
+                'stole'           => ['label' => 'وشاح التخرج',   'class' => 'bg-amber-100 text-amber-700'],
+            ];
+            $gm = $garmentMeta[$garmentType] ?? ['label' => $garmentType, 'class' => 'bg-gray-100 text-gray-600'];
         @endphp
 
         <a href="{{ route('admin.customizations.show', $customization) }}"
@@ -89,8 +99,7 @@
                 {{-- Thumbnail --}}
                 <div class="w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border border-gray-200 bg-white">
                     @if($image)
-                        <img src="{{ $image }}"
-                             class="w-full h-full object-cover"
+                        <img src="{{ $image }}" class="w-full h-full object-cover"
                              alt="{{ $product->name ?? 'منتج' }}">
                     @else
                         <div class="w-full h-full flex items-center justify-center bg-gray-100">
@@ -118,35 +127,42 @@
                         @if($customization->order_id) · طلب #{{ $customization->order_id }} @endif
                     </p>
 
-                    {{-- Garment type badge --}}
-                    <span class="inline-block mt-1 text-[10px] px-2 py-0.5 rounded-md bg-gray-200 text-gray-600">
-                        {{ $garmentBadge }}
-                    </span>
+                    {{-- ── PRODUCT TYPE + SIZE badges ──────────────────────── --}}
+                    <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg {{ $gm['class'] }}">
+                            {{ $gm['label'] }}
+                        </span>
+                        @if($customization->size)
+                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-gray-800 text-white">
+                            {{ $customization->size }}
+                        </span>
+                        @else
+                        <span class="text-[10px] px-2 py-0.5 rounded-md bg-gray-100 text-gray-400 italic">
+                            بدون مقاس
+                        </span>
+                        @endif
+                    </div>
 
-                    {{-- Notes preview --}}
                     @if($customization->notes)
-                    <p class="text-xs text-gray-500 mt-1.5 line-clamp-2">
-                        {{ $customization->notes }}
-                    </p>
+                    <p class="text-xs text-gray-500 mt-1.5 line-clamp-2">{{ $customization->notes }}</p>
                     @endif
 
                     {{-- Zone chips --}}
-                    @if(! empty($customization->selected_zones))
+                    @if(! empty($zones))
                     <div class="mt-2 flex flex-wrap gap-1">
-                        @foreach(array_slice($customization->selected_zones, 0, 6) as $zone)
+                        @foreach(array_slice($zones, 0, 6) as $zone)
                         <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-mono">
                             {{ $zone }}
                         </span>
                         @endforeach
-                        @if(count($customization->selected_zones) > 6)
+                        @if(count($zones) > 6)
                         <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
-                            +{{ count($customization->selected_zones) - 6 }}
+                            +{{ count($zones) - 6 }}
                         </span>
                         @endif
                     </div>
                     @endif
 
-                    {{-- Timestamp --}}
                     <p class="text-[10px] text-gray-300 mt-2">
                         {{ $customization->created_at->diffForHumans() }}
                     </p>
@@ -164,10 +180,8 @@
             <p class="text-xs mt-1">جرّب تغيير معايير البحث أو الفلتر</p>
         </div>
         @endforelse
-
     </div>
 
-    {{-- ── Pagination ─────────────────────────────────────────────────────── --}}
     @if($customizations->hasPages())
     <div class="px-6 py-4 border-t border-gray-100">
         {{ $customizations->links() }}
@@ -175,5 +189,4 @@
     @endif
 
 </div>
-
 @endsection
