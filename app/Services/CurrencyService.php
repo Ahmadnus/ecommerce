@@ -94,6 +94,23 @@ class CurrencyService
     }
 
     /**
+     * Switch the active currency by code, 404-ing when the code doesn't
+     * match an active currency (mirrors the storefront switch endpoint).
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     */
+    public function switchToOrFail(string $code): Currency
+    {
+        $currency = Currency::where('code', $code)
+                            ->where('is_active', true)
+                            ->firstOrFail();
+
+        session(['currency_code' => $currency->code]);
+
+        return $currency;
+    }
+
+    /**
      * Convert a JOD amount to the active currency.
      *
      * @param  float  $jod   Amount in Jordanian Dinar (base)
@@ -184,6 +201,77 @@ class CurrencyService
     public function flush(): void
     {
         $this->resolved = null;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Admin CRUD (used by Admin\CurrencyController)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * All currencies for the admin index (base first, then by name).
+     */
+    public function getAllForAdmin(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Currency::orderBy('is_base', 'desc')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Create a currency; if flagged as base, demotes the previous base
+     * inside the same transaction.
+     *
+     * @throws \Throwable on failure (transaction rolled back)
+     */
+    public function createCurrency(array $validated): Currency
+    {
+        try {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+                if (!empty($validated['is_base'])) {
+                    Currency::where('is_base', true)->update([
+                        'is_base' => false,
+                    ]);
+                }
+
+                return Currency::create($validated);
+            });
+        } catch (\Throwable $e) {
+            report($e);
+            throw $e;
+        }
+    }
+
+    /**
+     * Update a currency; promoting it to base demotes the previous base
+     * inside the same transaction.
+     *
+     * @throws \Throwable on failure (transaction rolled back)
+     */
+    public function updateCurrency(Currency $currency, array $validated): Currency
+    {
+        try {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($currency, $validated) {
+                if ($validated['is_base'] && !$currency->is_base) {
+                    Currency::where('is_base', true)
+                        ->where('id', '!=', $currency->id)
+                        ->update([
+                            'is_base' => false,
+                        ]);
+                }
+
+                $currency->update($validated);
+
+                return $currency;
+            });
+        } catch (\Throwable $e) {
+            report($e);
+            throw $e;
+        }
+    }
+
+    public function deleteCurrency(Currency $currency): void
+    {
+        $currency->delete();
     }
 
     /**

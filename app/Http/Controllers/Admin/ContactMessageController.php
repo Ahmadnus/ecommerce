@@ -4,42 +4,40 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContactMessage;
+use App\Services\ContactMessageService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ContactMessageController extends Controller
 {
+    public function __construct(
+        private readonly ContactMessageService $messages,
+    ) {}
+
     public function index(): View
     {
-        $messages = ContactMessage::with('user')
-            ->latest()
-            ->paginate(20);
+        $messages = $this->messages->getMessages();
 
         return view('admin.contact-messages.index', compact('messages'));
     }
 
     public function show(ContactMessage $contactMessage): View
     {
-        $contactMessage->load('user');
-
-        if (! $contactMessage->is_read) {
-            $contactMessage->update(['is_read' => true]);
-        }
+        $this->messages->prepareForShow($contactMessage);
 
         return view('admin.contact-messages.show', compact('contactMessage'));
     }
 
     public function markRead(ContactMessage $contactMessage): RedirectResponse
     {
-        $contactMessage->update(['is_read' => true]);
+        $this->messages->markRead($contactMessage);
 
         return back()->with('success', 'تم تعليم الرسالة كمقروءة.');
     }
 
     public function destroy(ContactMessage $contactMessage): RedirectResponse
     {
-        $contactMessage->delete();
+        $this->messages->delete($contactMessage);
 
         return back()->with('success', 'تم حذف الرسالة.');
     }

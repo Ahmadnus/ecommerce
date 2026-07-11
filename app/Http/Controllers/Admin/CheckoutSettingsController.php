@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\OtpSetting;
+use App\Services\CheckoutSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,23 +20,27 @@ use Illuminate\View\View;
  */
 class CheckoutSettingsController extends Controller
 {
+    public function __construct(
+        private readonly CheckoutSettingsService $settings,
+    ) {}
+
     public function show(): View
     {
-        $guestEnabled = get_otp_setting('guest_checkout_enabled', '0') == '1';
+        $guestEnabled = $this->settings->isGuestCheckoutEnabled();
 
         return view('admin.settings.checkout', compact('guestEnabled'));
     }
 
-   public function update(Request $request): RedirectResponse
-{
-    $value = $request->input('guest_checkout_enabled') === '1' ? '1' : '0';
+    public function update(Request $request): RedirectResponse
+    {
+        $value = $this->settings->setGuestCheckoutEnabled(
+            $request->input('guest_checkout_enabled')
+        );
 
-    set_otp_setting('guest_checkout_enabled', $value);
+        $label = $value === '1' ? 'تم تفعيل الشراء كزائر ✓' : 'تم تعطيل الشراء كزائر';
 
-    $label = $value === '1' ? 'تم تفعيل الشراء كزائر ✓' : 'تم تعطيل الشراء كزائر';
-
-    return redirect()
-        ->route('admin.settings.checkout')
-        ->with('success', $label);
-}
+        return redirect()
+            ->route('admin.settings.checkout')
+            ->with('success', $label);
+    }
 }

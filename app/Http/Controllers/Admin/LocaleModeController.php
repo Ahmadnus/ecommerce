@@ -2,27 +2,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\LocaleModeService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class LocaleModeController extends Controller
 {
+    public function __construct(
+        private readonly LocaleModeService $localeMode,
+    ) {}
+
     public function index()
     {
-        $mode = DB::table('settings')->where('key', 'langsetting')->value('value') ?? 'both';
+        $mode = $this->localeMode->getMode();
         return view('admin.locale-mode', compact('mode'));
     }
 
     public function update(Request $request)
     {
-        $mode = $request->input('mode');
-        if (in_array($mode, ['ar', 'en', 'both'])) {
-            DB::table('settings')->updateOrInsert(
-                ['key' => 'langsetting'],
-                ['value' => $mode]
-            );
-            cache()->forget('langsetting');
-        }
+        $this->localeMode->setMode($request->input('mode'));
+
         return back()->with('success', 'تم حفظ إعداد اللغة بنجاح ✓');
     }
 }

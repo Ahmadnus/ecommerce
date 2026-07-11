@@ -3,87 +3,28 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Attribute;
-use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductVariant;
+use App\Services\AdminProductService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    private const LOW_STOCK_THRESHOLD = 1;
+    public function __construct(
+        private readonly AdminProductService $products,
+    ) {}
 
     public function index(Request $request)
     {
-        $query = Product::with([
-            'categories',
-            'variants' => fn($q) => $q->orderBy('is_active', 'desc'),
-            'variants.attributeValues.attribute',
-            'media',
-        ])->withCount('variants');
+        $data = $this->products->getIndexData(
+            $request->only(['search', 'status', 'stock', 'category', 'sort'])
+        );
 
-        if ($request->filled('search')) {
-            $query->where(fn($q) => $q
-                ->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('sku', 'like', '%' . $request->search . '%'));
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('stock')) {
-            match ($request->stock) {
-                'out' => $query->whereHas('variants', fn($q) => $q->where('stock_quantity', 0)),
-                'low' => $query->whereHas('variants', fn($q) => $q
-                    ->where('stock_quantity', '>', 0)
-                    ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)),
-                default => null,
-            };
-        }
-
-        if ($request->filled('category')) {
-            $query->whereHas('categories', fn($q) => $q->where('categories.id', $request->category));
-        }
-
-        match ($request->get('sort', 'newest')) {
-            'name_asc'   => $query->orderBy('name'),
-            'name_desc'  => $query->orderByDesc('name'),
-            'price_asc'  => $query->orderBy('base_price'),
-            'price_desc' => $query->orderByDesc('base_price'),
-            default      => $query->latest(),
-        };
-
-        $products   = $query->paginate(20)->withQueryString();
-        $categories = Category::active()->orderBy('name')->get();
-
-        $stats = [
-            'total'  => Product::count(),
-            'active' => Product::where('status', 'active')->count(),
-            'out'    => ProductVariant::where('stock_quantity', 0)->count(),
-            'low'    => ProductVariant::where('stock_quantity', '>', 0)
-                ->where('stock_quantity', '<=', self::LOW_STOCK_THRESHOLD)
-                ->count(),
-        ];
-
-        return view('admin.products.index', compact('products', 'categories', 'stats'));
+        return view('admin.products.index', $data);
     }
 
     public function create()
     {
-        $categories = Category::active()->roots()
-            ->with('allActiveChildren')
-            ->orderBy('sort_order')
-            ->get();
-
-        $attributes = Attribute::with('values')
-            ->orderBy('sort_order')
-            ->get();
-
-        return view('admin.products.create', compact('categories', 'attributes'));
+        return view('admin.products.create', $this->products->getFormData());
     }
 
     public function store(Request $request)
@@ -112,43 +53,28 @@ class ProductController extends Controller
             'variants.*.attribute_values.*'  => 'exists:attribute_values,id',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $product = Product::create([
-                'name'              => $request->input('name'),
-                'description'       => $request->input('description'),
-                'short_description' => $request->input('short_description'),
-                'slug'              => $this->uniqueSlug(
-                    $request->input('name.ar') ?: $request->input('name.en')
-                ),
-                'base_price'        => $request->base_price,
-                'discount_price'    => $request->discount_price,
-                'sku'               => $request->sku,
-                'status'            => $request->boolean('is_active', true) ? 'active' : 'draft',
-                'is_featured'       => $request->boolean('is_featured'),
-            ]);
-
-            $pivot = [];
-            foreach ($request->category_ids as $catId) {
-                $pivot[(int) $catId] = [
-                    'is_primary' => (int) $catId === (int) $request->primary_category_id,
-                ];
-            }
-            $product->categories()->attach($pivot);
-
-            if ($request->hasFile('main_image')) {
-                $product->addCompressedMedia($request->file('main_image'), 'main');
-            }
-
-            if ($request->hasFile('product_images')) {
-                foreach ($request->file('product_images') as $index => $image) {
-                    $product->addCompressedMedia($image, 'products');
-                }
-            }
-
-            foreach ($request->variants as $variantData) {
-                $this->createVariant($product, $variantData);
-            }
-        });
+        try {
+            $this->products->create(
+                data: [
+                    'name'                => $request->input('name'),
+                    'description'         => $request->input('description'),
+                    'short_description'   => $request->input('short_description'),
+                    'base_price'          => $request->base_price,
+                    'discount_price'      => $request->discount_price,
+                    'sku'                 => $request->sku,
+                    'is_active'           => $request->boolean('is_active', true),
+                    'is_featured'         => $request->boolean('is_featured'),
+                    'category_ids'        => $request->category_ids,
+                    'primary_category_id' => $request->primary_category_id,
+                    'variants'            => $request->variants,
+                ],
+                mainImage: $request->hasFile('main_image') ? $request->file('main_image') : null,
+                productImages: $request->hasFile('product_images') ? $request->file('product_images') : [],
+            );
+        } catch (\Throwable $e) {
+            return back()->withInput()
+                ->with('error', 'حدث خطأ أثناء إضافة المنتج. يرجى المحاولة مرة أخرى.');
+        }
 
         return redirect()->route('admin.products.index')
             ->with('success', 'تم إضافة المنتج بنجاح');
@@ -157,52 +83,20 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         $product->load(['categories', 'variants.attributeValues.attribute', 'media']);
-        $lowThreshold = self::LOW_STOCK_THRESHOLD;
+        $lowThreshold = AdminProductService::LOW_STOCK_THRESHOLD;
 
         return view('admin.products.show', compact('product', 'lowThreshold'));
     }
 
     public function edit(Product $product)
     {
-        $product->load(['categories', 'variants.attributeValues.attribute']);
+        $data = array_merge(
+            ['product' => $product],
+            $this->products->getFormData(),
+            $this->products->getEditData($product),
+        );
 
-        $categories = Category::active()->roots()
-            ->with('allActiveChildren')
-            ->orderBy('sort_order')
-            ->get();
-
-        $attributes = Attribute::with('values')
-            ->orderBy('sort_order')
-            ->get();
-
-        $selectedCatIds = $product->categories->pluck('id')->toArray();
-        $primaryCatId   = $product->categories
-            ->first(fn($c) => $c->pivot->is_primary)?->id
-            ?? $product->categories->first()?->id;
-
-        $existingVariants = $product->variants->map(fn($v) => [
-            'id'              => $v->id,
-            'sku'             => $v->sku,
-            'stock_quantity'  => $v->stock_quantity,
-            'price_override'  => $v->price_override,
-            'is_active'       => $v->is_active,
-            'attribute_values' => $v->attributeValues->pluck('id')->toArray(),
-        ]);
-
-        $existingImages = $product->getMedia('products')->map(fn($m) => [
-            'id'  => $m->id,
-            'url' => $m->getUrl(),
-        ]);
-
-        return view('admin.products.edit', compact(
-            'product',
-            'categories',
-            'attributes',
-            'selectedCatIds',
-            'primaryCatId',
-            'existingVariants',
-            'existingImages'
-        ));
+        return view('admin.products.edit', $data);
     }
 
     public function update(Request $request, Product $product)
@@ -231,51 +125,28 @@ class ProductController extends Controller
             'variants.*.attribute_values.*'  => 'exists:attribute_values,id',
         ]);
 
-        DB::transaction(function () use ($request, $product) {
-            $newArName = $request->input('name.ar');
-            $newEnName = $request->input('name.en');
-
-            if ($newArName !== $product->getTranslation('name', 'ar')) {
-                $product->slug = $this->uniqueSlug($newArName ?: $newEnName, $product->id);
-            }
-
-            $product->update([
-                'name'              => $request->input('name'),
-                'description'       => $request->input('description'),
-                'short_description' => $request->input('short_description'),
-                'base_price'        => $request->base_price,
-                'discount_price'    => $request->discount_price,
-                'status'            => $request->boolean('is_active', true) ? 'active' : 'draft',
-                'is_featured'       => $request->boolean('is_featured'),
-            ]);
-
-            $pivot = [];
-            foreach ($request->category_ids as $catId) {
-                $pivot[(int) $catId] = [
-                    'is_primary' => (int) $catId === (int) $request->primary_category_id,
-                ];
-            }
-            $product->categories()->sync($pivot);
-
-            $deleteIds = $request->input('delete_media_ids', []);
-            if (!empty($deleteIds)) {
-                $product->media()->whereIn('id', $deleteIds)->get()->each(fn($m) => $m->delete());
-            }
-
-            if ($request->hasFile('product_images')) {
-                $existingCount = $product->getMedia('products')->count();
-
-                foreach ($request->file('product_images') as $index => $image) {
-                    $product->addCompressedMedia($image, 'products');
-                }
-            }
-
-            $product->variants()->forceDelete();
-
-            foreach ($request->variants as $variantData) {
-                $this->createVariant($product, $variantData);
-            }
-        });
+        try {
+            $this->products->update(
+                product: $product,
+                data: [
+                    'name'                => $request->input('name'),
+                    'description'         => $request->input('description'),
+                    'short_description'   => $request->input('short_description'),
+                    'base_price'          => $request->base_price,
+                    'discount_price'      => $request->discount_price,
+                    'is_active'           => $request->boolean('is_active', true),
+                    'is_featured'         => $request->boolean('is_featured'),
+                    'category_ids'        => $request->category_ids,
+                    'primary_category_id' => $request->primary_category_id,
+                    'delete_media_ids'    => $request->input('delete_media_ids', []),
+                    'variants'            => $request->variants,
+                ],
+                productImages: $request->hasFile('product_images') ? $request->file('product_images') : [],
+            );
+        } catch (\Throwable $e) {
+            return back()->withInput()
+                ->with('error', 'حدث خطأ أثناء تحديث المنتج. يرجى المحاولة مرة أخرى.');
+        }
 
         return redirect()->route('admin.products.show', $product)
             ->with('success', 'تم تحديث المنتج بنجاح');
@@ -291,15 +162,7 @@ class ProductController extends Controller
             'variants.*.is_active'        => 'nullable|boolean',
         ]);
 
-        foreach ($request->variants as $data) {
-            ProductVariant::where('id', $data['id'])
-                ->where('product_id', $product->id)
-                ->update([
-                    'stock_quantity' => $data['stock_quantity'],
-                    'price_override'  => $data['price_override'] ?: null,
-                    'is_active'      => (bool) ($data['is_active'] ?? true),
-                ]);
-        }
+        $this->products->updateStock($product, $request->variants);
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => 'تم تحديث المخزون']);
@@ -310,49 +173,9 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        $product->delete();
+        $this->products->delete($product);
 
         return redirect()->route('admin.products.index')
             ->with('success', 'تم نقل المنتج إلى المحذوفات');
-    }
-
-    private function uniqueSlug(string $name, ?int $excludeId = null): string
-    {
-        $slug = Str::slug($name);
-        $base = $slug;
-        $i = 1;
-
-        while (
-            Product::withTrashed()
-                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
-                ->where('slug', $slug)
-                ->exists()
-        ) {
-            $slug = $base . '-' . $i++;
-        }
-
-        return $slug;
-    }
-
-    private function createVariant(Product $product, array $data): ProductVariant
-    {
-        $variant = $product->variants()->create([
-            'sku'            => $data['sku'] ?: strtoupper(Str::random(8)),
-            'price_override' => $data['price_override'] ?: null,
-            'stock_quantity' => (int) ($data['stock_quantity'] ?? 0),
-            'is_active'      => true,
-        ]);
-
-        $avIds = collect($data['attribute_values'] ?? [])
-            ->filter(fn($v) => is_numeric($v))
-            ->map(fn($v) => (int) $v)
-            ->unique()
-            ->toArray();
-
-        if (!empty($avIds)) {
-            $variant->attributeValues()->attach($avIds);
-        }
-
-        return $variant;
     }
 }

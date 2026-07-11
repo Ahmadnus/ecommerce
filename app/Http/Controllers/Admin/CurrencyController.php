@@ -4,20 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
+use App\Services\CurrencyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class CurrencyController extends Controller
 {
-
+    public function __construct(
+        private readonly CurrencyService $currencies,
+    ) {}
 
     public function index(): View
     {
-        $currencies = Currency::orderBy('is_base', 'desc')
-            ->orderBy('name')
-            ->get();
+        $currencies = $this->currencies->getAllForAdmin();
 
         return view('admin.currencies.index', compact('currencies'));
     }
@@ -54,15 +54,12 @@ class CurrencyController extends Controller
             ? $request->boolean('is_active')
             : true;
 
-        DB::transaction(function () use ($validated) {
-            if (!empty($validated['is_base'])) {
-                Currency::where('is_base', true)->update([
-                    'is_base' => false,
-                ]);
-            }
-
-            Currency::create($validated);
-        });
+        try {
+            $this->currencies->createCurrency($validated);
+        } catch (\Throwable $e) {
+            return back()->withInput()
+                ->with('error', 'حدث خطأ أثناء إضافة العملة. يرجى المحاولة مرة أخرى.');
+        }
 
         return redirect()
             ->route('admin.currencies.index')
@@ -101,17 +98,12 @@ class CurrencyController extends Controller
             ? $request->boolean('is_active')
             : $currency->is_active;
 
-        DB::transaction(function () use ($currency, $validated) {
-            if ($validated['is_base'] && !$currency->is_base) {
-                Currency::where('is_base', true)
-                    ->where('id', '!=', $currency->id)
-                    ->update([
-                        'is_base' => false,
-                    ]);
-            }
-
-            $currency->update($validated);
-        });
+        try {
+            $this->currencies->updateCurrency($currency, $validated);
+        } catch (\Throwable $e) {
+            return back()->withInput()
+                ->with('error', 'حدث خطأ أثناء تحديث العملة. يرجى المحاولة مرة أخرى.');
+        }
 
         return redirect()
             ->route('admin.currencies.index')
@@ -124,7 +116,7 @@ class CurrencyController extends Controller
             return back()->with('error', 'لا يمكن حذف العملة الأساسية.');
         }
 
-        $currency->delete();
+        $this->currencies->deleteCurrency($currency);
 
         return redirect()
             ->route('admin.currencies.index')
@@ -141,7 +133,4 @@ class CurrencyController extends Controller
 
         return back();
     }
-
-
-
 }

@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Services\PageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PageController extends Controller
 {
+    public function __construct(
+        private readonly PageService $pages,
+    ) {}
+
     public function index(): View
     {
-        $pages = Page::ordered()->get();
+        $pages = $this->pages->getOrderedPages();
         return view('admin.pages.index', compact('pages'));
     }
 
@@ -40,31 +45,26 @@ class PageController extends Controller
             'content.ar.required' => 'محتوى الصفحة بالعربية مطلوب',
         ]);
 
-        $arName = $request->input('name.ar');
-        $enName = $request->input('name.en');
-
-        $slug = $request->filled('slug')
-            ? $request->slug
-            : Page::uniqueSlug($arName ?: $enName);
-
-        $page = Page::create([
-            'name'       => $request->input('name'),
-            'content'    => $request->input('content'),
-            'slug'       => $slug,
-            'sort_order' => $request->input('sort_order', 0),
-            'is_active'  => $request->boolean('is_active', true),
-        ]);
-
-        // ── Featured image ────────────────────────────────────────────────
-        if ($request->hasFile('featured_image')) {
-            $page->addMediaFromRequest('featured_image')
-                 ->withCustomProperties(['alt' => $request->input('image_alt', '')])
-                 ->toMediaCollection('featured');
+        try {
+            $this->pages->create(
+                data: [
+                    'name'       => $request->input('name'),
+                    'content'    => $request->input('content'),
+                    'slug'       => $request->filled('slug') ? $request->slug : null,
+                    'sort_order' => $request->input('sort_order', 0),
+                    'is_active'  => $request->boolean('is_active', true),
+                    'image_alt'  => $request->input('image_alt', ''),
+                ],
+                featuredImage: $request->hasFile('featured_image') ? $request->file('featured_image') : null,
+            );
+        } catch (\Throwable $e) {
+            return back()->withInput()
+                ->with('error', 'حدث خطأ أثناء إنشاء الصفحة. يرجى المحاولة مرة أخرى.');
         }
 
         return redirect()
             ->route('admin.pages.index')
-            ->with('success', 'تم إنشاء الصفحة "' . $arName . '" بنجاح.');
+            ->with('success', 'تم إنشاء الصفحة "' . $request->input('name.ar') . '" بنجاح.');
     }
 
     public function edit(Page $page): View
@@ -89,43 +89,23 @@ class PageController extends Controller
             'content.ar.required' => 'محتوى الصفحة بالعربية مطلوب',
         ]);
 
-        $arName = $request->input('name.ar');
-        $enName = $request->input('name.en');
-
-        // Regenerate slug only if Arabic name changed
-        $slug = $page->slug;
-        if ($arName !== $page->getTranslation('name', 'ar', false)) {
-            $slug = $request->filled('slug')
-                ? $request->slug
-                : Page::uniqueSlug($arName ?: $enName, $page->id);
-        }
-
-        $page->update([
-            'name'       => $request->input('name'),
-            'content'    => $request->input('content'),
-            'slug'       => $slug,
-            'sort_order' => $request->input('sort_order', 0),
-            'is_active'  => $request->boolean('is_active', true),
-        ]);
-
-        // ── Featured image ────────────────────────────────────────────────
-        if ($request->hasFile('featured_image')) {
-            // Clear existing image before adding new one
-            $page->clearMediaCollection('featured');
-
-            $page->addMediaFromRequest('featured_image')
-                 ->withCustomProperties(['alt' => $request->input('image_alt', '')])
-                 ->toMediaCollection('featured');
-        } elseif ($request->boolean('remove_image')) {
-            // Explicit removal via hidden checkbox
-            $page->clearMediaCollection('featured');
-        } else {
-            // No new file — update alt text on existing media if it changed
-            $existing = $page->getFirstMedia('featured');
-            if ($existing && $request->filled('image_alt')) {
-                $existing->setCustomProperty('alt', $request->input('image_alt'));
-                $existing->save();
-            }
+        try {
+            $this->pages->update(
+                page: $page,
+                data: [
+                    'name'         => $request->input('name'),
+                    'content'      => $request->input('content'),
+                    'slug'         => $request->filled('slug') ? $request->slug : null,
+                    'sort_order'   => $request->input('sort_order', 0),
+                    'is_active'    => $request->boolean('is_active', true),
+                    'image_alt'    => $request->input('image_alt', ''),
+                    'remove_image' => $request->boolean('remove_image'),
+                ],
+                featuredImage: $request->hasFile('featured_image') ? $request->file('featured_image') : null,
+            );
+        } catch (\Throwable $e) {
+            return back()->withInput()
+                ->with('error', 'حدث خطأ أثناء تحديث الصفحة. يرجى المحاولة مرة أخرى.');
         }
 
         return redirect()
@@ -135,7 +115,7 @@ class PageController extends Controller
 
     public function destroy(Page $page): RedirectResponse
     {
-        $page->delete();
+        $this->pages->delete($page);
 
         return redirect()
             ->route('admin.pages.index')

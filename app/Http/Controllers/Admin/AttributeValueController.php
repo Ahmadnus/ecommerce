@@ -3,27 +3,31 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Attribute;
 use App\Models\AttributeValue;
+use App\Services\AttributeService;
 use Illuminate\Http\Request;
 
 class AttributeValueController extends Controller
 {
+    public function __construct(
+        private readonly AttributeService $attributes,
+    ) {}
+
     public function index()
     {
-        $values = AttributeValue::with('attribute')->latest()->get();
+        $values = $this->attributes->getValuesWithAttributes();
         return view('admin.attribute-values.index', compact('values'));
     }
 
     public function create()
     {
-        $attributes = Attribute::orderBy('sort_order')->get();
+        $attributes = $this->attributes->getAttributesOrdered();
         return view('admin.attribute-values.create', compact('attributes'));
     }
 
     public function edit(AttributeValue $attributeValue)
     {
-        $attributes = Attribute::orderBy('sort_order')->get();
+        $attributes = $this->attributes->getAttributesOrdered();
         return view('admin.attribute-values.edit', compact('attributeValue', 'attributes'));
     }
 
@@ -41,12 +45,7 @@ class AttributeValueController extends Controller
             'value.en.required' => 'The English value is required.',
         ]);
 
-        AttributeValue::create([
-            'attribute_id' => $data['attribute_id'],
-            'value'        => ['ar' => $data['value']['ar'],  'en' => $data['value']['en']],
-            'label'        => ['ar' => $data['label']['ar'] ?? '', 'en' => $data['label']['en'] ?? ''],
-            'color_hex'    => $data['color_hex'] ?? null,
-        ]);
+        $this->attributes->createValue($data);
 
         return back()->with('success', 'تمت الإضافة');
     }
@@ -65,19 +64,14 @@ class AttributeValueController extends Controller
             'value.en.required' => 'The English value is required.',
         ]);
 
-        $attributeValue->update([
-            'attribute_id' => $data['attribute_id'],
-            'value'        => ['ar' => $data['value']['ar'],  'en' => $data['value']['en']],
-            'label'        => ['ar' => $data['label']['ar'] ?? '', 'en' => $data['label']['en'] ?? ''],
-            'color_hex'    => $data['color_hex'] ?? null,
-        ]);
+        $this->attributes->updateValue($attributeValue, $data);
 
         return back()->with('success', 'تم التعديل');
     }
 
     public function destroy(AttributeValue $attributeValue)
     {
-        $attributeValue->delete();
+        $this->attributes->deleteValue($attributeValue);
         return back()->with('success', 'تم الحذف');
     }
 }

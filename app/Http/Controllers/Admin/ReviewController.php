@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductReview;
+use App\Services\ReviewAdminService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -22,33 +23,17 @@ use Illuminate\View\View;
  */
 class ReviewController extends Controller
 {
+    public function __construct(
+        private readonly ReviewAdminService $reviews,
+    ) {}
+
     public function index(Request $request): View
     {
-        $query = ProductReview::with(['product', 'user'])
-            ->orderByDesc('created_at');
+        $data = $this->reviews->getIndexData(
+            $request->only(['status', 'product_id', 'rating'])
+        );
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('product_id')) {
-            $query->where('product_id', $request->product_id);
-        }
-
-        if ($request->filled('rating')) {
-            $query->where('rating', $request->rating);
-        }
-
-        $reviews = $query->paginate(25)->withQueryString();
-
-        $stats = [
-            'total'    => ProductReview::count(),
-            'pending'  => ProductReview::where('status', 'pending')->count(),
-            'approved' => ProductReview::where('status', 'approved')->count(),
-            'rejected' => ProductReview::where('status', 'rejected')->count(),
-        ];
-
-        return view('admin.reviews.index', compact('reviews', 'stats'));
+        return view('admin.reviews.index', $data);
     }
 
     public function show(ProductReview $review): View
@@ -59,36 +44,33 @@ class ReviewController extends Controller
 
     public function forProduct(Product $product): View
     {
-        $reviews = $product->reviews()
-            ->with('user')
-            ->orderByDesc('created_at')
-            ->paginate(20);
+        $reviews = $this->reviews->getReviewsForProduct($product);
 
         return view('admin.reviews.for-product', compact('product', 'reviews'));
     }
 
     public function approve(ProductReview $review): RedirectResponse
     {
-        $review->update(['status' => 'approved']);
+        $this->reviews->approve($review);
         return back()->with('success', 'تم اعتماد التقييم.');
     }
 
     public function reject(ProductReview $review): RedirectResponse
     {
-        $review->update(['status' => 'rejected']);
+        $this->reviews->reject($review);
         return back()->with('success', 'تم رفض التقييم.');
     }
 
     public function pin(ProductReview $review): RedirectResponse
     {
-        $review->update(['is_pinned' => ! $review->is_pinned]);
-        $label = $review->is_pinned ? 'تم تثبيت التقييم.' : 'تم إلغاء تثبيت التقييم.';
+        $pinned = $this->reviews->togglePin($review);
+        $label = $pinned ? 'تم تثبيت التقييم.' : 'تم إلغاء تثبيت التقييم.';
         return back()->with('success', $label);
     }
 
     public function destroy(ProductReview $review): RedirectResponse
     {
-        $review->delete();
+        $this->reviews->delete($review);
         return back()->with('success', 'تم حذف التقييم.');
     }
 }

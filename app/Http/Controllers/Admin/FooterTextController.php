@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FooterText;
+use App\Services\FooterTextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class FooterTextController extends Controller
 {
+    public function __construct(
+        private readonly FooterTextService $footerTexts,
+    ) {}
+
     public function index(): View
     {
-        $items = FooterText::orderBy('sort_order')->latest()->get();
+        $items = $this->footerTexts->getItems();
 
         return view('admin.footer-texts.index', compact('items'));
     }
@@ -27,24 +32,20 @@ class FooterTextController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-       $item = FooterText::create([
-    'slug'       => $validated['slug'],
-    'is_active'  => $request->boolean('is_active', true),
-    'sort_order' => $validated['sort_order'] ?? 0,
-    'text' => [
-        'ar' => $validated['text_ar'],
-        'en' => $validated['text_en'],
-    ],
-]);
-
-        $item->save();
+        $this->footerTexts->create([
+            'slug'       => $validated['slug'],
+            'text_ar'    => $validated['text_ar'],
+            'text_en'    => $validated['text_en'],
+            'sort_order' => $validated['sort_order'] ?? 0,
+            'is_active'  => $request->boolean('is_active', true),
+        ]);
 
         return back()->with('success', 'تمت الإضافة بنجاح.');
     }
 
     public function destroy(FooterText $footerText): RedirectResponse
     {
-        $footerText->delete();
+        $this->footerTexts->delete($footerText);
 
         return back()->with('success', 'تم الحذف بنجاح.');
     }

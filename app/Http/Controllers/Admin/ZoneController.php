@@ -5,15 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Country;
 use App\Models\Zone;
+use App\Services\ZoneService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ZoneController extends Controller
 {
+    public function __construct(
+        private readonly ZoneService $zones,
+    ) {}
+
     public function index(Country $country): View
     {
-        $zones = $country->zones()->ordered()->get();
+        $zones = $this->zones->getZonesForCountry($country);
 
         return view('admin.zones.index', compact('country', 'zones'));
     }
@@ -27,7 +32,7 @@ class ZoneController extends Controller
     {
         $validated = $this->validateZone($request);
 
-        $country->zones()->create($validated);
+        $this->zones->create($country, $validated);
 
         return redirect()
             ->route('admin.countries.zones.index', $country)
@@ -43,7 +48,7 @@ class ZoneController extends Controller
     {
         $validated = $this->validateZone($request);
 
-        $zone->update($validated);
+        $this->zones->update($zone, $validated);
 
         return redirect()
             ->route('admin.countries.zones.index', $country)
@@ -52,7 +57,7 @@ class ZoneController extends Controller
 
     public function destroy(Country $country, Zone $zone): RedirectResponse
     {
-        $zone->delete();
+        $this->zones->delete($zone);
 
         return redirect()
             ->route('admin.countries.zones.index', $country)
@@ -73,13 +78,9 @@ class ZoneController extends Controller
             'is_active'      => ['nullable', 'boolean'],
         ]);
 
-        $validated['is_active']    = $request->boolean('is_active', true);
-        $validated['sort_order']   = $validated['sort_order'] ?? 0;
-
-        if (isset($validated['calling_code'])) {
-            $validated['calling_code'] = ltrim($validated['calling_code'], '+') ?: null;
-        }
-
-        return $validated;
+        return $this->zones->normalizeZoneData(
+            $validated,
+            $request->boolean('is_active', true)
+        );
     }
 }

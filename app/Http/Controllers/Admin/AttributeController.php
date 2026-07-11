@@ -4,15 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attribute;
+use App\Services\AttributeService;
 use Illuminate\Http\Request;
 
 class AttributeController extends Controller
 {
+    public function __construct(
+        private readonly AttributeService $attributes,
+    ) {}
+
     public function index()
     {
-        $attributes = Attribute::withCount('values')
-            ->orderBy('sort_order')
-            ->get();
+        $attributes = $this->attributes->getAttributesWithValueCounts();
 
         return view('admin.attributes.index', compact('attributes'));
     }
@@ -34,11 +37,7 @@ class AttributeController extends Controller
             'name.en.required' => 'The English name is required.',
         ]);
 
-        Attribute::create([
-            'name'       => ['ar' => $data['name']['ar'], 'en' => $data['name']['en']],
-            'type'       => $data['type'] ?? 'select',
-            'sort_order' => $data['sort_order'] ?? 0,
-        ]);
+        $this->attributes->createAttribute($data);
 
         return redirect()
             ->route('admin.attributes.index')
@@ -62,18 +61,14 @@ class AttributeController extends Controller
             'name.en.required' => 'The English name is required.',
         ]);
 
-        $attribute->update([
-            'name'       => ['ar' => $data['name']['ar'], 'en' => $data['name']['en']],
-            'type'       => $data['type'] ?? $attribute->type,
-            'sort_order' => $data['sort_order'] ?? $attribute->sort_order,
-        ]);
+        $this->attributes->updateAttribute($attribute, $data);
 
         return back()->with('success', 'تم التحديث');
     }
 
     public function destroy(Attribute $attribute)
     {
-        $attribute->delete();
+        $this->attributes->deleteAttribute($attribute);
         return back()->with('success', 'تم الحذف');
     }
 }

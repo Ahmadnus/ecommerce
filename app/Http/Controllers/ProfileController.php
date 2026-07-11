@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ProfileService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
@@ -9,16 +10,19 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    public function __construct(
+        private readonly ProfileService $profile,
+    ) {}
+
     /**
      * عرض صفحة البروفايل (بدلاً من edit)
      */
     public function show(Request $request): View
     {
         $user = $request->user();
-        
+
         // جلب آخر 5 طلبات للمستخدم
-        // تأكد أن علاقة orders موجودة في مودل User
-        $orders = $user->orders()->latest()->take(5)->get() ?? collect();
+        $orders = $this->profile->getRecentOrders($user);
 
         return view('myprofile.show', [
             'user' => $user,
@@ -39,14 +43,7 @@ class ProfileController extends Controller
             'password' => 'nullable|min:8|confirmed',
         ]);
 
-        $user->name = $data['name'];
-        $user->phone = $data['phone'];
-
-        if (!empty($data['password'])) {
-            $user->password = $data['password']; // Laravel 11+ سيقوم بعمل Hash تلقائياً بناءً على المودل
-        }
-
-        $user->save();
+        $this->profile->updateProfile($user, $data);
 
         return back()->with('success', 'تم تحديث بياناتك بنجاح');
     }
@@ -59,7 +56,7 @@ class ProfileController extends Controller
         $request->validate(['password' => ['required', 'current_password']]);
         $user = $request->user();
         Auth::logout();
-        $user->delete();
+        $this->profile->deleteAccount($user);
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/');

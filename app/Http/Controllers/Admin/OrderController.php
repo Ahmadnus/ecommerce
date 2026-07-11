@@ -4,46 +4,31 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\AdminOrderService;
 use Illuminate\Http\Request;
 
 /**
  * Admin\OrderController
  * ─────────────────────────────────────────────────────────────────────────────
- * Changes:
- *   • index() and show() now eager-load items.productVariant.attributeValues.attribute
- *     so every variant's attributes (Color, Size, Storage…) are available in views.
- *   • show() also loads 'zone' for the delivery area display.
+ * Thin HTTP layer over AdminOrderService (listing, detail, status updates
+ * with stock restore on cancellation).
  */
 class OrderController extends Controller
 {
- public function index(Request $request)
-{
-    $query = Order::with([
-        'items.product',
-        'items.productVariant.attributeValues.attribute',
-        'zone',
-    ])->latest();
+    public function __construct(
+        private readonly AdminOrderService $orders,
+    ) {}
 
-    if ($request->filled('status')) {
-        $query->where('status', $request->status);
+    public function index(Request $request)
+    {
+        $data = $this->orders->getIndexData($request->only(['status']));
+
+        return view('admin.orders.index', $data);
     }
-
-    $orders = $query->paginate(10)->withQueryString();
-
-    // Always resolve via the base currency for admin — admins see storage currency (JOD)
-    $activeCurrency = \App\Models\Currency::where('is_base', true)->first()
-        ?? \App\Models\Currency::where('is_active', true)->orderBy('sort_order')->first();
-
-    return view('admin.orders.index', compact('orders', 'activeCurrency'));
-}
 
     public function show(Order $order)
     {
-        $order->load([
-            'items.product',
-            'items.productVariant.attributeValues.attribute',
-            'zone',
-        ]);
+        $this->orders->loadOrderDetails($order);
 
         return view('admin.orders.show', compact('order'));
     }
@@ -52,19 +37,11 @@ class OrderController extends Controller
     {
         $request->validate(['status' => 'required|string']);
 
-        $oldStatus = $order->status;
-        $newStatus = $request->status;
-
-        // Restore stock when cancelling a previously non-cancelled order
-        if ($newStatus === 'cancelled' && $oldStatus !== 'cancelled') {
-            foreach ($order->items as $item) {
-                if ($item->product_variant_id) {
-                    $item->variant()->increment('stock_quantity', $item->quantity);
-                }
-            }
+        try {
+            $this->orders->updateStatus($order, $request->status);
+        } catch (\Throwable $e) {
+            return back()->with('error', 'حدث خطأ أثناء تحديث حالة الطلب. يرجى المحاولة مرة أخرى.');
         }
-
-        $order->update(['status' => $newStatus]);
 
         return back()->with('success', 'تم تحديث حالة الطلب بنجاح');
     }

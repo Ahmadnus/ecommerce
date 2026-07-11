@@ -4,43 +4,45 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SiteFeature;
+use App\Services\SiteFeatureService;
 use Illuminate\Http\Request;
 
 class SiteFeatureController extends Controller
 {
+    public function __construct(
+        private readonly SiteFeatureService $features,
+    ) {}
+
     public function index()
     {
-        $features = SiteFeature::orderBy('sort_order')->get();
+        $features = $this->features->getFeatures();
         return view('admin.site-features.index', compact('features'));
     }
 
-       public function create()
-{
-    $site_feature = new SiteFeature();
+    public function create()
+    {
+        $site_feature = new SiteFeature();
 
-    return view('admin.site-features.create', compact('site_feature'));
-}
-
-public function store(Request $request)
-{
-    try {
-        // نستخدم الإدخال اليدوي للتجربة
-        $feature = new SiteFeature();
-        $feature->icon = $request->icon;
-        $feature->setTranslation('title', 'ar', $request->input('title.ar'));
-        $feature->setTranslation('title', 'en', $request->input('title.en'));
-        $feature->setTranslation('description', 'ar', $request->input('description.ar'));
-        $feature->setTranslation('description', 'en', $request->input('description.en'));
-        $feature->sort_order = $request->input('sort_order', 0);
-        $feature->is_active = $request->has('is_active');
-        $feature->save();
-
-        return redirect()->route('admin.site-features.index')->with('success', 'تم الحفظ');
-    } catch (\Exception $e) {
-        // سيظهر لك سبب المشكلة الحقيقي هنا
-        return $e->getMessage(); 
+        return view('admin.site-features.create', compact('site_feature'));
     }
-}
+
+    public function store(Request $request)
+    {
+        try {
+            $this->features->create([
+                'icon'        => $request->icon,
+                'title'       => $request->input('title', []),
+                'description' => $request->input('description', []),
+                'sort_order'  => $request->input('sort_order', 0),
+                'is_active'   => $request->has('is_active'),
+            ]);
+
+            return redirect()->route('admin.site-features.index')->with('success', 'تم الحفظ');
+        } catch (\Exception $e) {
+            // سيظهر لك سبب المشكلة الحقيقي هنا
+            return $e->getMessage();
+        }
+    }
 
     public function edit(SiteFeature $site_feature)
     {
@@ -59,7 +61,7 @@ public function store(Request $request)
             'is_active'         => 'boolean',
         ]);
 
-        $site_feature->update([
+        $this->features->update($site_feature, [
             'icon'        => $request->icon,
             'title'       => $request->input('title'),
             'description' => $request->input('description'),
@@ -72,7 +74,7 @@ public function store(Request $request)
 
     public function destroy(SiteFeature $site_feature)
     {
-        $site_feature->delete();
+        $this->features->delete($site_feature);
         return back()->with('success', 'تم الحذف');
     }
 }

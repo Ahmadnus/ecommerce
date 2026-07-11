@@ -152,4 +152,19 @@ class OrderCustomization extends Model
             default      => 'gray',
         };
     }
+
+    public function priceBreakdown(): array
+{
+    return app(\App\Services\CustomizationPricingService::class)->breakdown($this);
+}
+ 
+/**
+ * Convenience accessor: $customization->total_price_jod
+ * Just the final JOD total, no breakdown.
+ */
+public function getTotalPriceJodAttribute(): float
+{
+    return $this->priceBreakdown()['total'];
+}
+ 
 }

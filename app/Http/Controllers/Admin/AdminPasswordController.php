@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class AdminPasswordController extends Controller
 {
+    public function __construct(
+        private readonly AuthService $auth,
+    ) {}
+
     public function edit(): View
     {
         return view('admin.password.edit');
@@ -28,11 +32,7 @@ class AdminPasswordController extends Controller
             'password.confirmed' => 'تأكيد كلمة السر غير مطابق.',
         ]);
 
-        $user = $request->user();
-
-        $user->update([
-            'password' => Hash::make($request->password),
-        ]);
+        $this->auth->updatePassword($request->user(), $request->password);
 
         return back()->with('success', 'تم تغيير كلمة السر بنجاح.');
     }

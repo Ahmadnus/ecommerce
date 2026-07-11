@@ -4,31 +4,25 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Services\CategoryService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
+    public function __construct(
+        private readonly CategoryService $categories,
+    ) {}
+
     public function index()
     {
-        $categories = Category::withCount('products')
-            ->with(['allChildren.products', 'media'])
-            ->roots()
-            ->orderBy('sort_order')
-            ->orderBy('name')   // Spatie sorts by current locale automatically
-            ->get();
+        $categories = $this->categories->getCategoryTree();
 
         return view('admin.categories.index', compact('categories'));
     }
 
     public function create(Request $request)
     {
-        $parentOptions = Category::active()
-            ->with('media')
-            ->orderBy('depth')
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $parentOptions = $this->categories->getParentOptions();
 
         $preselectedParentId = $request->query('parent_id');
 
@@ -56,54 +50,33 @@ class CategoryController extends Controller
             'image.max'        => 'حجم الصورة يجب أن لا يتجاوز 4 ميجابايت',
         ]);
 
-        $arName = $request->input('name.ar');
-        $enName = $request->input('name.en');
-
-        $category = Category::create([
-            // Pass the full array — Spatie stores it as {"ar": "...", "en": "..."}
-            'name'             => $request->input('name'),
-            'description'      => $request->input('description'),
-            'slug'             => $request->filled('slug')
-                                    ? $request->slug
-                                    : Str::slug($arName ?: $enName),
-            'parent_id'        => $request->parent_id,
-            'sort_order'       => $request->input('sort_order', 0),
-            'is_active'        => $request->boolean('is_active', true),
-            'banner_is_active' => $request->boolean('banner_is_active', false),
-        ]);
-
-        if ($request->hasFile('image')) {
-            $category
-                ->addMediaFromRequest('image')
-                ->usingName($arName ?: $enName)
-                ->usingFileName(Str::slug($arName ?: $enName) . '.' . $request->file('image')->extension())
-                ->toMediaCollection('category_images');
-        }
-
-        if ($request->hasFile('banner_image')) {
-            $category
-                ->addMediaFromRequest('banner_image')
-                ->usingName(($arName ?: $enName) . ' Banner')
-                ->usingFileName(Str::slug($arName ?: $enName) . '-banner.' . $request->file('banner_image')->extension())
-                ->toMediaCollection('category_banner');
+        try {
+            $this->categories->create(
+                data: [
+                    'name'             => $request->input('name'),
+                    'description'      => $request->input('description'),
+                    'slug'             => $request->filled('slug') ? $request->slug : null,
+                    'parent_id'        => $request->parent_id,
+                    'sort_order'       => $request->input('sort_order', 0),
+                    'is_active'        => $request->boolean('is_active', true),
+                    'banner_is_active' => $request->boolean('banner_is_active', false),
+                ],
+                image: $request->hasFile('image') ? $request->file('image') : null,
+                bannerImage: $request->hasFile('banner_image') ? $request->file('banner_image') : null,
+            );
+        } catch (\Throwable $e) {
+            return back()->withInput()
+                ->with('error', 'حدث خطأ أثناء إضافة التصنيف. يرجى المحاولة مرة أخرى.');
         }
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('success', 'تم إضافة التصنيف "' . $arName . '" بنجاح');
+            ->with('success', 'تم إضافة التصنيف "' . $request->input('name.ar') . '" بنجاح');
     }
 
     public function edit(Category $category)
     {
-        $descendantIds = $category->getAllDescendants()->pluck('id')->push($category->id);
-
-        $parentOptions = Category::active()
-            ->with('media')
-            ->whereNotIn('id', $descendantIds)
-            ->orderBy('depth')
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $parentOptions = $this->categories->getParentOptionsForEdit($category);
 
         return view('admin.categories.edit', compact('category', 'parentOptions'));
     }
@@ -118,7 +91,7 @@ class CategoryController extends Controller
             'description.en'  => 'nullable|string',
             // ────────────────────────────────────────────────────────────────
             'slug'            => 'nullable|string|unique:categories,slug,' . $category->id,
-        
+
             'parent_id'       => 'nullable|exists:categories,id',
             'sort_order'      => 'nullable|integer|min:0',
             'is_active'       => 'nullable|boolean',
@@ -130,70 +103,41 @@ class CategoryController extends Controller
         ]);
 
         // Prevent circular parent
-        if ($request->filled('parent_id')) {
-            $descendants = $category->getAllDescendants()->pluck('id');
-            if ($descendants->contains($request->parent_id) || $request->parent_id == $category->id) {
-                return back()->withErrors(['parent_id' => 'لا يمكن تعيين تصنيف فرعي كأب.']);
-            }
+        if ($request->filled('parent_id')
+            && $this->categories->wouldCreateCycle($category, $request->parent_id)) {
+            return back()->withErrors(['parent_id' => 'لا يمكن تعيين تصنيف فرعي كأب.']);
         }
 
-        $arName = $request->input('name.ar');
-        $enName = $request->input('name.en');
-
-        // Regenerate slug only if Arabic name changed
-        $slug = $category->slug;
-        if ($arName !== $category->getTranslation('name', 'ar', false)) {
-            $slug = $request->filled('slug')
-                ? $request->slug
-                : Str::slug($arName ?: $enName);
-        }
-
-        $category->update([
-            'name'             => $request->input('name'),
-            'description'      => $request->input('description'),
-            'slug'             => $slug,
-            'parent_id'        => $request->parent_id,
-            'sort_order'       => $request->input('sort_order', 0),
-            'is_active'        => $request->boolean('is_active', true),
-            'banner_is_active' => $request->boolean('banner_is_active', false),
-        ]);
-
-        // ── Image handling ─────────────────────────────────────────────────
-        if ($request->boolean('remove_image')) {
-            $category->clearMediaCollection('category_images');
-            $category->clearMediaCollection('categories'); // legacy
-        }
-
-        if ($request->hasFile('image')) {
-            $category->clearMediaCollection('category_images');
-            $category
-                ->addMediaFromRequest('image')
-                ->usingName($arName ?: $enName)
-                ->usingFileName(Str::slug($arName ?: $enName) . '.' . $request->file('image')->extension())
-                ->toMediaCollection('category_images');
-        }
-
-        if ($request->boolean('remove_banner_image')) {
-            $category->clearMediaCollection('category_banner');
-        }
-
-        if ($request->hasFile('banner_image')) {
-            $category->clearMediaCollection('category_banner');
-            $category
-                ->addMediaFromRequest('banner_image')
-                ->usingName(($arName ?: $enName) . ' Banner')
-                ->usingFileName(Str::slug($arName ?: $enName) . '-banner.' . $request->file('banner_image')->extension())
-                ->toMediaCollection('category_banner');
+        try {
+            $this->categories->update(
+                category: $category,
+                data: [
+                    'name'                => $request->input('name'),
+                    'description'         => $request->input('description'),
+                    'slug'                => $request->filled('slug') ? $request->slug : null,
+                    'parent_id'           => $request->parent_id,
+                    'sort_order'          => $request->input('sort_order', 0),
+                    'is_active'           => $request->boolean('is_active', true),
+                    'banner_is_active'    => $request->boolean('banner_is_active', false),
+                    'remove_image'        => $request->boolean('remove_image'),
+                    'remove_banner_image' => $request->boolean('remove_banner_image'),
+                ],
+                image: $request->hasFile('image') ? $request->file('image') : null,
+                bannerImage: $request->hasFile('banner_image') ? $request->file('banner_image') : null,
+            );
+        } catch (\Throwable $e) {
+            return back()->withInput()
+                ->with('error', 'حدث خطأ أثناء تحديث التصنيف. يرجى المحاولة مرة أخرى.');
         }
 
         return redirect()
             ->route('admin.categories.index')
-            ->with('success', 'تم تحديث التصنيف "' . $arName . '" بنجاح');
+            ->with('success', 'تم تحديث التصنيف "' . $request->input('name.ar') . '" بنجاح');
     }
 
     public function destroy(Category $category)
     {
-        $category->delete();
+        $this->categories->delete($category);
 
         return redirect()
             ->route('admin.categories.index')

@@ -3,36 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\OtpSetting; // تم تغيير الموديل
 use App\Services\SmsService;
+use App\Services\SmsSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SmsSettingsController extends Controller
 {
-    public function __construct(private SmsService $sms) {}
+    public function __construct(
+        private SmsService $sms,
+        private readonly SmsSettingsService $settings,
+    ) {}
 
     /**
      * عرض صفحة الإعدادات في الداشبورد
      */
     public function show(): View
     {
-        // جلب الإعدادات من جدول otpsettings وتجميعها بالمفتاح
-        $settings  = OtpSetting::where('group', 'sms')->get()->keyBy('key');
-        
-        // جلب القيم الفعالة (من القاعدة أو من الـ config كـ fallback)
-        $effective = [
-            'sms_url'         => get_otp_setting('sms_url'),
-            'sms_user'        => get_otp_setting('sms_user'),
-            'sms_pass'        => get_otp_setting('sms_pass'),
-            'sms_sid'         => get_otp_setting('sms_sid'),
-            'sms_type'        => get_otp_setting('sms_type', 4),
-            'otp_ttl_minutes' => get_otp_setting('otp_ttl_minutes', 5),
-            'otp_length'      => get_otp_setting('otp_length', 6),
-        ];
-
-        return view('admin.settings.sms', compact('settings', 'effective'));
+        return view('admin.settings.sms', $this->settings->getSettingsData());
     }
 
     /**
@@ -50,10 +39,7 @@ class SmsSettingsController extends Controller
             'otp_length'      => 'nullable|integer|min:4|max:8',
         ]);
 
-        foreach ($validated as $key => $value) {
-            // استخدام ميثود set الموجودة في موديل OtpSetting لمسح الكاش تلقائياً
-            OtpSetting::set($key, ($value !== '' && $value !== null) ? $value : null);
-        }
+        $this->settings->saveSettings($validated);
 
         return redirect()->route('admin.settings.sms')
                          ->with('success', 'تم حفظ إعدادات الرسائل النصية بنجاح ✓');

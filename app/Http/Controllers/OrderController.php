@@ -2,40 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
+use App\Services\OrderService;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    public function __construct(
+        private readonly OrderService $orders,
+    ) {}
+
     /**
      * Order success / confirmation page.
      * Accessible by the order owner only.
      */
- public function success(string $orderNumber): View
-{
-    // نبحث عن الطلب برقم الطلب فقط (للسماح للزوار برؤية صفحة النجاح فوراً)
-    // أو يمكنك التأكد أن المستخدم هو صاحب الطلب "فقط إذا كان مسجلاً"
-    $order = Order::where('order_number', $orderNumber)
-                  ->with('items')
-                  ->firstOrFail(); // إذا لم يجد الرقم سيظهر 404، تأكد أن الرقم يمر صح
+    public function success(string $orderNumber): View
+    {
+        // نبحث عن الطلب برقم الطلب فقط (للسماح للزوار برؤية صفحة النجاح فوراً)
+        $order = $this->orders->getOrderForSuccessPage($orderNumber);
 
-    return view('orders.success', compact('order'));
-}
+        return view('orders.success', compact('order'));
+    }
+
     /**
      * User's order history.
      */
-public function index(Request $request): View
-{
-    $user = $request->user();
-    
-    // استخدمنا العلاقة مباشرة كما فعلت في البروفايل
-    $orders = $user->orders()->latest()->paginate(10);
+    public function index(Request $request): View
+    {
+        $user = $request->user();
 
-    return view('orders.index', [
-        'orders' => $orders
-    ]);
-}
+        $orders = $this->orders->getUserOrders($user);
+
+        return view('orders.index', [
+            'orders' => $orders
+        ]);
+    }
 }

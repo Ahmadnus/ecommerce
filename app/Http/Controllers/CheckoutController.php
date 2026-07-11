@@ -3,26 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Country;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\ProductVariant;
-use App\Models\Zone;
 use App\Services\CartService;
+use App\Services\CheckoutService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class CheckoutController extends Controller
 {
-    public function __construct(private readonly CartService $cart) {}
-
-    private function guestCheckoutEnabled(): bool
-    {
-        return get_otp_setting('guest_checkout_enabled', '0') === '1';
-    }
+    public function __construct(
+        private readonly CartService $cart,
+        private readonly CheckoutService $checkout,
+    ) {}
 
     // ─── Show checkout page ───────────────────────────────────────────────────
 
@@ -33,22 +28,17 @@ class CheckoutController extends Controller
                              ->with('error', __('app.cart_empty'));
         }
 
-        if (!$this->guestCheckoutEnabled() && !Auth::check()) {
+        if (!$this->checkout->guestCheckoutEnabled() && !Auth::check()) {
             return redirect()->route('login')
                              ->with('info', __('app.login_required_checkout'));
         }
 
-        $summary = $this->cart->getSummary();
-
-        $countries = Country::active()
-            ->ordered()
-            ->whereHas('activeZones')
-            ->with(['activeZones' => fn($q) => $q->orderBy('sort_order')->orderBy('name')])
-            ->get();
+        $summary   = $this->cart->getSummary();
+        $countries = $this->checkout->getCountriesWithZones();
 
         $user         = Auth::user();
         $isGuest      = !$user;
-        $guestEnabled = $this->guestCheckoutEnabled();
+        $guestEnabled = $this->checkout->guestCheckoutEnabled();
 
         return view('cart.checkout', compact(
             'summary', 'user', 'countries', 'isGuest', 'guestEnabled'
@@ -59,12 +49,7 @@ class CheckoutController extends Controller
 
     public function zonesForCountry(Country $country): JsonResponse
     {
-        $zones = $country->activeZones()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'shipping_price', 'delivery_days']);
-
-        return response()->json(['zones' => $zones]);
+        return response()->json(['zones' => $this->checkout->zonesForCountry($country)]);
     }
 
     // ─── Place the order ──────────────────────────────────────────────────────
@@ -76,7 +61,7 @@ class CheckoutController extends Controller
                              ->with('error', __('app.cart_empty'));
         }
 
-        if (!$this->guestCheckoutEnabled() && !Auth::check()) {
+        if (!$this->checkout->guestCheckoutEnabled() && !Auth::check()) {
             return redirect()->route('login')
                              ->with('info', __('app.login_required_checkout'));
         }
@@ -119,86 +104,16 @@ class CheckoutController extends Controller
             'zone_id.required'          => __('app.validation_zone_required'),
         ]);
 
-        $zone = Zone::where('id', $validated['zone_id'])
-            ->where('country_id', $validated['country_id'])
-            ->where('is_active', true)
-            ->firstOrFail();
-
-        $summary     = $this->cart->getSummary();
-        $deliveryFee = (float) $zone->shipping_price;
-        $total       = round($summary['subtotal'] + $deliveryFee, 2);
-
         try {
-            $order = DB::transaction(function () use ($validated, $summary, $zone, $deliveryFee, $total) {
-
-                $userId     = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
-                $guestEmail = !$userId ? ($validated['guest_email'] ?? null) : null;
-
-                $order = Order::create([
-                    'user_id'          => $userId,
-                    'guest_email'      => $guestEmail,
-                    'guest_session_id' => !$userId ? session()->getId() : null,
-
-                    'order_number'     => Order::generateOrderNumber(),
-                    'status'           => Order::STATUS_PENDING,
-                    'payment_method'   => Order::PAYMENT_COD,
-                    'payment_status'   => Order::PAYMENT_PENDING,
-
-                    'zone_id'          => $zone->id,
-                    'shipping_area'    => $zone->name . ' (' . $zone->country->name . ')',
-                    'delivery_days'    => $zone->delivery_days,
-                    'tax_amount'       => $deliveryFee,
-
-                    'subtotal'         => (float) $summary['subtotal'],
-                    'shipping_amount'  => 0.00,
-                    'total_amount'     => $total,
-
-                    'shipping_name'    => $validated['shipping_name'],
-                  'shipping_phone' => ($validated['shipping_phone_code'] ?? '')
-    ? '+' . $validated['shipping_phone_code'] . $validated['shipping_phone']
-    : $validated['shipping_phone'],
-                    'shipping_address' => $validated['shipping_address'],
-                    'shipping_city'    => $validated['shipping_city'],
-                    'shipping_zip'     => $validated['shipping_zip'] ?? null,
-                    'notes'            => $validated['notes'] ?? null,
-                ]);
-
-                foreach ($summary['items'] as $item) {
-                    OrderItem::create([
-                        'order_id'           => $order->id,
-                        'product_id'         => $item['product_id'],
-                        'product_variant_id' => $item['variant_id'] ?? null,
-                        'product_name'       => $item['name'],
-                        'quantity'           => $item['quantity'],
-                        'unit_price'         => $item['price'],
-                        'total_price'        => $item['subtotal'],
-                    ]);
-
-                    if (!empty($item['variant_id'])) {
-                        $variant = ProductVariant::lockForUpdate()->find($item['variant_id']);
-                    } else {
-                        $variant = ProductVariant::where('product_id', $item['product_id'])
-                            ->lockForUpdate()->first();
-                    }
-
-                    if (!$variant || $variant->stock_quantity < $item['quantity']) {
-                        throw new \RuntimeException(
-                            __('app.insufficient_stock_for_product', ['product' => $item['name']])
-                        );
-                    }
-
-                    $variant->decrement('stock_quantity', $item['quantity']);
-                }
-
-                return $order;
-            });
-
-            $this->cart->clear();
+            $order = $this->checkout->placeOrder($validated);
 
             return redirect()
                 ->route('orders.success', $order->order_number)
                 ->with('success', __('app.order_placed_successfully'));
 
+        } catch (ModelNotFoundException $e) {
+            // Invalid zone/country pair — same 404 as the old firstOrFail()
+            throw $e;
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
@@ -217,7 +132,7 @@ class CheckoutController extends Controller
                              ->with('error', __('app.session_expired_reorder'));
         }
 
-        $order = Order::find($orderId);
+        $order = $this->checkout->findOrder($orderId);
 
         if (!$order || $order->zone_id !== null) {
             session()->forget('pending_zone_order_id');
@@ -228,11 +143,7 @@ class CheckoutController extends Controller
                              ->with('error', __('app.order_not_found'));
         }
 
-        $countries = Country::active()
-            ->ordered()
-            ->whereHas('activeZones')
-            ->with(['activeZones' => fn($q) => $q->orderBy('sort_order')->orderBy('name')])
-            ->get();
+        $countries = $this->checkout->getCountriesWithZones();
 
         return view('orders.select-zone', compact('order', 'countries'));
     }
@@ -251,26 +162,16 @@ class CheckoutController extends Controller
             'zone_id'    => 'required|exists:zones,id',
         ]);
 
-        $zone = Zone::where('id', $request->zone_id)
-            ->where('country_id', $request->country_id)
-            ->where('is_active', true)
-            ->firstOrFail();
-
-        $order = Order::find($orderId);
+        $order = $this->checkout->confirmZone(
+            (int) $orderId,
+            (int) $request->zone_id,
+            (int) $request->country_id,
+        );
 
         if (!$order) {
             return redirect()->route('products.index')
                              ->with('error', __('app.order_not_found'));
         }
-
-        $deliveryFee = (float) $zone->shipping_price;
-        $order->update([
-            'zone_id'       => $zone->id,
-            'shipping_area' => $zone->name . ' (' . $zone->country->name . ')',
-            'delivery_days' => $zone->delivery_days,
-            'tax_amount'    => $deliveryFee,
-            'total_amount'  => round((float) $order->subtotal + $deliveryFee, 2),
-        ]);
 
         session()->forget('pending_zone_order_id');
 

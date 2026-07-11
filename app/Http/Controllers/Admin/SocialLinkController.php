@@ -3,40 +3,48 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\SocialLink;
+use App\Services\SocialLinkService;
 use Illuminate\Http\Request;
 
 class SocialLinkController extends Controller
 {
+    public function __construct(
+        private readonly SocialLinkService $socialLinks,
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
-   public function index() {
-    $links = \App\Models\SocialLink::orderBy('sort_order')->get();
-    return view('admin.social_links.index', compact('links'));
-}
+    public function index()
+    {
+        $links = $this->socialLinks->getLinks();
+        return view('admin.social_links.index', compact('links'));
+    }
 
-public function store(Request $request)
-{
-    $request->validate([
-        'platform_name'   => 'required|string',
-        'url'             => 'nullable|url',
-        'whatsapp_number' => 'nullable|string',
-        'icon_svg'        => 'nullable|string',
-        'is_floating'     => 'nullable|boolean',
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'platform_name'   => 'required|string',
+            'url'             => 'nullable|url',
+            'whatsapp_number' => 'nullable|string',
+            'icon_svg'        => 'nullable|string',
+            'is_floating'     => 'nullable|boolean',
+        ]);
 
-    $data = $request->all();
-    $data['is_floating'] = $request->has('is_floating') ? 1 : 0;
+        $data = $request->all();
+        $data['is_floating'] = $request->has('is_floating') ? 1 : 0;
 
-    \App\Models\SocialLink::create($data);
+        $this->socialLinks->create($data);
 
-    return back()->with('success', 'تمت إضافة الرابط بنجاح');
-}
+        return back()->with('success', 'تمت إضافة الرابط بنجاح');
+    }
 
-public function destroy(\App\Models\SocialLink $socialLink) {
-    $socialLink->delete();
-    return back()->with('success', 'تم الحذف');
-}
+    public function destroy(SocialLink $socialLink)
+    {
+        $this->socialLinks->delete($socialLink);
+        return back()->with('success', 'تم الحذف');
+    }
 
     /**
      * Show the form for editing the specified resource.
@@ -53,9 +61,4 @@ public function destroy(\App\Models\SocialLink $socialLink) {
     {
         //
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-  
 }

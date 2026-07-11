@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Country;
-use App\Models\Currency;
+use App\Services\CountryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -12,16 +12,20 @@ use Illuminate\View\View;
 
 class CountryController extends Controller
 {
+    public function __construct(
+        private readonly CountryService $countries,
+    ) {}
+
     public function index(): View
     {
-        $countries = Country::withCount('zones')->ordered()->get();
+        $countries = $this->countries->getCountriesWithZoneCounts();
 
         return view('admin.countries.index', compact('countries'));
     }
 
     public function create(): View
     {
-        $currencies = Currency::active()->orderBy('name')->get();
+        $currencies = $this->countries->getActiveCurrencies();
 
         return view('admin.countries.create', compact('currencies'));
     }
@@ -30,9 +34,12 @@ class CountryController extends Controller
     {
         $validated = $this->validateCountry($request);
 
-        $country = Country::create($validated);
-
-        $this->syncCurrencies($country, $validated);
+        try {
+            $country = $this->countries->create($validated);
+        } catch (\Throwable $e) {
+            return back()->withInput()
+                ->with('error', 'حدث خطأ أثناء إضافة الدولة. يرجى المحاولة مرة أخرى.');
+        }
 
         return redirect()
             ->route('admin.countries.index')
@@ -41,33 +48,19 @@ class CountryController extends Controller
 
     public function edit(Country $country): View
     {
-        $country->load('currencies');
-        $currencies        = Currency::active()->orderBy('name')->get();
-        $attachedIds       = $country->currencies->pluck('id')->toArray();
-        $defaultCurrencyId = $country->currencies
-            ->where('pivot.is_default', true)
-            ->first()?->id;
-
-        return view('admin.countries.edit', compact(
-            'country', 'currencies', 'attachedIds', 'defaultCurrencyId'
-        ));
+        return view('admin.countries.edit', $this->countries->getEditData($country));
     }
 
     public function update(Request $request, Country $country): RedirectResponse
     {
         $validated = $this->validateCountry($request, $country);
 
-        // For system records, silently discard any attempt to change immutable
-        // fields before we even reach the model — double protection layer.
-        if ($country->is_system) {
-            foreach (Country::IMMUTABLE_SYSTEM_FIELDs as $field) {
-                unset($validated[$field]);
-            }
+        try {
+            $this->countries->update($country, $validated);
+        } catch (\Throwable $e) {
+            return back()->withInput()
+                ->with('error', 'حدث خطأ أثناء تحديث الدولة. يرجى المحاولة مرة أخرى.');
         }
-
-        $country->update($validated);
-
-        $this->syncCurrencies($country, $validated);
 
         return redirect()
             ->route('admin.countries.index')
@@ -77,7 +70,7 @@ class CountryController extends Controller
     public function destroy(Country $country): RedirectResponse
     {
         try {
-            $country->delete();
+            $this->countries->delete($country);
         } catch (ValidationException $e) {
             return redirect()
                 ->route('admin.countries.index')
@@ -117,18 +110,5 @@ class CountryController extends Controller
         $validated['calling_code'] = ltrim($validated['calling_code'], '+');
 
         return $validated;
-    }
-
-    private function syncCurrencies(Country $country, array $validated): void
-    {
-        $pivot = [];
-
-        foreach ($validated['currencies'] ?? [] as $currencyId) {
-            $pivot[(int) $currencyId] = [
-                'is_default' => (int) $currencyId === (int) ($validated['default_currency'] ?? 0),
-            ];
-        }
-
-        $country->currencies()->sync($pivot);
     }
 }

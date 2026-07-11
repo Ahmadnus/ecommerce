@@ -4,13 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Services\AnnouncementService;
 use Illuminate\Http\Request;
 
 class AnnouncementController extends Controller
 {
+    public function __construct(
+        private readonly AnnouncementService $announcements,
+    ) {}
+
     public function index()
     {
-        $announcements = Announcement::orderBy('sort_order')->get();
+        $announcements = $this->announcements->getAnnouncements();
         return view('admin.announcements.index', compact('announcements'));
     }
 
@@ -23,7 +28,7 @@ class AnnouncementController extends Controller
             'is_active'  => 'boolean',
         ]);
 
-        Announcement::create([
+        $this->announcements->create([
             'content'    => $request->input('content'),   // ['ar' => '...', 'en' => '...']
             'sort_order' => $request->input('sort_order', 0),
             'is_active'  => $request->boolean('is_active', true),
@@ -41,7 +46,7 @@ class AnnouncementController extends Controller
             'is_active'  => 'boolean',
         ]);
 
-        $announcement->update([
+        $this->announcements->update($announcement, [
             'content'    => $request->input('content'),
             'sort_order' => $request->input('sort_order', 0),
             'is_active'  => $request->boolean('is_active'),
@@ -52,7 +57,7 @@ class AnnouncementController extends Controller
 
     public function destroy(Announcement $announcement)
     {
-        $announcement->delete();
+        $this->announcements->delete($announcement);
         return back()->with('success', 'تم الحذف');
     }
 }

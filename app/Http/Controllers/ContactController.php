@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ContactMessage;
+use App\Services\ContactMessageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ContactController extends Controller
 {
+    public function __construct(
+        private readonly ContactMessageService $messages,
+    ) {}
+
     public function create(): View
     {
         return view('contact');
@@ -24,15 +28,7 @@ class ContactController extends Controller
             'message' => ['required', 'string', 'max:5000'],
         ]);
 
-        ContactMessage::create([
-            'user_id' => auth()->id(),
-            'name'    => $validated['name'],
-            'email'   => $validated['email'] ?? null,
-            'phone'   => $validated['phone'] ?? null,
-            'subject' => $validated['subject'] ?? 'رسالة من صفحة اتصل بنا',
-            'message' => $validated['message'],
-            'is_read' => false,
-        ]);
+        $this->messages->createFromContactForm($validated, auth()->id());
 
         return back()->with('success', 'تم إرسال رسالتك بنجاح، سنرد عليك قريباً.');
     }

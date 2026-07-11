@@ -97,4 +97,25 @@ class OrderService
     {
         return $this->orderRepository->findByOrderNumber($orderNumber);
     }
+
+    /**
+     * Order (with items) for the success/confirmation page.
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException (404)
+     */
+    public function getOrderForSuccessPage(string $orderNumber): Order
+    {
+        // نبحث عن الطلب برقم الطلب فقط (للسماح للزوار برؤية صفحة النجاح فوراً)
+        return Order::where('order_number', $orderNumber)
+                    ->with('items')
+                    ->firstOrFail();
+    }
+
+    /**
+     * Paginated order history for a user.
+     */
+    public function getUserOrders($user)
+    {
+        return $user->orders()->latest()->paginate(10);
+    }
 }
