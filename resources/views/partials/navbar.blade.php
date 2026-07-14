@@ -10,14 +10,15 @@
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
     <nav class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
-        <div class="flex items-center justify-between h-14 md:h-16">
+        <div class="relative flex items-center justify-between h-14 md:h-16">
 
-            {{-- Logo --}}
+            {{-- Logo: absolutely centered on all breakpoints --}}
+            <a href="/" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                                flex-shrink-0 hover:opacity-80 transition-opacity z-10">
+                <img src="{{ $logoUrl }}" alt="Logo" class="h-8 md:h-10 w-auto">
+            </a>
+
             <div class="flex items-center gap-6 lg:gap-10">
-                <a href="/" class="flex-shrink-0 hover:opacity-80 transition-opacity">
-                    <img src="{{ $logoUrl }}" alt="Logo" class="h-8 md:h-10 w-auto">
-                </a>
-
                 {{-- Currency switcher --}}
                 <div class="relative" x-data="{ open: false }">
                     <button @click.stop="open = !open" type="button"
@@ -70,12 +71,15 @@
                        style="color: var(--text-navbar); font-size: var(--navbar-font-size);">
                         {{ __('app.shop') }}
                     </a>
+{{-- Customize link hidden from navbar per product request; route/page kept intact --}}
+{{--
 <a href="{{ route('customize.index') }}"
    class="px-3 py-2 rounded-xl font-bold transition-all
           {{ request()->routeIs('customize.index') ? 'bg-gray-100' : 'hover:bg-gray-50' }}"
    style="color: var(--text-navbar); font-size: var(--navbar-font-size);">
     تصميمي الخاص
 </a>
+--}}
                     @foreach(\App\Models\Category::whereNull('parent_id')->where('is_active', true)->take(6)->get() as $parent)
                     <div class="relative group">
                         <a href="{{ route('products.index', ['category' => $parent->slug]) }}"
@@ -368,12 +372,15 @@
                style="color: var(--text-navbar);">
                 {{ __('app.all_products') }}
             </a>
+{{-- Customize link hidden from navbar per product request; route/page kept intact --}}
+{{--
 <a href="{{ route('customize.index') }}"
    class="block px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50
           {{ request()->routeIs('customize.index') ? 'bg-gray-100' : '' }}"
    style="color: var(--text-navbar);">
     تصميمي الخاص
 </a>
+--}}
             @foreach(\App\Models\Category::where('is_active', true)->take(6)->get() as $cat)
             <a href="{{ route('products.index', ['category' => $cat->id]) }}"
                class="block px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50"

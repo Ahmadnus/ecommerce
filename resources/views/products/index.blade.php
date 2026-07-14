@@ -630,61 +630,30 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
         <div class="featured-list">
             @foreach($sectionProducts as $sp)
             @php $spWishlisted = in_array($sp->id, $wishlistedIds ?? []); @endphp
-            <div class="featured-card group" onclick="window.location='{{ route('products.show', $sp->slug) }}'">
-                <div class="relative overflow-hidden bg-gray-100" style="padding-top:126%">
+            <div class="featured-card" onclick="window.location='{{ route('products.show', $sp->slug) }}'">
+                <div class="relative overflow-hidden aspect-square rounded-[2px]">
                     <div class="shimmer absolute inset-0 z-0" id="fsk-{{ $sp->id }}"></div>
                     <img src="{{ $sp->getFirstMediaUrl('main') ?: ($sp->image_url ?? 'https://picsum.photos/seed/'.$sp->id.'/300/390') }}"
                          alt="{{ $sp->name }}"
                          class="fc-img absolute inset-0 w-full h-full object-cover z-10"
                          loading="lazy"
                          onload="this.previousElementSibling.style.display='none'">
-                    @if($sp->is_on_sale)
-                    <div class="fc-ribbon">{{ $sp->discount_percentage }}% OFF</div>
-                    @endif
-                    <div class="absolute top-2 left-2 z-20" onclick="event.stopPropagation()">
-                        <button type="button" class="share-btn"
-                                onclick="shareProduct('{{ route('products.show', $sp->slug) }}', '{{ addslashes($sp->name) }}')"
-                                title="{{ __('app.share_title') }}">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="absolute bottom-2 left-2 z-20" onclick="event.stopPropagation()">
-                        @auth
-                        <button type="button" class="heart-btn wishlist-btn"
-                                data-product-id="{{ $sp->id }}"
-                                data-wishlisted="{{ $spWishlisted ? 'true' : 'false' }}"
-                                onclick="toggleWishlist(this)"
-                                aria-label="{{ $spWishlisted ? __('app.remove_from_wishlist') : __('app.add_to_wishlist') }}">
-                            <svg data-heart="outline" class="{{ $spWishlisted ? 'hidden' : '' }}" fill="none" stroke="#888" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                            </svg>
-                            <svg data-heart="filled" class="{{ $spWishlisted ? '' : 'hidden' }}" fill="#ff3366" stroke="#ff3366" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                            </svg>
-                        </button>
-                        @endauth
-                    </div>
                 </div>
                 {{-- Featured card info --}}
-                <div class="px-2.5 pt-2 pb-3 {{ $isRtl ? 'text-right' : 'text-left' }}">
-                    <p class="text-xs font-semibold line-clamp-2 leading-snug mb-1"
+                <div class="pt-2 text-start">
+                    <p class="text-xs font-medium line-clamp-2 leading-snug"
                        style="color: var(--text-product-title);">
                         {{ $sp->name }}
                     </p>
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-2">
                         @if($sp->is_on_sale)
-                            {{-- ✅ Sale price uses price-val class → --text-price --}}
                             <x-price :amount="$sp->discount_price"
-                                     class="price-val text-sm font-black leading-none tabular-nums" />
-                            {{-- ✅ Original price uses price-original → --text-muted --}}
+                                     class="price-val text-xs tracking-wide" />
                             <x-price :amount="$sp->base_price"
-                                     class="price-original text-[10px] tabular-nums" />
+                                     class="price-original text-xs tracking-wide" />
                         @else
                             <x-price :amount="$sp->base_price"
-                                     class="price-val text-sm font-black leading-none tabular-nums" />
+                                     class="price-val text-xs tracking-wide" />
                         @endif
                     </div>
                 </div>
@@ -760,106 +729,36 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
         @foreach($products as $i => $product)
         @php $isWishlisted = in_array($product->id, $wishlistedIds ?? []); @endphp
-        <div class="pcard flex flex-col group reveal"
+        <div class="pcard flex flex-col reveal"
              style="--i: {{ min($i % 6, 5) }}"
              onclick="window.location='{{ route('products.show', $product->slug) }}'">
 
-            <div class="relative overflow-hidden bg-gray-100" style="padding-top:130%">
+            <div class="relative overflow-hidden aspect-square rounded-[2px]">
                 <div class="shimmer absolute inset-0 z-0" id="sk-{{ $product->id }}"></div>
                 <img src="{{ $product->getFirstMediaUrl('products') ?: asset('images/placeholder.jpg') }}"
                      alt="{{ $product->name }}"
                      class="pcard-img absolute inset-0 w-full h-full object-cover z-10"
                      loading="lazy"
                      onload="document.getElementById('sk-{{ $product->id }}').style.display='none'">
-
-                @if($product->is_on_sale)
-                <div class="ribbon">{{ $product->discount_percentage }}% OFF</div>
-                @endif
-
-                @if($product->is_featured)
-                <span class="absolute top-0 right-0 z-10 text-amber-900 text-[9px] font-black px-2 py-0.5"
-                      style="background:var(--gold);border-bottom-left-radius:9px">
-                    {{ __('app.featured_badge') }}
-                </span>
-                @endif
-
-                <div class="absolute bottom-2 left-2 z-20 flex gap-1.5" onclick="event.stopPropagation()">
-                    @auth
-                    <button type="button" class="heart-btn wishlist-btn"
-                            data-product-id="{{ $product->id }}"
-                            data-wishlisted="{{ $isWishlisted ? 'true' : 'false' }}"
-                            onclick="toggleWishlist(this)"
-                            aria-label="{{ $isWishlisted ? __('app.remove_from_wishlist') : __('app.add_to_wishlist') }}">
-                        <svg data-heart="outline" class="{{ $isWishlisted ? 'hidden' : '' }}" fill="none" stroke="#999" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                        <svg data-heart="filled" class="{{ $isWishlisted ? '' : 'hidden' }}" fill="#ff3366" stroke="#ff3366" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                    </button>
-                    @endauth
-
-                    <button type="button" class="share-btn"
-                            onclick="shareProduct('{{ route('products.show', $product->slug) }}', '{{ addslashes($product->name) }}')"
-                            title="{{ __('app.share_title') }}">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                        </svg>
-                    </button>
-                </div>
-
-                @if(!$product->in_stock)
-                <div class="absolute inset-0 bg-white/55 z-10 flex items-end justify-center pb-3">
-                    <span class="bg-white/95 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full border border-gray-100 shadow-sm">
-                        {{ __('app.out_of_stock') }}
-                    </span>
-                </div>
-                @endif
             </div>
 
-            {{-- ✅ Card info — all price classes replaced with price-val / price-original --}}
-            <div class="px-2 pt-2 pb-2.5 flex flex-col gap-1 {{ $isRtl ? 'text-right' : 'text-left' }}">
-
-                @if($product->categories->first())
-                <p class="text-[10px] font-bold uppercase tracking-wide leading-none truncate"
-                   style="color: var(--text-muted);">
-                    {{ $product->categories->first()->name }}
-                </p>
-                @endif
-
-                <p class="text-xs font-semibold line-clamp-2 leading-snug"
+            <div class="pt-2 flex flex-col gap-0.5 text-start">
+                <p class="text-xs font-medium line-clamp-2 leading-snug"
                    style="color: var(--text-product-title);">
                     {{ $product->name }}
                 </p>
 
-                <div class="flex flex-col">
+                <div class="flex items-center gap-2">
                     @if($product->discount_price && $product->discount_price < $product->base_price)
-                    {{-- Sale badge --}}
-                    <span class="text-xs font-bold px-1.5 py-0.5 rounded w-fit mb-1"
-                          style="color: var(--text-price); background: color-mix(in srgb, var(--text-price) 10%, #fff);">
-                        {{ __('app.sale_badge') }}
-                    </span>
-                    <div class="flex items-center gap-2">
-                        {{-- ✅ Sale price --}}
-                        <x-price :amount="$product->discount_price"
-                                 class="price-val font-bold text-sm" />
-                        {{-- ✅ Original strikethrough --}}
-                        <x-price :amount="$product->base_price"
-                                 class="price-original text-xs" />
-                    </div>
-                    @else
-                    {{-- ✅ Regular price --}}
+                    <x-price :amount="$product->discount_price"
+                             class="price-val text-xs tracking-wide" />
                     <x-price :amount="$product->base_price"
-                             class="price-val font-bold text-sm" />
+                             class="price-original text-xs tracking-wide" />
+                    @else
+                    <x-price :amount="$product->base_price"
+                             class="price-val text-xs tracking-wide" />
                     @endif
                 </div>
-
-                @if($product->variants->where('is_active',true)->count() > 1)
-                <p class="text-[10px] leading-none" style="color: var(--text-muted);">
-                    {{ __('app.variants_count', ['count' => $product->variants->where('is_active',true)->count()]) }}
-                </p>
-                @endif
             </div>
         </div>
         @endforeach
