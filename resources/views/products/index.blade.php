@@ -147,6 +147,15 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     display:grid; grid-template-columns:repeat(2, 1fr);
     column-gap:32px; row-gap:40px; margin-top:30px; padding:0 10px;
 }
+@media (min-width:768px) {
+    .featured-list { grid-template-columns:repeat(4, 1fr); column-gap:24px; }
+}
+@media (min-width:1024px) {
+    .featured-list { grid-template-columns:repeat(6, 1fr); column-gap:20px; }
+}
+@media (min-width:1280px) {
+    .featured-list { grid-template-columns:repeat(8, 1fr); column-gap:24px; }
+}
 .featured-card {
     cursor:pointer; position:relative;
 }
@@ -713,7 +722,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     </div>
 
     @else
-    <div class="grid grid-cols-2 gap-x-8 gap-y-10 mt-[30px] px-[10px]">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-8 md:gap-x-6 lg:gap-x-5 xl:gap-x-6 gap-y-10 mt-[30px] px-[10px]">
         @foreach($products as $i => $product)
         @php $isWishlisted = in_array($product->id, $wishlistedIds ?? []); @endphp
         <div class="pcard flex flex-col w-full reveal group"

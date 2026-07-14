@@ -20,7 +20,7 @@
     @endif
 
     {{-- 2-column square grid on all breakpoints --}}
-    <div class="grid grid-cols-2 gap-x-8 gap-y-10 px-[10px]">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-8 md:gap-x-6 lg:gap-x-5 xl:gap-x-6 gap-y-10 px-[10px]">
 
         @foreach($categories as $cat)
         <x-category-circle

@@ -63,8 +63,8 @@
                     </div>
                 </div>
 
-                {{-- Desktop nav links --}}
-                <div class="hidden md:flex items-center gap-1">
+                {{-- Desktop nav links: hidden — collided with the centered logo on wide screens --}}
+                <div class="hidden">
                     <a href="{{ route('products.index') }}"
                        class="px-3 py-2 rounded-xl font-bold transition-all
                               {{ request()->routeIs('products.index') && !request('category') ? 'bg-gray-100' : 'hover:bg-gray-50' }}"
@@ -151,8 +151,8 @@
                     </button>
                 </form>
 
-                {{-- Mobile search toggle --}}
-                <button class="md:hidden p-2 rounded-xl hover:bg-gray-50 transition-colors"
+                {{-- Search toggle: covers mobile + tablet, since the inline desktop search only shows at lg+ --}}
+                <button class="lg:hidden p-2 rounded-xl hover:bg-gray-50 transition-colors"
                         style="color: var(--text-navbar);"
                         onclick="document.getElementById('mobile-search').classList.toggle('hidden')">
                     <svg class="w-5 h-5 {{ $isRtl ? 'scale-x-[-1]' : '' }}"
