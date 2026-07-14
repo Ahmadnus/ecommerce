@@ -8,7 +8,7 @@ use App\Http\Controllers\{
 };
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\{
-    DashboardController, CategoryController, HeroBannerController, SettingController,
+    DashboardController, CategoryController, HeroBannerController, TopHeroMediaController, SettingController,
     AnnouncementController, AttributeController, AttributeValueController, CheckoutSettingsController, HomeSectionController, SiteFeatureController,
     CountryController, ZoneController,
     CurrencyController as AdminCurrencyController,
@@ -214,6 +214,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('products/{product}/stock', [AdminProductController::class, 'updateStock'])->name('products.stock');
     Route::resource('announcements', AnnouncementController::class);
     Route::resource('hero-banners', HeroBannerController::class);
+    Route::resource('top-hero-media', TopHeroMediaController::class)->except(['show', 'create', 'edit']);
     Route::resource('home-sections', HomeSectionController::class);
     Route::post('home-sections/reorder', [HomeSectionController::class, 'reorder'])->name('home-sections.reorder');
 

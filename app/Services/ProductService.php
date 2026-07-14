@@ -69,7 +69,7 @@ class ProductService
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException if the
      *         requested category doesn't exist (404, as before).
      */
-    public function getStorefrontIndexData(array $filters): array
+    public function getStorefrontIndexData(array $filters, ?\App\Models\User $user = null): array
     {
         $query = \App\Models\Product::query()
             ->active()
@@ -123,11 +123,19 @@ class ProductService
             ->with('category')
             ->get();
 
+        $wishlistedIds = $user
+            ? \Illuminate\Support\Facades\DB::table('wishlists')
+                ->where('user_id', $user->id)
+                ->pluck('product_id')
+                ->toArray()
+            : [];
+
         return [
             'products'        => $products,
             'categoryTree'    => $categoryTree,
             'currentCategory' => $currentCategory,
             'homeSections'    => $homeSections,
+            'wishlistedIds'   => $wishlistedIds,
         ];
     }
 

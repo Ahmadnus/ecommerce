@@ -298,6 +298,8 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 @section('content')
 <div class="page-shop">
 
+@include('partials.sections.top-hero-media')
+
 {{-- ── Announcement banners ──────────────────────────────────────────── --}}
 @php
     $announcements = \App\Models\Announcement::where('is_active', true)
@@ -634,6 +636,24 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                                 transition-opacity duration-300 group-hover:opacity-80"
                          loading="lazy"
                          onload="this.previousElementSibling.style.display='none'">
+
+                    <button type="button" class="favorite-btn absolute top-3 {{ $isRtl ? 'left-3' : 'right-3' }} z-20"
+                            data-product-id="{{ $sp->id }}"
+                            data-wishlisted="{{ $spWishlisted ? 'true' : 'false' }}"
+                            onclick="event.stopPropagation(); toggleWishlist(this)"
+                            aria-label="{{ $spWishlisted ? __('app.remove_from_wishlist') : __('app.add_to_wishlist') }}">
+                        <svg data-heart="outline"
+                             class="w-5 h-5 text-white drop-shadow-sm transition-all duration-200 {{ $spWishlisted ? 'hidden' : 'block' }}"
+                             fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        <svg data-heart="filled"
+                             class="w-5 h-5 text-red-500 drop-shadow-sm transition-all duration-200 {{ $spWishlisted ? 'block' : 'hidden' }}"
+                             fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                    </button>
                 </div>
                 {{-- Featured card info --}}
                 <div class="pt-1.5 flex flex-col gap-0.5 text-start">
@@ -737,6 +757,24 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                             transition-opacity duration-300 group-hover:opacity-80"
                      loading="lazy"
                      onload="document.getElementById('sk-{{ $product->id }}').style.display='none'">
+
+                <button type="button" class="favorite-btn absolute top-3 {{ $isRtl ? 'left-3' : 'right-3' }} z-20"
+                        data-product-id="{{ $product->id }}"
+                        data-wishlisted="{{ $isWishlisted ? 'true' : 'false' }}"
+                        onclick="event.stopPropagation(); toggleWishlist(this)"
+                        aria-label="{{ $isWishlisted ? __('app.remove_from_wishlist') : __('app.add_to_wishlist') }}">
+                    <svg data-heart="outline"
+                         class="w-5 h-5 text-white drop-shadow-sm transition-all duration-200 {{ $isWishlisted ? 'hidden' : 'block' }}"
+                         fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                    <svg data-heart="filled"
+                         class="w-5 h-5 text-red-500 drop-shadow-sm transition-all duration-200 {{ $isWishlisted ? 'block' : 'hidden' }}"
+                         fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                </button>
             </div>
 
             <div class="pt-1.5 flex flex-col gap-0.5 text-start">

@@ -15,7 +15,7 @@
             {{-- Logo: absolutely centered on all breakpoints --}}
             <a href="/" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
                                 flex-shrink-0 hover:opacity-80 transition-opacity z-10">
-                <img src="{{ $logoUrl }}" alt="Logo" class="h-8 md:h-10 w-auto">
+                <img src="{{ $logoUrl }}" alt="Logo" class="h-5 md:h-6 w-auto max-h-[24px] md:max-h-[28px] object-contain">
             </a>
 
             <div class="flex items-center gap-6 lg:gap-10">
@@ -151,16 +151,7 @@
                     </button>
                 </form>
 
-                {{-- Search toggle: covers mobile + tablet, since the inline desktop search only shows at lg+ --}}
-                <button class="lg:hidden p-2 rounded-xl hover:bg-gray-50 transition-colors"
-                        style="color: var(--text-navbar);"
-                        onclick="document.getElementById('mobile-search').classList.toggle('hidden')">
-                    <svg class="w-5 h-5 {{ $isRtl ? 'scale-x-[-1]' : '' }}"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </button>
+                {{-- Search icon hidden on mobile/tablet — search now lives inside the mobile menu drawer --}}
 
                 {{-- Mobile cart icon (moved here from bottombar) --}}
                 <a href="{{ route('cart.index') }}"
@@ -346,9 +337,9 @@
                     @endauth
                 </div>
 
-                {{-- Mobile menu button --}}
+                {{-- Mobile menu button: covers mobile + tablet, since the inline desktop search/nav only shows at lg+ --}}
                 <button id="mobile-menu-btn"
-                        class="md:hidden p-2 rounded-xl hover:bg-gray-50 transition-colors"
+                        class="lg:hidden p-2 rounded-xl hover:bg-gray-50 transition-colors"
                         style="color: var(--text-navbar);">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -358,34 +349,34 @@
             </div>
         </div>
 
-        {{-- Mobile search --}}
-        <div id="mobile-search" class="hidden pb-3">
-            <form method="GET" action="{{ route('products.index') }}" class="relative">
+        {{-- Mobile menu --}}
+        <div id="mobile-menu" class="hidden lg:hidden border-t border-gray-100 py-3 space-y-1">
+
+            {{-- Search — moved here from the top navbar icon on mobile/tablet --}}
+            <form method="GET" action="{{ route('products.index') }}" class="px-3 pb-3">
                 @if(request('category'))
                     <input type="hidden" name="category" value="{{ request('category') }}">
                 @endif
-                <input type="text" name="search"
-                       value="{{ request('search') }}"
-                       placeholder="{{ __('app.search_mobile_placeholder') }}"
-                       autofocus
-                       class="w-full py-2.5 pe-10 ps-4 text-sm bg-gray-50 border border-gray-200
-                              rounded-xl focus:bg-white focus:ring-2 outline-none
-                              {{ $isRtl ? 'text-right' : 'text-left' }}"
-                       style="color: var(--text-input); --tw-ring-color: var(--brand-color);">
-                <button type="submit"
-                        class="absolute inset-y-0 {{ $isRtl ? 'left-0 pl-3' : 'right-0 pr-3' }}
-                               flex items-center text-gray-400">
-                    <svg class="w-4 h-4 {{ $isRtl ? 'scale-x-[-1]' : '' }}"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </button>
+                <div class="relative">
+                    <input type="text" name="search"
+                           value="{{ request('search') }}"
+                           placeholder="{{ __('app.search_mobile_placeholder') }}"
+                           class="w-full py-2.5 pe-10 ps-4 text-sm bg-gray-50 border border-gray-200
+                                  rounded-xl focus:bg-white focus:ring-2 outline-none
+                                  {{ $isRtl ? 'text-right' : 'text-left' }}"
+                           style="color: var(--text-input); --tw-ring-color: var(--brand-color);">
+                    <button type="submit"
+                            class="absolute inset-y-0 {{ $isRtl ? 'left-0 pl-3' : 'right-0 pr-3' }}
+                                   flex items-center text-gray-400">
+                        <svg class="w-4 h-4 {{ $isRtl ? 'scale-x-[-1]' : '' }}"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </button>
+                </div>
             </form>
-        </div>
 
-        {{-- Mobile menu --}}
-        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 py-3 space-y-1">
             <a href="{{ route('products.index') }}"
                class="block px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50"
                style="color: var(--text-navbar);">

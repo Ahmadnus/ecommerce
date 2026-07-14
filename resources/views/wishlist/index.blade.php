@@ -106,10 +106,10 @@
     @else
 
         {{-- Product grid --}}
-        <div class="grid grid-cols-2 gap-3 md:gap-5">
+        <div class="grid grid-cols-2 gap-x-8 gap-y-10 mt-[30px] px-[10px]">
             @foreach($products as $product)
                 @php
-                    $cardImage = $product->image_url ?? 'https://picsum.photos/seed/' . $product->id . '/400/400';
+                    $cardImage = $product->getFirstMediaUrl('products');
                 @endphp
 
                 <a href="{{ route('products.show', $product->slug) }}"
@@ -117,10 +117,30 @@
                    aria-label="{{ $product->name }}">
 
                     <div class="relative overflow-hidden aspect-square rounded-[2px]">
+                        @if($cardImage)
                         <img src="{{ $cardImage }}"
                              alt="{{ $product->name }}"
                              class="w-full h-full object-cover"
                              loading="lazy">
+                        @endif
+
+                        <button type="button" class="favorite-btn absolute top-3 {{ $isRtl ? 'left-3' : 'right-3' }} z-20"
+                                data-product-id="{{ $product->id }}"
+                                data-wishlisted="true"
+                                onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist(this)"
+                                aria-label="{{ __('app.remove_from_wishlist') }}">
+                            <svg data-heart="outline"
+                                 class="w-5 h-5 text-white drop-shadow-sm transition-all duration-200 hidden"
+                                 fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                            <svg data-heart="filled"
+                                 class="w-5 h-5 text-red-500 drop-shadow-sm transition-all duration-200 block"
+                                 fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                        </button>
                     </div>
 
                     <div class="pt-1.5 text-start">

@@ -21,6 +21,7 @@ class WishlistService
             ->with([
                 'categories',
                 'variants' => fn ($q) => $q->where('is_active', true),
+                'media',
             ])
             ->active()
             ->latest('wishlists.created_at')

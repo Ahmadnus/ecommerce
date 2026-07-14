@@ -78,6 +78,11 @@
                         البانر الإعلاني (Hero)
                     </x-admin-nav-link>
 
+                    <x-admin-nav-link href="{{ route('admin.top-hero-media.index') }}" icon="photograph"
+                        :active="request()->routeIs('admin.top-hero-media.*')">
+                        الهيرو العلوي (صورة/فيديو)
+                    </x-admin-nav-link>
+
                     <x-admin-nav-link href="{{ route('admin.home-sections.index') }}" icon="template"
                         :active="request()->routeIs('admin.home-sections.*')">
                         أقسام الصفحة الرئيسية
