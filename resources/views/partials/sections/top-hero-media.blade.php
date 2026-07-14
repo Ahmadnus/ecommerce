@@ -47,17 +47,15 @@
                     </button>
 
                     <button type="button"
-                            data-hero-play-btn
+                            data-hero-restart-btn
                             data-target="{{ $topHeroVideoId }}"
-                            aria-label="Play / Pause"
+                            aria-label="Restart"
                             class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-black/30 backdrop-blur-sm
                                    flex items-center justify-center text-white
                                    hover:bg-black/50 transition-colors duration-200">
-                        <svg data-icon="play" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5.14v13.72a1 1 0 001.5.86l11-6.86a1 1 0 000-1.72l-11-6.86A1 1 0 008 5.14z"/>
-                        </svg>
-                        <svg data-icon="pause" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M7 5a1 1 0 011-1h2a1 1 0 011 1v14a1 1 0 01-1 1H8a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h2a1 1 0 011 1v14a1 1 0 01-1 1h-2a1 1 0 01-1-1V5z"/>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0113.06-5.03M19.5 12a7.5 7.5 0 01-13.06 5.03"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.5 3.5v3.5H14M6.5 20.5V17H10"/>
                         </svg>
                     </button>
                 </div>
@@ -71,7 +69,7 @@
                 var wrapper = videoEl.closest('.relative');
 
                 var muteBtn = wrapper.querySelector('[data-hero-mute-btn]');
-                var playBtn = wrapper.querySelector('[data-hero-play-btn]');
+                var restartBtn = wrapper.querySelector('[data-hero-restart-btn]');
 
                 function stop(e) {
                     e.preventDefault();
@@ -85,23 +83,10 @@
                     muteBtn.querySelector('[data-icon="unmuted"]').classList.toggle('hidden', videoEl.muted);
                 });
 
-                playBtn.addEventListener('click', function (e) {
+                restartBtn.addEventListener('click', function (e) {
                     stop(e);
-                    if (videoEl.paused) {
-                        videoEl.play();
-                    } else {
-                        videoEl.pause();
-                    }
-                });
-
-                videoEl.addEventListener('play', function () {
-                    playBtn.querySelector('[data-icon="play"]').classList.add('hidden');
-                    playBtn.querySelector('[data-icon="pause"]').classList.remove('hidden');
-                });
-
-                videoEl.addEventListener('pause', function () {
-                    playBtn.querySelector('[data-icon="play"]').classList.remove('hidden');
-                    playBtn.querySelector('[data-icon="pause"]').classList.add('hidden');
+                    videoEl.currentTime = 0;
+                    videoEl.play();
                 });
             })();
             </script>
