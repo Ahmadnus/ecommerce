@@ -65,19 +65,6 @@
         border: 1.5px solid #fff;
     }
 
-    .bb-cart-bubble {
-        width: 46px;
-        height: 46px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-top: -18px;
-        box-shadow: 0 4px 16px color-mix(in srgb, var(--brand-color, #0ea5e9) 45%, transparent);
-        background: var(--brand-color, #0ea5e9);
-        flex-shrink: 0;
-    }
-
     /* حتى لا يغطي الشريط المحتوى */
     @media (max-width: 767px) {
         main {
@@ -118,28 +105,6 @@
                 @endauth
             </div>
             {{ __('app.wishlist') }}
-        </a>
-
-        <a href="{{ route('cart.index') }}"
-           class="bb-item relative {{ request()->routeIs('cart.*') ? 'active' : '' }}">
-            <div class="relative">
-                <div class="bb-cart-bubble">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                    </svg>
-                </div>
-
-                @php $cartCount = app(\App\Services\CartService::class)->getItemCount(); @endphp
-                @if($cartCount > 0)
-                    <span class="absolute -top-5 {{ $isRtl ? '-left-1' : '-right-1' }}
-                                 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-black
-                                 rounded-full flex items-center justify-center border border-white px-0.5 leading-none">
-                        {{ $cartCount }}
-                    </span>
-                @endif
-            </div>
-       {{ __('app.cart.heading') }}
         </a>
 
         <a href="{{ url('/orders') }}"

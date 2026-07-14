@@ -424,7 +424,8 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     @endforeach
     @endif
 
-    {{-- ── Category grid ────────────────────────────────────────────── --}}
+    {{-- ── Category grid (all-products view only — hidden on category and search pages) ── --}}
+    @if(!$currentCategory && !request('search'))
     @php
         $topCategories = \App\Models\Category::active()->roots()
             ->with(['allActiveChildren','media'])
@@ -433,6 +434,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     <div class="relative overflow-hidden pt-2">
         <x-category-grid :categories="$topCategories" :current="$currentCategory ?? null" :show-all="true" />
     </div>
+    @endif
 
     {{-- ── Toolbar ──────────────────────────────────────────────────── --}}
     <div class="flex items-center justify-between mb-4 gap-3 mt-4">
