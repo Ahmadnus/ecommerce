@@ -144,21 +144,12 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 
 /* ── Featured list ──────────────────────────────────────────────── */
 .featured-list {
-    display:flex; gap:12px; overflow-x:auto; padding-bottom:6px;
-    scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
+    display:grid; grid-template-columns:repeat(2, 1fr);
+    column-gap:32px; row-gap:40px; margin-top:30px; padding:0 10px;
 }
-.featured-list::-webkit-scrollbar{display:none}
 .featured-card {
-    min-width:148px; max-width:148px; flex-shrink:0;
-    scroll-snap-align:start; background:var(--card-bg, #fff)!important;
-    border-radius:var(--radius-card); overflow:hidden; cursor:pointer;
-    transition:transform .15s, box-shadow .15s; position:relative;
+    cursor:pointer; position:relative;
 }
-@media(min-width:640px){.featured-card{min-width:175px;max-width:175px}}
-.featured-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.1)}
-.featured-card:hover .fc-img{transform:scale(1.07)}
-.fc-img{transition:transform .35s ease}
 .fc-ribbon{
     position:absolute;top:0;right:0;background:var(--sale-red);
     color:#fff;font-size:9px;font-weight:800;padding:3px 9px 3px 7px;
@@ -167,15 +158,8 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 
 /* ── Product card (grid) ────────────────────────────────────────── */
 .pcard {
-    background-color:var(--card-bg, #fff)!important;
-    border-radius:var(--radius-card); overflow:hidden;
     cursor:pointer; position:relative;
-    border:1px solid rgba(0,0,0,.05);
-    transition:transform .15s, box-shadow .15s;
 }
-.pcard:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.08)}
-.pcard:hover .pcard-img{transform:scale(1.06)}
-.pcard-img{transition:transform .35s ease}
 .ribbon{
     position:absolute;top:0;left:0;background:var(--sale-red);
     color:#fff;font-size:9px;font-weight:800;padding:2px 8px 2px 5px;
@@ -630,17 +614,18 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
         <div class="featured-list">
             @foreach($sectionProducts as $sp)
             @php $spWishlisted = in_array($sp->id, $wishlistedIds ?? []); @endphp
-            <div class="featured-card" onclick="window.location='{{ route('products.show', $sp->slug) }}'">
+            <div class="featured-card flex flex-col w-full group" onclick="window.location='{{ route('products.show', $sp->slug) }}'">
                 <div class="relative overflow-hidden aspect-square rounded-[2px]">
                     <div class="shimmer absolute inset-0 z-0" id="fsk-{{ $sp->id }}"></div>
                     <img src="{{ $sp->getFirstMediaUrl('main') ?: ($sp->image_url ?? 'https://picsum.photos/seed/'.$sp->id.'/300/390') }}"
                          alt="{{ $sp->name }}"
-                         class="fc-img absolute inset-0 w-full h-full object-cover z-10"
+                         class="fc-img absolute inset-0 w-full h-full object-cover z-10
+                                transition-opacity duration-300 group-hover:opacity-80"
                          loading="lazy"
                          onload="this.previousElementSibling.style.display='none'">
                 </div>
                 {{-- Featured card info --}}
-                <div class="pt-2 text-start">
+                <div class="pt-1.5 flex flex-col gap-0.5 text-start">
                     <p class="text-xs font-medium line-clamp-2 leading-snug"
                        style="color: var(--text-product-title);">
                         {{ $sp->name }}
@@ -726,10 +711,10 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     </div>
 
     @else
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
+    <div class="grid grid-cols-2 gap-x-8 gap-y-10 mt-[30px] px-[10px]">
         @foreach($products as $i => $product)
         @php $isWishlisted = in_array($product->id, $wishlistedIds ?? []); @endphp
-        <div class="pcard flex flex-col reveal"
+        <div class="pcard flex flex-col w-full reveal group"
              style="--i: {{ min($i % 6, 5) }}"
              onclick="window.location='{{ route('products.show', $product->slug) }}'">
 
@@ -737,12 +722,13 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
                 <div class="shimmer absolute inset-0 z-0" id="sk-{{ $product->id }}"></div>
                 <img src="{{ $product->getFirstMediaUrl('products') ?: asset('images/placeholder.jpg') }}"
                      alt="{{ $product->name }}"
-                     class="pcard-img absolute inset-0 w-full h-full object-cover z-10"
+                     class="pcard-img absolute inset-0 w-full h-full object-cover z-10
+                            transition-opacity duration-300 group-hover:opacity-80"
                      loading="lazy"
                      onload="document.getElementById('sk-{{ $product->id }}').style.display='none'">
             </div>
 
-            <div class="pt-2 flex flex-col gap-0.5 text-start">
+            <div class="pt-1.5 flex flex-col gap-0.5 text-start">
                 <p class="text-xs font-medium line-clamp-2 leading-snug"
                    style="color: var(--text-product-title);">
                     {{ $product->name }}

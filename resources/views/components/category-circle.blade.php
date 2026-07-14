@@ -28,7 +28,7 @@
    title="{{ $category->name }}">
 
     {{-- Square image ────────────────────────────────────────────── --}}
-    <div class="relative w-full aspect-square rounded-[2px] overflow-hidden bg-gray-50">
+    <div class="relative w-full aspect-square rounded-[2px] overflow-hidden">
 
         {{-- Shimmer skeleton (hidden once image loads) --}}
         <div class="shimmer absolute inset-0 z-0 rounded-[2px]"
@@ -51,10 +51,11 @@
     </div>
 
     {{-- Label ─────────────────────────────────────────────────────── --}}
-    <span class="mt-2 text-xs uppercase tracking-wider text-start leading-snug
-                 transition-colors duration-150
-                 {{ $active ? 'text-[var(--brand-color,#0ea5e9)] font-semibold' : 'text-gray-700 group-hover:text-gray-900' }}">
-        {{ $category->name }}
-    </span>
+    <div class="pt-1.5 flex flex-col gap-0.5 text-start">
+        <p class="text-xs font-medium line-clamp-2 leading-snug"
+           style="color: var(--text-product-title);">
+            {{ $category->name }}
+        </p>
+    </div>
 
 </a>

@@ -215,8 +215,12 @@
         }
 
         /* ── Cards ─────────────────────────────────────────────────────── */
-        .pcard, .featured-card, .product-card {
+        .product-card {
             background-color: var(--card-bg) !important;
+            color: var(--text-card);
+            font-size: var(--card-font-size);
+        }
+        .pcard, .featured-card {
             color: var(--text-card);
             font-size: var(--card-font-size);
         }

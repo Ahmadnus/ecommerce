@@ -8,7 +8,7 @@
 @php $isRtl = app()->getLocale() === 'ar'; @endphp
 
 @if($categories->isNotEmpty())
-<section class="category-grid-section mb-6" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<section class="category-grid-section mb-6 mt-[30px]" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 
     @if($title)
     <div class="flex items-center justify-between mb-3 px-1">
@@ -20,7 +20,7 @@
     @endif
 
     {{-- 2-column square grid on all breakpoints --}}
-    <div class="grid grid-cols-2 gap-4 md:gap-6">
+    <div class="grid grid-cols-2 gap-x-8 gap-y-10 px-[10px]">
 
         @foreach($categories as $cat)
         <x-category-circle
