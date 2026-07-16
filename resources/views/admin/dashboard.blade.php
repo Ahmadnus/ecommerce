@@ -169,7 +169,7 @@
                         </td>
                         <td class="px-8 py-5">
                             <span class="inline-flex items-center px-3 py-1 rounded-lg bg-gray-100 text-gray-600 text-xs font-bold group-hover:bg-white transition-colors">
-                                {{ $p->category->first()->name ?? 'عام' }}
+                           {{ $p->categories->first()->name ?? 'عام' }}
                             </span>
                         </td>
                     </tr>
