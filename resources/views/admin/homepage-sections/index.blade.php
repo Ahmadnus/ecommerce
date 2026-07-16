@@ -128,6 +128,19 @@
                     @error('text_alignment')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
                 </div>
 
+                <div>
+                    <label class="text-xs font-bold mb-1 block">التحكم في الخط (Font Style)</label>
+                    <select name="font_family"
+                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
+                        <option value="{{ $value }}" {{ old('font_family') === $value ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                        @endforeach
+                    </select>
+                    @error('font_family')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                </div>
+
                 <div class="md:col-span-2 flex items-center gap-3">
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}>
@@ -315,6 +328,18 @@
                                         <option value="" {{ $item->text_alignment ? '' : 'selected' }}>-- افتراضي (Default) --</option>
                                         @foreach(\App\Models\HomepageSection::TEXT_ALIGNMENTS as $value => $label)
                                         <option value="{{ $value }}" {{ $item->text_alignment === $value ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-bold mb-1 block">التحكم في الخط (Font Style)</label>
+                                    <select name="font_family"
+                                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                        @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
+                                        <option value="{{ $value }}" {{ $item->font_family === $value ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                         @endforeach

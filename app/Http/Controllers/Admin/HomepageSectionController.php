@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\HomepageSection;
 use App\Services\HomepageSectionService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class HomepageSectionController extends Controller
 {
@@ -40,6 +41,7 @@ class HomepageSectionController extends Controller
                     'button_bg_color'    => $request->input('button_bg_color'),
                     'button_text_color'  => $request->input('button_text_color'),
                     'text_alignment'     => $request->input('text_alignment'),
+                    'font_family'        => $request->input('font_family'),
                     'is_active'   => $request->boolean('is_active', true),
                     'sort_order'  => $request->input('sort_order', 0),
                 ],
@@ -74,6 +76,7 @@ class HomepageSectionController extends Controller
                     'button_bg_color'    => $request->input('button_bg_color'),
                     'button_text_color'  => $request->input('button_text_color'),
                     'text_alignment'     => $request->input('text_alignment'),
+                    'font_family'        => $request->input('font_family'),
                     'is_active'   => $request->boolean('is_active', false),
                     'sort_order'  => $request->input('sort_order', $homepageSection->sort_order ?? 0),
                 ],
@@ -117,6 +120,7 @@ class HomepageSectionController extends Controller
             'button_bg_color'   => ['nullable', 'string', 'regex:/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/'],
             'button_text_color' => ['nullable', 'string', 'regex:/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/'],
             'text_alignment' => 'nullable|in:left,center,right',
+            'font_family' => ['nullable', Rule::in(array_keys(HomepageSection::FONT_FAMILIES))],
             'is_active'   => 'nullable|boolean',
             'sort_order'  => 'nullable|integer|min:0',
             'media'       => ($needsFile ? 'required|' : 'nullable|') . $fileRule,

@@ -27,8 +27,18 @@
    class="flex flex-col w-full group"
    title="{{ $category->name }}">
 
+    {{-- Label — positioned ABOVE the image, hardcoded luxury Didone /
+         Modern Serif styling (Bodoni Moda, matching the "Best Sellers"
+         section-title look) regardless of the site's configurable
+         product-title color/font settings. ─────────────────────────── --}}
+    <div class="pb-1.5 flex flex-col gap-0.5 text-start">
+        <p class="cat-title-didone text-[13px] sm:text-sm leading-snug line-clamp-2">
+            {{ $category->name }}
+        </p>
+    </div>
+
     {{-- Tall portrait image ───────────────────────────────────────── --}}
-    <div class="relative w-full aspect-[3/4] rounded-[2px] overflow-hidden">
+    <div class="relative w-full aspect-[4/5] rounded-[2px] overflow-hidden">
 
         {{-- Shimmer skeleton (hidden once image loads) --}}
         <div class="shimmer absolute inset-0 z-0 rounded-[2px]"
@@ -48,14 +58,6 @@
             alt="{{ $category->name }}"
             class="w-full h-full object-cover relative z-10">
         @endif
-    </div>
-
-    {{-- Label ─────────────────────────────────────────────────────── --}}
-    <div class="pt-1.5 flex flex-col gap-0.5 text-start">
-        <p class="text-xs font-medium line-clamp-2 leading-snug"
-           style="color: var(--text-product-title);">
-            {{ $category->name }}
-        </p>
     </div>
 
 </a>

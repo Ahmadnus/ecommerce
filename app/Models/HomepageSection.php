@@ -32,6 +32,20 @@ class HomepageSection extends Model
         self::ALIGN_RIGHT  => 'يمين (Right)',
     ];
 
+    // ── Font family choices (التحكم في الخط) ────────────────────────────────
+    public const FONT_DEFAULT = '';
+    public const FONT_DIDONE  = 'didone';
+
+    public const FONT_FAMILIES = [
+        self::FONT_DEFAULT => 'افتراضي (Default)',
+        self::FONT_DIDONE  => 'Didone / Modern Serif',
+    ];
+
+    // CSS font-stack for each non-default choice, with a safe serif fallback.
+    private const FONT_FAMILY_CSS = [
+        self::FONT_DIDONE => "'Bodoni Moda', 'Playfair Display', serif",
+    ];
+
     protected $fillable = [
         'title',
         'paragraph',
@@ -45,6 +59,7 @@ class HomepageSection extends Model
         'button_bg_color',
         'button_text_color',
         'text_alignment',
+        'font_family',
         'is_active',
         'sort_order',
     ];
@@ -86,5 +101,23 @@ class HomepageSection extends Model
     public function hasButton(): bool
     {
         return ! empty($this->button_text) && ! empty($this->button_url);
+    }
+
+    /**
+     * CSS font-family stack for the admin-chosen font, or null to fall back
+     * to the site's default heading font.
+     */
+    public function fontFamilyCss(): ?string
+    {
+        return self::FONT_FAMILY_CSS[$this->font_family] ?? null;
+    }
+
+    /**
+     * Whether this section's chosen font requires a Google Font not already
+     * loaded site-wide (e.g. Bodoni Moda for the Didone/Modern Serif choice).
+     */
+    public function needsGoogleFont(): bool
+    {
+        return $this->font_family === self::FONT_DIDONE;
     }
 }

@@ -20,6 +20,10 @@
                               title, paragraph, AND the CTA button's position.
                               Falls back to the default centered layout when
                               not set (or set to anything else).
+      - font_family        : string|null  CSS font-family stack (e.g. from
+                              HomepageSection::fontFamilyCss()) — applied to
+                              the h1 title only, falls back to the site's
+                              default heading font when not set.
 
     NOTE on the !important below: resources/views/layouts/app.blade.php
     defines a SITE-WIDE rule `h1, h2 { color: var(--text-heading) !important; }`
@@ -39,6 +43,7 @@
     'buttonBgColor'     => null,
     'buttonTextColor'   => null,
     'textAlignment'     => null,
+    'fontFamily'        => null,
 ])
 
 @php
@@ -56,7 +61,7 @@
 @endphp
 
 <section class="home-block reveal {{ $sectionAlign }}">
-    @if($title)<h1 @if($titleAccentColor) style="color: {{ $titleAccentColor }} !important;" @endif>{{ $title }}</h1>@endif
+    @if($title)<h1 @if($titleAccentColor || $fontFamily) style="{{ $titleAccentColor ? 'color: '.$titleAccentColor.' !important;' : '' }}{{ $fontFamily ? 'font-family: '.$fontFamily.';' : '' }}" @endif>{{ $title }}</h1>@endif
     @if($text)<p @if($textColor) style="color: {{ $textColor }};" @endif>{{ $text }}</p>@endif
     {{-- Button renders whenever button_text is present, even if the admin
          left button_url empty — falls back to "#" so the CTA never

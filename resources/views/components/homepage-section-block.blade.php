@@ -15,6 +15,15 @@
     'isRtl' => false,
 ])
 
+@if($section->needsGoogleFont())
+    @once
+        @push('head')
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;1,6..96,400&display=swap" rel="stylesheet">
+        @endpush
+    @endonce
+@endif
+
 @if($section->media_type !== 'none' && $section->hasMedia())
     <x-hero-media-banner
         :media_type="$section->media_type"
@@ -37,5 +46,6 @@
         :text-color="$section->text_color"
         :button-bg-color="$section->button_bg_color"
         :button-text-color="$section->button_text_color"
-        :text-alignment="$section->text_alignment" />
+        :text-alignment="$section->text_alignment"
+        :font-family="$section->fontFamilyCss()" />
 @endif

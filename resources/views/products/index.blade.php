@@ -288,6 +288,14 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     font-size: 14.5px; line-height: 1.7; color: var(--text-muted, #6b7280);
     margin-bottom: 26px;
 }
+/* ── Category title — hardcoded Didone / Modern Serif (Bodoni Moda) ── */
+.cat-title-didone {
+    font-family: 'Bodoni Moda', 'Playfair Display', serif;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    color: #111827;
+}
+
 .home-cta-btn {
     background: var(--brand); color: #fff;
     border-radius: 0 !important; /* sharp corners, per client spec */
