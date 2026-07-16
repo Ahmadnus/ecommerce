@@ -90,7 +90,11 @@ class HomepageSection extends Model
             return null;
         }
 
-        return Storage::disk('public')->url($this->media_path);
+        // Use the same disk as the rest of the app's media (configured via
+        // MEDIA_DISK / config/media-library.php) rather than the built-in
+        // "public" disk — on this server they point at different physical
+        // directories, and only the media-library disk is web-served.
+        return Storage::disk(config('media-library.disk_name', 'public'))->url($this->media_path);
     }
 
     public function hasMedia(): bool
