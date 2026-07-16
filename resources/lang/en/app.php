@@ -15,7 +15,7 @@ return [
     'login'     => 'Login',
     'register'  => 'Register',
     'logout'    => 'Logout',
-    'search_placeholder' => 'Search the gallery...',
+    'search_placeholder' => 'Search the gallery..',
     'search_mobile_placeholder' => 'Search for a product...',
     'view_all'  => 'View all',
     'account_info' => 'Account info',
