@@ -21,7 +21,7 @@
         :file_path="$section->media_url"
         :link_url="$section->button_url"
         :is_rtl="$isRtl"
-        height="h-[70vh] md:h-[90vh]" />
+        height="h-screen min-h-screen" />
 @endif
 
 {{-- Text / CTA block — renders independently of media whenever there is a

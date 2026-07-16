@@ -23,7 +23,7 @@
             :file_path="$heroMediaUrl"
             :link_url="$heroMedia->link_url"
             :is_rtl="$isRtl ?? false"
-            :height="$height ?? 'h-[70vh] md:h-[90vh]'"
+            :height="$height ?? 'h-screen min-h-screen'"
         />
     @endif
 @endif

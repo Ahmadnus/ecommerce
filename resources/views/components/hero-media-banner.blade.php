@@ -18,7 +18,7 @@
     'media_type' => 'image',
     'file_path'  => null,
     'link_url'   => null,
-    'height'     => 'h-[50vh] md:h-[65vh] lg:h-[85vh]',
+    'height'     => 'h-screen min-h-screen',
     'is_rtl'     => false,
 ])
 
