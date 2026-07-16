@@ -15,6 +15,7 @@ class TopHeroMedia extends Model implements HasMedia
 
     protected $fillable = [
         'type',
+        'position',
         'link_url',
         'is_active',
         'sort_order',

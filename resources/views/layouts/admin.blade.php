@@ -88,6 +88,11 @@
                         أقسام الصفحة الرئيسية
                     </x-admin-nav-link>
 
+                    <x-admin-nav-link href="{{ route('admin.homepage-sections.index') }}" icon="template"
+                        :active="request()->routeIs('admin.homepage-sections.*')">
+                        الأقسام الديناميكية (نص/صورة/فيديو)
+                    </x-admin-nav-link>
+
                     <hr class="my-2 mx-2" style="border-color:rgba(255,255,255,0.1);">
 
                     <x-admin-nav-link href="{{ route('admin.products.index') }}" icon="shopping-bag"

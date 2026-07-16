@@ -271,6 +271,32 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     margin-top: -8px !important;
 }
 
+/* ── Homepage divider / intro blocks (tall-media redesign) ───────── */
+.home-block { text-align: center; max-width: 640px; margin: 0 auto; padding: 40px 16px; }
+/* Higher specificity than plain Tailwind .text-left/.text-center/.text-right
+   utilities so admin-chosen alignment reliably wins regardless of CSS load order. */
+.home-block.text-left   { text-align: left; }
+.home-block.text-center { text-align: center; }
+.home-block.text-right  { text-align: right; }
+.home-block h1 {
+    font-family: var(--font-display, inherit);
+    font-size: clamp(1.6rem, 4vw, 2.75rem);
+    font-weight: 800; line-height: 1.15; letter-spacing: -.01em;
+    color: var(--text-heading, #111827); margin-bottom: 14px;
+}
+.home-block p {
+    font-size: 14.5px; line-height: 1.7; color: var(--text-muted, #6b7280);
+    margin-bottom: 26px;
+}
+.home-cta-btn {
+    background: var(--brand); color: #fff;
+    border-radius: 0 !important; /* sharp corners, per client spec */
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--brand) 35%, transparent);
+    transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    text-decoration: none;
+}
+.home-cta-btn:hover { transform: translateY(-2px); opacity: .93; box-shadow: 0 14px 34px color-mix(in srgb, var(--brand) 45%, transparent); }
+
 /* ── Category banner ────────────────────────────────────────────── */
 .cat-banner { border-radius: 20px; overflow: hidden; position: relative; margin-bottom: 20px; }
 .cat-banner-inner { display: flex; align-items: center; gap: 24px; padding: 36px 28px; position: relative; z-index: 10; }
@@ -298,7 +324,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 @section('content')
 <div class="page-shop">
 
-@include('partials.sections.top-hero-media')
+@include('partials.sections.top-hero-media', ['position' => 'top'])
 
 {{-- ── Announcement banners ──────────────────────────────────────────── --}}
 @php
@@ -378,74 +404,10 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 <div class="bg-gray-50 pb-bar md:pb-12" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <div class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
 
-    {{-- ── Hero banners (top) ───────────────────────────────────────── --}}
-    @if(!$currentCategory)
-    @php
-        $banners = \App\Models\HeroBanner::where('is_active', true)->orderBy('sort_order')->get();
-    @endphp
-    @foreach($banners as $banner)
-        @if($banner->position === 'top')
-        @php
-            $layout      = $banner->layout ?? 'text_image';
-            $image       = $banner->getFirstMediaUrl('banner_image');
-            $hasImage    = !empty($image);
-            $isImageOnly = $layout === 'image_only';
-            $hasText     = in_array($layout, ['text_image', 'text_only']);
-        @endphp
-        <div class="hero-banner mt-4 mb-5 reveal relative overflow-hidden"
-             style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
-            @if($isImageOnly && $hasImage)
-                <img src="{{ $image }}" class="w-full h-40 sm:h-52 md:h-64 object-cover rounded-2xl">
-            @else
-                <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
-                            {{ $hasImage ? '' : 'justify-center text-center' }}">
-                    @if($hasText)
-                    <div class="{{ $hasImage ? 'flex-1 ' . ($isRtl ? 'text-right' : 'text-left') : 'max-w-xl mx-auto text-center' }}">
-                        @if($banner->badge)
-                        <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
-                              style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
-                            {{ $banner->badge }}
-                        </span>
-                        @endif
-                        <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
-                            style="color: {{ $banner->text_color ?? '#fff' }};">
-                            {{ $banner->title }}
-                            @if($banner->subtitle)<br><span>{{ $banner->subtitle }}</span>@endif
-                        </h2>
-                        <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
-                           style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
-                            {{ $banner->description }}
-                        </p>
-                        <a href="{{ $banner->button_url ?? '#' }}"
-                           class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
-                           style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
-                            {{ $banner->button_text }}
-                        </a>
-                    </div>
-                    @endif
-                    @if($hasImage && !$isImageOnly)
-                    <div class="w-32 sm:w-40 md:w-52 flex-shrink-0">
-                        <img src="{{ $image }}" class="w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
-                    </div>
-                    @endif
-                </div>
-            @endif
-        </div>
-        @endif
-    @endforeach
-    @endif
-
-    {{-- ── Category grid (all-products view only — hidden on category and search pages) ── --}}
-    @if(!$currentCategory && !request('search'))
-    @php
-        $topCategories = \App\Models\Category::active()->roots()
-            ->with(['allActiveChildren','media'])
-            ->orderBy('sort_order')->take(20)->get();
-    @endphp
-    <div class="relative overflow-hidden pt-2">
-        <x-category-grid :categories="$topCategories" :current="$currentCategory ?? null" :show-all="true" />
-    </div>
-    @endif
+    @if($currentCategory || request('search') || request('sort'))
+    {{-- ══════════════════════════════════════════════════════════════
+         CATEGORY / SEARCH / SORT VIEW — unchanged toolbar-first layout
+    ══════════════════════════════════════════════════════════════════ --}}
 
     {{-- ── Toolbar ──────────────────────────────────────────────────── --}}
     <div class="flex items-center justify-between mb-4 gap-3 mt-4">
@@ -604,11 +566,97 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     </nav>
     @endif
 
+    @else
     {{-- ══════════════════════════════════════════════════════════════
-         HOME SECTIONS
+         HOMEPAGE — STRICT 9-SECTION SEQUENTIAL LAYOUT
     ══════════════════════════════════════════════════════════════════ --}}
-    @if(!$currentCategory && !request('search') && !request('sort'))
+    @php
+        $banners = \App\Models\HeroBanner::where('is_active', true)->orderBy('sort_order')->get();
 
+        // ── Admin-managed dynamic content blocks (title/paragraph/CTA and/or
+        //    tall portrait image/video) — fully database-driven via the
+        //    "homepage-sections" admin screen. Multiple active sections can
+        //    share the same `position`; they are grouped (not keyBy'd, which
+        //    would silently overwrite all but the last one) and rendered
+        //    sequentially in `sort_order` within their slot.
+        $sections = \App\Models\HomepageSection::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->groupBy('position');
+    @endphp
+
+    {{-- ── LOCATION 1 (Top of Page): position = top_hero ───────────────── --}}
+    @foreach($sections->get('top_hero', collect()) as $dynSection)
+        <x-homepage-section-block :section="$dynSection" :is-rtl="$isRtl" />
+    @endforeach
+
+    {{-- ── SECTION 3: Categories ───────────────────────────────────── --}}
+    @php
+        $topCategories = \App\Models\Category::active()->roots()
+            ->with(['allActiveChildren','media'])
+            ->orderBy('sort_order')->take(20)->get();
+    @endphp
+    <div class="relative overflow-hidden pt-2">
+        <x-category-grid :categories="$topCategories" :current="$currentCategory ?? null" :show-all="true" />
+    </div>
+
+    {{-- ── LOCATION 2 (Middle of Page): position = below_categories ────── --}}
+    @foreach($sections->get('below_categories', collect()) as $dynSection)
+        <x-homepage-section-block :section="$dynSection" :is-rtl="$isRtl" />
+    @endforeach
+
+    @foreach($banners as $banner)
+        @if($banner->position === 'top')
+        @php
+            $layout      = $banner->layout ?? 'text_image';
+            $image       = $banner->getFirstMediaUrl('banner_image');
+            $hasImage    = !empty($image);
+            $isImageOnly = $layout === 'image_only';
+            $hasText     = in_array($layout, ['text_image', 'text_only']);
+        @endphp
+        <div class="hero-banner mt-4 mb-5 reveal relative overflow-hidden"
+             style="--i:{{ $loop->index }}; background: {{ $banner->background_color ?? '#0ea5e9' }} !important;">
+            @if($isImageOnly && $hasImage)
+                <img src="{{ $image }}" class="w-full h-40 sm:h-52 md:h-64 object-cover rounded-2xl">
+            @else
+                <div class="relative z-10 flex items-center gap-6 px-6 md:px-14 py-10 md:py-12
+                            {{ $hasImage ? '' : 'justify-center text-center' }}">
+                    @if($hasText)
+                    <div class="{{ $hasImage ? 'flex-1 ' . ($isRtl ? 'text-right' : 'text-left') : 'max-w-xl mx-auto text-center' }}">
+                        @if($banner->badge)
+                        <span class="inline-block text-[10px] font-black px-3 py-1 rounded-full mb-3 tracking-widest uppercase"
+                              style="background:rgba(255,255,255,.12);color:{{ $banner->text_color ?? '#fff' }};">
+                            {{ $banner->badge }}
+                        </span>
+                        @endif
+                        <h2 class="font-display text-2xl md:text-4xl font-bold leading-tight mb-3"
+                            style="color: {{ $banner->text_color ?? '#fff' }};">
+                            {{ $banner->title }}
+                            @if($banner->subtitle)<br><span>{{ $banner->subtitle }}</span>@endif
+                        </h2>
+                        <p class="text-sm mb-6 leading-relaxed {{ $hasImage ? 'max-w-sm' : 'max-w-md mx-auto' }}"
+                           style="color: {{ $banner->text_color ?? '#ffffffcc' }};">
+                            {{ $banner->description }}
+                        </p>
+                        <a href="{{ $banner->button_url ?? '#' }}"
+                           class="inline-flex items-center gap-2 font-black text-sm px-6 py-3 rounded-xl shadow-xl"
+                           style="background: {{ $banner->text_color ?? '#fff' }}; color: {{ $banner->background_color ?? '#000' }};">
+                            {{ $banner->button_text }}
+                        </a>
+                    </div>
+                    @endif
+                    @if($hasImage && !$isImageOnly)
+                    <div class="w-32 sm:w-40 md:w-52 flex-shrink-0">
+                        <img src="{{ $image }}" class="w-full h-32 sm:h-44 md:h-56 object-cover rounded-2xl">
+                    </div>
+                    @endif
+                </div>
+            @endif
+        </div>
+        @endif
+    @endforeach
+
+    {{-- ── SECTION 5: First products block ─────────────────────────── --}}
     @foreach($homeSections as $section)
     @php $sectionProducts = $section->resolveProducts(); @endphp
     @if($sectionProducts->isNotEmpty())
@@ -718,15 +766,55 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
         @endif
     @endforeach
 
-    <div class="flex items-center gap-3 mb-5">
+    {{-- ── SECTION 7 lead-in: "All products" divider + sort control ─── --}}
+    {{-- (home view only — category/search/sort pages already have their
+         own toolbar with search/sort at the very top of the page) ──── --}}
+    <div class="flex items-center gap-3 mb-5 mt-2">
         <div class="h-px bg-gray-200 flex-1"></div>
         <span class="text-xs font-bold text-gray-500 flex-shrink-0">{{ __('app.all_products_divider') }}</span>
         <div class="h-px bg-gray-200 flex-1"></div>
     </div>
-    @endif
+
+    <div class="flex items-center justify-end gap-2 mb-4">
+        {{-- Desktop sort --}}
+        <div class="hidden sm:block">
+            <select onchange="window.location.href=this.value"
+                    class="text-xs border border-gray-200 rounded-xl px-3 py-2 bg-white cursor-pointer outline-none focus:ring-2"
+                    style="--tw-ring-color:var(--brand)">
+                @php
+                $shortSorts = [
+                    'featured'   => __('app.sort_featured_short'),
+                    'price_asc'  => __('app.sort_price_asc_short'),
+                    'price_desc' => __('app.sort_price_desc_short'),
+                    'newest'     => __('app.sort_newest_short'),
+                ];
+                @endphp
+                @foreach($shortSorts as $v => $l)
+                <option value="{{ request()->fullUrlWithQuery(['sort' => $v]) }}"
+                        {{ request('sort','featured') === $v ? 'selected' : '' }}>{{ $l }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        {{-- Mobile sort --}}
+        <button onclick="openSortDrawer()"
+                class="flex sm:hidden items-center gap-1.5 bg-white border border-gray-200 rounded-xl
+                       px-3 py-2 text-xs font-bold text-gray-600 shadow-sm active:scale-95 transition-transform">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M7 8h10m-7 4h4"/>
+            </svg>
+            {{ __('app.sort_btn') }}
+        </button>
+    </div>
+
+    @endif {{-- end home-view-only SECTIONS 2–6 (intro/categories/dividers/homeSections) --}}
 
     {{-- ══════════════════════════════════════════════════════════════
-         REGULAR PRODUCT GRID
+         SHARED PRODUCT GRID + PAGINATION
+         Renders for EVERY view: home (as Section 7), category, search,
+         and sort pages. Was previously trapped inside the home-only
+         branch above, which silently hid the entire grid AND the
+         pagination on category/search/sort pages — fixed here.
     ══════════════════════════════════════════════════════════════════ --}}
     @if($products->isEmpty())
     <div class="flex flex-col items-center justify-center py-24 text-center">
@@ -799,13 +887,39 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
         @endforeach
     </div>
 
-    @if($products->hasPages())
-    <div class="mt-10 flex justify-center">{{ $products->links() }}</div>
-    @endif
     @endif
 
 </div>
 </div>
+
+@if(!$currentCategory && !request('search') && !request('sort'))
+{{-- ── SECTION 8: Bottom brand image — tall/vertical, majestic ────────── --}}
+@include('partials.sections.top-hero-media', ['position' => 'bottom', 'height' => 'h-[70vh] md:h-[90vh]'])
+@endif
+
+{{-- ── LOCATION 3 (Bottom of Page, above footer): position = above_footer ──
+     ($sections is only set on the home-view branch above; guard against it
+     being undefined on category/search/sort pages.) ───────────────────── --}}
+@php $footerSections = ($sections ?? collect())->get('above_footer', collect()); @endphp
+@if($footerSections->isNotEmpty())
+<div class="bg-gray-50">
+    @foreach($footerSections as $dynSection)
+        <x-homepage-section-block :section="$dynSection" :is-rtl="$isRtl" />
+    @endforeach
+</div>
+@endif
+
+{{-- ── Pagination — absolute last content block on the page, directly
+     above the footer. Isolated, full-width container of its own; not
+     nested inside the product grid, the category grid, or any flex/grid
+     ancestor, so it can never inherit float/position behavior from
+     something else and jump out of place. ──────────────────────────── --}}
+@if($products->hasPages())
+<div class="w-full block clear-both mt-16 mb-10 py-6 border-t border-gray-100 flex justify-center items-center relative z-10">
+    {{ $products->links() }}
+</div>
+@endif
+
 </div>
 @endsection
 

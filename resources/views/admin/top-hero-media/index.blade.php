@@ -27,6 +27,16 @@
                 </div>
 
                 <div>
+                    <label class="text-xs font-bold mb-1 block">موضع العرض في الصفحة</label>
+                    <select name="position"
+                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        <option value="top" {{ old('position', 'top') === 'top' ? 'selected' : '' }}>أعلى الصفحة</option>
+                        <option value="middle" {{ old('position') === 'middle' ? 'selected' : '' }}>منتصف الصفحة</option>
+                        <option value="bottom" {{ old('position') === 'bottom' ? 'selected' : '' }}>أسفل الصفحة</option>
+                    </select>
+                </div>
+
+                <div>
                     <label class="text-xs font-bold mb-1 block">ترتيب العرض</label>
                     <input type="number" name="sort_order" min="0" value="{{ old('sort_order', 0) }}"
                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
@@ -72,6 +82,7 @@
                 <tr>
                     <th class="px-6 py-4">المعاينة</th>
                     <th class="px-6 py-4">النوع</th>
+                    <th class="px-6 py-4">الموضع</th>
                     <th class="px-6 py-4">الرابط</th>
                     <th class="px-6 py-4">الترتيب</th>
                     <th class="px-6 py-4">الحالة</th>
@@ -96,6 +107,12 @@
                     <td class="px-6 py-4">
                         <span class="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 border border-blue-100">
                             {{ $item->type === 'video' ? 'فيديو' : 'صورة' }}
+                        </span>
+                    </td>
+
+                    <td class="px-6 py-4">
+                        <span class="text-xs px-2 py-1 rounded bg-gray-50 text-gray-600 border border-gray-100">
+                            {{ ['top' => 'أعلى', 'middle' => 'منتصف', 'bottom' => 'أسفل'][$item->position] ?? $item->position }}
                         </span>
                     </td>
 
@@ -128,7 +145,7 @@
 
                 {{-- ── Inline edit row ──────────────────────────────── --}}
                 <tr id="edit-{{ $item->id }}" class="hidden bg-gray-50">
-                    <td colspan="6" class="p-6">
+                    <td colspan="7" class="p-6">
                         <form action="{{ route('admin.top-hero-media.update', $item) }}"
                               method="POST"
                               enctype="multipart/form-data"
@@ -142,6 +159,16 @@
                                             class="hero-media-type w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
                                         <option value="image" {{ $item->type === 'image' ? 'selected' : '' }}>صورة</option>
                                         <option value="video" {{ $item->type === 'video' ? 'selected' : '' }}>فيديو</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-bold mb-1 block">موضع العرض في الصفحة</label>
+                                    <select name="position"
+                                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                        <option value="top" {{ $item->position === 'top' ? 'selected' : '' }}>أعلى الصفحة</option>
+                                        <option value="middle" {{ $item->position === 'middle' ? 'selected' : '' }}>منتصف الصفحة</option>
+                                        <option value="bottom" {{ $item->position === 'bottom' ? 'selected' : '' }}>أسفل الصفحة</option>
                                     </select>
                                 </div>
 
@@ -184,7 +211,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-10 text-center text-gray-400">لا توجد عناصر بعد</td>
+                    <td colspan="7" class="px-6 py-10 text-center text-gray-400">لا توجد عناصر بعد</td>
                 </tr>
                 @endforelse
             </tbody>

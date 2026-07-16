@@ -52,6 +52,19 @@ return [
 'share_prompt'      => 'Copy product link:',
 'share_text'        => ':name — Shop now',
 'share_title'       => 'Share',
+
+    // Homepage layout blocks
+    'home_intro_title'       => 'Crafted For Your Everyday',
+    'home_intro_text'        => 'Discover a curated collection of pieces designed with quality, comfort and timeless style in mind.',
+    'home_divider1_title'    => 'The Essentials Collection',
+    'home_divider1_text'     => 'Handpicked staples that blend effortlessly into your wardrobe, built to last and made to be worn.',
+    'home_divider1_btn'      => 'Shop The Collection',
+    'home_divider2_title'    => 'New Arrivals, Just Dropped',
+    'home_divider2_text'     => 'Fresh styles added regularly — be the first to explore what just landed in the gallery.',
+    'home_divider2_btn'      => 'Explore New Arrivals',
+    'home_footer_title'      => 'Elevate Your Everyday Style',
+    'home_footer_text'       => 'Join thousands who trust us for quality pieces that stand the test of time.',
+    'home_footer_btn'        => 'Start Shopping',
 'add_to_wishlist'   => 'Add to wishlist',
 'remove_from_wishlist' => 'Remove from wishlist',
 

@@ -27,8 +27,8 @@
    class="flex flex-col w-full group"
    title="{{ $category->name }}">
 
-    {{-- Square image ────────────────────────────────────────────── --}}
-    <div class="relative w-full aspect-square rounded-[2px] overflow-hidden">
+    {{-- Tall portrait image ───────────────────────────────────────── --}}
+    <div class="relative w-full aspect-[3/4] rounded-[2px] overflow-hidden">
 
         {{-- Shimmer skeleton (hidden once image loads) --}}
         <div class="shimmer absolute inset-0 z-0 rounded-[2px]"

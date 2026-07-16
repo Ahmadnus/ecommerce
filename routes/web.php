@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\{
     DashboardController, CategoryController, HeroBannerController, TopHeroMediaController, SettingController,
     AnnouncementController, AttributeController, AttributeValueController, CheckoutSettingsController, HomeSectionController, SiteFeatureController,
+    HomepageSectionController,
     CountryController, ZoneController,
     CurrencyController as AdminCurrencyController,
     FooterCompanyInfoController,
@@ -217,6 +218,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('top-hero-media', TopHeroMediaController::class)->except(['show', 'create', 'edit']);
     Route::resource('home-sections', HomeSectionController::class);
     Route::post('home-sections/reorder', [HomeSectionController::class, 'reorder'])->name('home-sections.reorder');
+    Route::resource('homepage-sections', HomepageSectionController::class)->except(['show', 'create', 'edit']);
 
     // ── الطلبات ─────────────────────────────────────────────────────────────
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');

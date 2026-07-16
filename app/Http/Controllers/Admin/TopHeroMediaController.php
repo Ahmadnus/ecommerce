@@ -32,6 +32,7 @@ class TopHeroMediaController extends Controller
             $this->heroMedia->create(
                 attributes: [
                     'type'       => $type,
+                    'position'   => $request->input('position', 'top'),
                     'link_url'   => $request->input('link_url'),
                     'is_active'  => $request->boolean('is_active', true),
                     'sort_order' => $request->input('sort_order', 0),
@@ -57,6 +58,7 @@ class TopHeroMediaController extends Controller
                 hero: $topHeroMedium,
                 attributes: [
                     'type'       => $type,
+                    'position'   => $request->input('position', $topHeroMedium->position),
                     'link_url'   => $request->input('link_url'),
                     'is_active'  => $request->boolean('is_active', false),
                     'sort_order' => $request->input('sort_order', $topHeroMedium->sort_order ?? 0),
@@ -88,6 +90,7 @@ class TopHeroMediaController extends Controller
 
         return [
             'type'       => 'required|in:image,video',
+            'position'   => 'nullable|in:top,middle,bottom',
             'link_url'   => 'nullable|url|max:500',
             'is_active'  => 'nullable|boolean',
             'sort_order' => 'nullable|integer|min:0',
