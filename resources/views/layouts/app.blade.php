@@ -112,6 +112,7 @@
                     },
                     fontFamily: {
                         sans: ['var(--app-font)', 'system-ui', 'sans-serif'],
+                        luxurySerif: ['"Bodoni Moda"', '"Playfair Display"', 'serif'],
                     },
                 }
             }

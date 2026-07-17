@@ -32,7 +32,8 @@
          section-title look) regardless of the site's configurable
          product-title color/font settings. ─────────────────────────── --}}
     <div class="pb-1.5 flex flex-col gap-0.5 text-start">
-        <p class="cat-title-didone text-[13px] sm:text-sm leading-snug line-clamp-2">
+        <p class="cat-title-didone font-luxurySerif text-[13px] sm:text-sm leading-snug line-clamp-2"
+           style="font-family: 'Bodoni Moda', 'Playfair Display', serif !important;">
             {{ $category->name }}
         </p>
     </div>

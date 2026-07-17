@@ -66,8 +66,8 @@
 @endphp
 
 <section class="home-block reveal {{ $sectionAlign }}">
-    @if($title)<h1 @if($titleAccentColor || $titleFontFamily) style="{{ $titleAccentColor ? 'color: '.$titleAccentColor.' !important;' : '' }}{{ $titleFontFamily ? 'font-family: '.$titleFontFamily.';' : '' }}" @endif>{{ $title }}</h1>@endif
-    @if($text)<p @if($textColor || $paragraphFontFamily) style="{{ $textColor ? 'color: '.$textColor.';' : '' }}{{ $paragraphFontFamily ? 'font-family: '.$paragraphFontFamily.';' : '' }}" @endif>{{ $text }}</p>@endif
+    @if($title)<h1 class="{{ $titleFontFamily ? 'font-luxurySerif' : '' }}" @if($titleAccentColor || $titleFontFamily) style="{{ $titleAccentColor ? 'color: '.$titleAccentColor.' !important;' : '' }}{{ $titleFontFamily ? 'font-family: '.$titleFontFamily.' !important;' : '' }}" @endif>{{ $title }}</h1>@endif
+    @if($text)<p class="{{ $paragraphFontFamily ? 'font-luxurySerif' : '' }}" @if($textColor || $paragraphFontFamily) style="{{ $textColor ? 'color: '.$textColor.';' : '' }}{{ $paragraphFontFamily ? 'font-family: '.$paragraphFontFamily.' !important;' : '' }}" @endif>{{ $text }}</p>@endif
     {{-- Button renders whenever button_text is present, even if the admin
          left button_url empty — falls back to "#" so the CTA never
          silently disappears. Custom colors apply via inline style with a
