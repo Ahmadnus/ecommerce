@@ -47,5 +47,6 @@
         :button-bg-color="$section->button_bg_color"
         :button-text-color="$section->button_text_color"
         :text-alignment="$section->text_alignment"
-        :font-family="$section->fontFamilyCss()" />
+        :title-font-family="$section->titleFontFamilyCss()"
+        :paragraph-font-family="$section->paragraphFontFamilyCss()" />
 @endif

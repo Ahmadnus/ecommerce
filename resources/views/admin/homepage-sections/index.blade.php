@@ -129,16 +129,29 @@
                 </div>
 
                 <div>
-                    <label class="text-xs font-bold mb-1 block">التحكم في الخط (Font Style)</label>
-                    <select name="font_family"
+                    <label class="text-xs font-bold mb-1 block">خط العنوان (Title Font)</label>
+                    <select name="title_font_family"
                             class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
                         @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
-                        <option value="{{ $value }}" {{ old('font_family') === $value ? 'selected' : '' }}>
+                        <option value="{{ $value }}" {{ old('title_font_family') === $value ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                         @endforeach
                     </select>
-                    @error('font_family')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                    @error('title_font_family')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold mb-1 block">خط الفقرة (Paragraph Font)</label>
+                    <select name="paragraph_font_family"
+                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
+                        <option value="{{ $value }}" {{ old('paragraph_font_family') === $value ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                        @endforeach
+                    </select>
+                    @error('paragraph_font_family')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div class="md:col-span-2 flex items-center gap-3">
@@ -335,11 +348,23 @@
                                 </div>
 
                                 <div>
-                                    <label class="text-xs font-bold mb-1 block">التحكم في الخط (Font Style)</label>
-                                    <select name="font_family"
+                                    <label class="text-xs font-bold mb-1 block">خط العنوان (Title Font)</label>
+                                    <select name="title_font_family"
                                             class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
                                         @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
-                                        <option value="{{ $value }}" {{ $item->font_family === $value ? 'selected' : '' }}>
+                                        <option value="{{ $value }}" {{ $item->title_font_family === $value ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="text-xs font-bold mb-1 block">خط الفقرة (Paragraph Font)</label>
+                                    <select name="paragraph_font_family"
+                                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                        @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
+                                        <option value="{{ $value }}" {{ $item->paragraph_font_family === $value ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                         @endforeach

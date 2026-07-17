@@ -59,7 +59,8 @@ class HomepageSection extends Model
         'button_bg_color',
         'button_text_color',
         'text_alignment',
-        'font_family',
+        'title_font_family',
+        'paragraph_font_family',
         'is_active',
         'sort_order',
     ];
@@ -108,20 +109,30 @@ class HomepageSection extends Model
     }
 
     /**
-     * CSS font-family stack for the admin-chosen font, or null to fall back
-     * to the site's default heading font.
+     * CSS font-family stack for the admin-chosen title font, or null to
+     * fall back to the site's default heading font.
      */
-    public function fontFamilyCss(): ?string
+    public function titleFontFamilyCss(): ?string
     {
-        return self::FONT_FAMILY_CSS[$this->font_family] ?? null;
+        return self::FONT_FAMILY_CSS[$this->title_font_family] ?? null;
     }
 
     /**
-     * Whether this section's chosen font requires a Google Font not already
+     * CSS font-family stack for the admin-chosen paragraph font, or null to
+     * fall back to the site's default body font.
+     */
+    public function paragraphFontFamilyCss(): ?string
+    {
+        return self::FONT_FAMILY_CSS[$this->paragraph_font_family] ?? null;
+    }
+
+    /**
+     * Whether this section's chosen fonts require a Google Font not already
      * loaded site-wide (e.g. Bodoni Moda for the Didone/Modern Serif choice).
      */
     public function needsGoogleFont(): bool
     {
-        return $this->font_family === self::FONT_DIDONE;
+        return $this->title_font_family === self::FONT_DIDONE
+            || $this->paragraph_font_family === self::FONT_DIDONE;
     }
 }
