@@ -32,11 +32,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\FooterTextController;
 use App\Http\Controllers\Admin\AdminPasswordController;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use App\Models\OtpSetting;
-use App\Services\SmsService;
 
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -382,90 +378,3 @@ Route::post('/language/switch', function (\Illuminate\Http\Request $request) {
     }
     return back();
 })->name('language.switch')->middleware('web');
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SMS TEST / DEBUG ROUTES
-// ⚠ REMOVE BEFORE PRODUCTION — these expose credentials and send real SMS.
-// ═══════════════════════════════════════════════════════════════════════════
-
-Route::get('/send-test-sms', function () {
-
-    $number = "962799400020";
-    $text   = "مرحبا";
-
-    function normalize_msisdn($input) {
-        $digits = preg_replace('/\D+/', '', $input);
-        if (strpos($digits, '962') === 0) return $digits;
-        if (strpos($digits, '0') === 0)   return '962' . substr($digits, 1);
-        return $digits;
-    }
-
-    $params = [
-        "user" => "JbuyApp1",
-        "pass" => "429J@NewY",
-        "sid"  => "Jbuy.App",
-        "mno"  => normalize_msisdn($number),
-        "type" => 4,
-        "text" => $text,
-    ];
-
-    $ch = curl_init("https://gwjo1s.broadnet.me:8443/websmpp/websms");
-
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_SSL_VERIFYHOST => false,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => http_build_query($params),
-    ]);
-    $response = curl_exec($ch);
-    $err = curl_error($ch);
-    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    return [
-        "sent_to" => $number,
-        "message" => $text,
-        "response" => $response,
-        "error" => $err,
-        "status" => $code,
-    ];
-});
-
-Route::get('/debug-otp-chain', function () {
-    $keys = ['sms_url', 'sms_user', 'sms_pass', 'sms_sid', 'sms_type', 'otp_ttl_minutes', 'otp_length'];
-
-    $result = [];
-    foreach ($keys as $key) {
-        $dbRaw     = OtpSetting::where('key', $key)->value('value');
-        $resolved  = get_otp_setting($key);
-
-        $result[$key] = [
-            'db_raw'     => $dbRaw,
-            'resolved'   => $key === 'sms_pass' ? (empty($resolved) ? '(empty)' : '***hidden***') : $resolved,
-            'source'     => (!is_null($dbRaw) && $dbRaw !== '') ? 'database' : 'config/sms.php',
-        ];
-    }
-
-    return response()->json($result, 200, ['Content-Type' => 'application/json']);
-})->middleware('auth');
-
-Route::get('/debug-send-test-sms', function (SmsService $sms) {
-    $testNumber = '962799400020';
-
-    $result = $sms->send($testNumber, 'اختبار النظام — إذا وصلتك هذه الرسالة فالنظام يعمل ✓');
-
-    return response()->json([
-        'sent_to'   => $testNumber,
-        'success'   => $result['success'],
-        'response'  => $result['response'],
-        'resolved_credentials' => [
-            'url'  => get_otp_setting('sms_url'),
-            'user' => get_otp_setting('sms_user'),
-            'sid'  => get_otp_setting('sms_sid'),
-            'type' => get_otp_setting('sms_type'),
-        ],
-    ]);
-})->middleware('auth');
