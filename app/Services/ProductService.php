@@ -123,6 +123,27 @@ class ProductService
             ->with('category')
             ->get();
 
+        // ── Modular homepage builder ───────────────────────────────────────
+        // Every active section, rendered strictly in sort_order. Product grids
+        // get their products pre-resolved here to keep the view free of query
+        // logic and avoid N+1. Each section's resolution is isolated in its
+        // own try/catch — a single bad product_source (e.g. a deleted
+        // category id) must degrade to an empty grid, never blank the page.
+        $homepageSections = \App\Models\HomepageSection::active()
+            ->ordered()
+            ->get();
+
+        foreach ($homepageSections as $section) {
+            if ($section->isProductGrid()) {
+                try {
+                    $section->setRelation('resolvedProducts', $section->resolveProducts());
+                } catch (\Throwable $e) {
+                    report($e);
+                    $section->setRelation('resolvedProducts', new \Illuminate\Database\Eloquent\Collection());
+                }
+            }
+        }
+
         $wishlistedIds = $user
             ? \Illuminate\Support\Facades\DB::table('wishlists')
                 ->where('user_id', $user->id)
@@ -135,6 +156,7 @@ class ProductService
             'categoryTree'    => $categoryTree,
             'currentCategory' => $currentCategory,
             'homeSections'    => $homeSections,
+            'homepageSections' => $homepageSections,
             'wishlistedIds'   => $wishlistedIds,
         ];
     }

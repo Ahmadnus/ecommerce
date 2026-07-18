@@ -18,7 +18,12 @@ class HomepageSectionController extends Controller
     {
         $items = $this->sections->getAll();
 
-        return view('admin.homepage-sections.index', compact('items'));
+        // Categories feed the "product source" dropdown (product_grid sections).
+        $categories = \App\Models\Category::active()
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('admin.homepage-sections.index', compact('items', 'categories'));
     }
 
     public function store(Request $request)
@@ -34,6 +39,10 @@ class HomepageSectionController extends Controller
                     'paragraph'   => $request->input('paragraph'),
                     'media_type'  => $mediaType,
                     'position'    => $request->input('position'),
+                    'section_type'   => $request->input('section_type', HomepageSection::TYPE_TEXT_BLOCK),
+                    'product_source' => $this->resolveProductSource($request),
+                    'text_position'  => $request->input('text_position', HomepageSection::POS_OVERLAY_CENTER),
+                    'aspect_ratio'   => $request->input('aspect_ratio', HomepageSection::RATIO_LANDSCAPE),
                     'button_text' => $request->input('button_text'),
                     'button_url'  => $request->input('button_url'),
                     'section_title_accent_color' => $request->input('section_title_accent_color'),
@@ -70,6 +79,10 @@ class HomepageSectionController extends Controller
                     'paragraph'   => $request->input('paragraph'),
                     'media_type'  => $mediaType,
                     'position'    => $request->input('position', $homepageSection->position),
+                    'section_type'   => $request->input('section_type', $homepageSection->section_type ?? HomepageSection::TYPE_BANNER),
+                    'product_source' => $this->resolveProductSource($request),
+                    'text_position'  => $request->input('text_position', $homepageSection->text_position),
+                    'aspect_ratio'   => $request->input('aspect_ratio', $homepageSection->aspect_ratio),
                     'button_text' => $request->input('button_text'),
                     'button_url'  => $request->input('button_url'),
                     'section_title_accent_color' => $request->input('section_title_accent_color'),
@@ -99,6 +112,21 @@ class HomepageSectionController extends Controller
         return back()->with('success', 'تم حذف القسم بنجاح');
     }
 
+    /**
+     * product_source is only persisted for product_grid sections; for any
+     * other type it is nulled so stale values can never leak into rendering.
+     */
+    private function resolveProductSource(Request $request): ?string
+    {
+        if ($request->input('section_type') !== HomepageSection::TYPE_PRODUCT_GRID) {
+            return null;
+        }
+
+        $source = $request->input('product_source');
+
+        return $source !== '' ? $source : null;
+    }
+
     private function rules(string $mediaType, bool $requireFile): array
     {
         $needsFile = $requireFile && in_array($mediaType, ['image', 'video'], true);
@@ -111,7 +139,13 @@ class HomepageSectionController extends Controller
             'title'       => 'nullable|string|max:255',
             'paragraph'   => 'nullable|string',
             'media_type'  => 'required|in:image,video,none',
-            'position'    => 'required|in:top_hero,below_categories,above_footer',
+            'position'    => 'nullable|in:top_hero,below_categories,above_footer',
+            'section_type'   => ['required', Rule::in(array_keys(HomepageSection::SECTION_TYPES))],
+            // Free string: one of the smart sources or a numeric category id.
+            // Only meaningful when section_type = product_grid.
+            'product_source' => 'nullable|string|max:100',
+            'text_position'  => ['nullable', Rule::in(array_keys(HomepageSection::TEXT_POSITIONS_MAP))],
+            'aspect_ratio'   => ['nullable', Rule::in(array_keys(HomepageSection::ASPECT_RATIOS))],
             'button_text' => 'nullable|string|max:100',
             'button_url'  => 'nullable|string|max:500',
             // Array syntax (not a pipe-string) — the regex itself contains a

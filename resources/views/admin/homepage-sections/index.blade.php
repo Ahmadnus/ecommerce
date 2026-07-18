@@ -32,20 +32,49 @@
                 </div>
 
                 <div>
-                    <label class="text-xs font-bold mb-1 block">مكان العرض (Position)</label>
-                    <select name="position" required
-                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-                        <option value="" disabled {{ old('position') ? '' : 'selected' }}>-- اختر مكان العرض --</option>
-                        @foreach(\App\Models\HomepageSection::POSITIONS as $value => $label)
-                        <option value="{{ $value }}" {{ old('position') === $value ? 'selected' : '' }}>
+                    <label class="text-xs font-bold mb-1 block">نوع القسم (Section Type)</label>
+                    <select name="section_type" required
+                            class="section-type-select w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        @foreach(\App\Models\HomepageSection::SECTION_TYPES as $value => $label)
+                        <option value="{{ $value }}" {{ old('section_type', 'hero_banner') === $value ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                         @endforeach
                     </select>
-                    @error('position')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                    @error('section_type')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
+                    <label class="text-xs font-bold mb-1 block">الترتيب (Sort Order)</label>
+                    <input type="number" name="sort_order" min="0" value="{{ old('sort_order', 0) }}"
+                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                    <p class="text-[10px] text-gray-400 mt-1">
+                        رقم يحدد تسلسل ظهور القسم في الصفحة (1 = الأعلى، 2 = تحته، وهكذا).
+                    </p>
+                </div>
+
+                {{-- ── Product source — only for product_grid sections ─────── --}}
+                <div class="md:col-span-2 js-product-source">
+                    <label class="text-xs font-bold mb-1 block">مصدر المنتجات (Product Source)</label>
+                    <select name="product_source"
+                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        @foreach(\App\Models\HomepageSection::PRODUCT_SOURCES as $value => $label)
+                        <option value="{{ $value }}" {{ old('product_source') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                        <optgroup label="حسب التصنيف (By Category)">
+                            @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ (string) old('product_source') === (string) $cat->id ? 'selected' : '' }}>
+                                {{ $cat->name }}
+                            </option>
+                            @endforeach
+                        </optgroup>
+                    </select>
+                    <p class="text-[10px] text-gray-400 mt-1">
+                        يُستخدم فقط عندما يكون نوع القسم "شبكة منتجات".
+                    </p>
+                </div>
+
+                <div class="js-media-type">
                     <label class="text-xs font-bold mb-1 block">نوع الوسائط</label>
                     <select name="media_type"
                             class="section-media-type w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
@@ -58,16 +87,47 @@
                     </p>
                 </div>
 
-                <div class="md:col-span-2">
-                    <label class="text-xs font-bold mb-1 block">ملف الوسائط (صورة طولية أو فيديو)</label>
+                <div class="md:col-span-2 js-media-file">
+                    <label class="text-xs font-bold mb-1 block">ملف الوسائط (صورة أو فيديو)</label>
                     <input type="file" name="media" accept="image/*,video/mp4,video/webm" class="w-full px-4 py-2 rounded-xl border">
                     @error('media')<p class="text-xs text-red-500 -mt-2">{{ $message }}</p>@enderror
                 </div>
 
-                <div>
-                    <label class="text-xs font-bold mb-1 block">ترتيب فرعي (عند تعدد الأقسام لنفس المكان)</label>
-                    <input type="number" name="sort_order" min="0" value="{{ old('sort_order', 0) }}"
-                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                {{-- ── Media layout: aspect ratio + text/button position ──── --}}
+                <div class="js-media-layout">
+                    <label class="text-xs font-bold mb-1 block">شكل الإطار (Aspect Ratio)</label>
+                    <select name="aspect_ratio"
+                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        @foreach(\App\Models\HomepageSection::ASPECT_RATIOS as $value => $label)
+                        <option value="{{ $value }}" {{ old('aspect_ratio', 'landscape') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('aspect_ratio')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                </div>
+
+                <div class="js-media-layout">
+                    <label class="text-xs font-bold mb-1 block">موضع النص والزر (Text & Button Position)</label>
+                    <select name="text_position"
+                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        @foreach(\App\Models\HomepageSection::TEXT_POSITIONS_MAP as $value => $label)
+                        <option value="{{ $value }}" {{ old('text_position', 'overlay_center') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('text_position')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                </div>
+
+                <div class="js-legacy-position">
+                    <label class="text-xs font-bold mb-1 block">مكان العرض القديم (Position — اختياري)</label>
+                    <select name="position"
+                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        <option value="">-- بدون (يُرتّب حسب "الترتيب") --</option>
+                        @foreach(\App\Models\HomepageSection::POSITIONS as $value => $label)
+                        <option value="{{ $value }}" {{ old('position') === $value ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                        @endforeach
+                    </select>
+                    @error('position')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -180,7 +240,8 @@
                 <tr>
                     <th class="px-6 py-4">المعاينة</th>
                     <th class="px-6 py-4">العنوان</th>
-                    <th class="px-6 py-4">مكان العرض</th>
+                    <th class="px-6 py-4">النوع</th>
+                    <th class="px-6 py-4">الترتيب</th>
                     <th class="px-6 py-4">الوسائط</th>
                     <th class="px-6 py-4">الزر</th>
                     <th class="px-6 py-4">الحالة</th>
@@ -208,8 +269,15 @@
 
                     <td class="px-6 py-4">
                         <span class="text-xs px-2 py-1 rounded bg-purple-50 text-purple-700 border border-purple-100 whitespace-nowrap">
-                            {{ \App\Models\HomepageSection::POSITIONS[$item->position] ?? $item->position }}
+                            {{ \App\Models\HomepageSection::SECTION_TYPES[$item->section_type] ?? $item->section_type }}
                         </span>
+                        @if($item->isProductGrid() && $item->productSourceLabel())
+                        <span class="block text-[10px] text-gray-400 mt-1">{{ $item->productSourceLabel() }}</span>
+                        @endif
+                    </td>
+
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-bold text-gray-700">{{ $item->sort_order }}</span>
                     </td>
 
                     <td class="px-6 py-4">
@@ -245,7 +313,7 @@
 
                 {{-- ── Inline edit row ──────────────────────────────── --}}
                 <tr id="edit-{{ $item->id }}" class="hidden bg-gray-50">
-                    <td colspan="7" class="p-6">
+                    <td colspan="8" class="p-6">
                         <form action="{{ route('admin.homepage-sections.update', $item) }}"
                               method="POST"
                               enctype="multipart/form-data"
@@ -266,11 +334,11 @@
                                 </div>
 
                                 <div>
-                                    <label class="text-xs font-bold mb-1 block">مكان العرض (Position)</label>
-                                    <select name="position" required
-                                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
-                                        @foreach(\App\Models\HomepageSection::POSITIONS as $value => $label)
-                                        <option value="{{ $value }}" {{ $item->position === $value ? 'selected' : '' }}>
+                                    <label class="text-xs font-bold mb-1 block">نوع القسم (Section Type)</label>
+                                    <select name="section_type" required
+                                            class="section-type-select w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                        @foreach(\App\Models\HomepageSection::SECTION_TYPES as $value => $label)
+                                        <option value="{{ $value }}" {{ ($item->section_type ?? 'banner') === $value ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                         @endforeach
@@ -278,6 +346,32 @@
                                 </div>
 
                                 <div>
+                                    <label class="text-xs font-bold mb-1 block">الترتيب (Sort Order)</label>
+                                    <input type="number" name="sort_order" min="0" value="{{ $item->sort_order }}"
+                                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                    <p class="text-[10px] text-gray-400 mt-1">
+                                        رقم يحدد تسلسل ظهور القسم (1 = الأعلى).
+                                    </p>
+                                </div>
+
+                                <div class="md:col-span-2 js-product-source">
+                                    <label class="text-xs font-bold mb-1 block">مصدر المنتجات (Product Source)</label>
+                                    <select name="product_source"
+                                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                        @foreach(\App\Models\HomepageSection::PRODUCT_SOURCES as $value => $label)
+                                        <option value="{{ $value }}" {{ (string) $item->product_source === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                        <optgroup label="حسب التصنيف (By Category)">
+                                            @foreach($categories as $cat)
+                                            <option value="{{ $cat->id }}" {{ (string) $item->product_source === (string) $cat->id ? 'selected' : '' }}>
+                                                {{ $cat->name }}
+                                            </option>
+                                            @endforeach
+                                        </optgroup>
+                                    </select>
+                                </div>
+
+                                <div class="js-media-type">
                                     <label class="text-xs font-bold mb-1 block">نوع الوسائط</label>
                                     <select name="media_type"
                                             class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
@@ -287,15 +381,42 @@
                                     </select>
                                 </div>
 
-                                <div class="md:col-span-2">
+                                <div class="md:col-span-2 js-media-file">
                                     <label class="text-xs font-bold mb-1 block">استبدال ملف الوسائط (اختياري)</label>
                                     <input type="file" name="media" accept="image/*,video/mp4,video/webm" class="w-full px-4 py-2 rounded-xl border">
                                 </div>
 
-                                <div>
-                                    <label class="text-xs font-bold mb-1 block">ترتيب فرعي (عند تعدد الأقسام لنفس المكان)</label>
-                                    <input type="number" name="sort_order" min="0" value="{{ $item->sort_order }}"
-                                           class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                <div class="js-media-layout">
+                                    <label class="text-xs font-bold mb-1 block">شكل الإطار (Aspect Ratio)</label>
+                                    <select name="aspect_ratio"
+                                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                        @foreach(\App\Models\HomepageSection::ASPECT_RATIOS as $value => $label)
+                                        <option value="{{ $value }}" {{ ($item->aspect_ratio ?? 'landscape') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="js-media-layout">
+                                    <label class="text-xs font-bold mb-1 block">موضع النص والزر (Text & Button Position)</label>
+                                    <select name="text_position"
+                                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                        @foreach(\App\Models\HomepageSection::TEXT_POSITIONS_MAP as $value => $label)
+                                        <option value="{{ $value }}" {{ ($item->text_position ?? 'overlay_center') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="js-legacy-position">
+                                    <label class="text-xs font-bold mb-1 block">مكان العرض القديم (Position — اختياري)</label>
+                                    <select name="position"
+                                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                        <option value="" {{ $item->position ? '' : 'selected' }}>-- بدون (يُرتّب حسب "الترتيب") --</option>
+                                        @foreach(\App\Models\HomepageSection::POSITIONS as $value => $label)
+                                        <option value="{{ $value }}" {{ $item->position === $value ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                        @endforeach
+                                    </select>
                                 </div>
 
                                 <div>
@@ -393,7 +514,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-10 text-center text-gray-400">لا توجد أقسام بعد</td>
+                    <td colspan="8" class="px-6 py-10 text-center text-gray-400">لا توجد أقسام بعد</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -406,5 +527,36 @@ function toggleEdit(id) {
     const el = document.getElementById('edit-' + id);
     if (el) el.classList.toggle('hidden');
 }
+
+/*
+ * Show only the fields relevant to the chosen section_type, per form:
+ *   - hero_banner     → media (image/video) + overlay text/CTA
+ *   - custom_image    → media (image)
+ *   - product_grid    → product source
+ *   - categories_grid → (no media, no source — just title/sort_order)
+ *   - text_block      → text/CTA fields only
+ */
+function applySectionType(select) {
+    const form = select.closest('form');
+    if (!form) return;
+    const type = select.value;
+    const usesMedia = (type === 'hero_banner' || type === 'custom_image' || type === 'banner');
+
+    const setVisible = (selector, visible) => {
+        form.querySelectorAll(selector).forEach(el => {
+            el.style.display = visible ? '' : 'none';
+        });
+    };
+
+    setVisible('.js-media-type', usesMedia);
+    setVisible('.js-media-file', usesMedia);
+    setVisible('.js-media-layout', usesMedia);
+    setVisible('.js-product-source', type === 'product_grid');
+}
+
+document.querySelectorAll('.section-type-select').forEach(sel => {
+    applySectionType(sel);
+    sel.addEventListener('change', () => applySectionType(sel));
+});
 </script>
 @endsection
