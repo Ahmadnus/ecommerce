@@ -3,8 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     CartController, OrderController, ProductController, WishlistController,
-    PageController, ShippingApiController, CheckoutController, ProfileController,
-    SocialLinkController
+    PageController, ShippingApiController, CheckoutController, ProfileController
 };
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\{
@@ -12,6 +11,7 @@ use App\Http\Controllers\Admin\{
     AnnouncementController, AttributeController, AttributeValueController, CheckoutSettingsController, HomeSectionController, SiteFeatureController,
     HomepageSectionController,
     CountryController, ZoneController,
+    SocialLinkController,
     CurrencyController as AdminCurrencyController,
     FooterCompanyInfoController,
     ProductController as AdminProductController,
@@ -25,7 +25,6 @@ use App\Http\Controllers\Admin\{
 use App\Http\Controllers\CustomizableProductsController;
 use App\Http\Controllers\CustomizationController;
 use App\Http\Controllers\Admin\OrderCustomizationController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ContactController;
@@ -67,18 +66,11 @@ Route::middleware('guest.checkout')->group(function () {
 Route::get('/checkout/select-zone',  [CheckoutController::class, 'selectZone'])->name('checkout.select-zone');
 Route::post('/checkout/confirm-zone',[CheckoutController::class, 'confirmZone'])->name('checkout.confirm-zone');
 
-// Zones API (called by JS — no auth required)
-Route::get('/api/shipping/zones/{country}', [CheckoutController::class, 'zonesForCountry'])
-     ->name('checkout.zones');
-
-
 // ═══════════════════════════════════════════════════════════════════════════
 // AUTH (login / register / password reset / OTP) — DEDUPLICATED
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ── Guest-only auth routes (login / register) ─────────────────────────────
-// NOTE: this is the ONLY place '/login' and '/register' are registered.
-// The previous file had a second, unguarded copy of these — removed.
 Route::middleware('guest')->group(function () {
     Route::get('/login',     [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login',    [AuthController::class, 'login'])->name('login.attempt');
@@ -91,13 +83,6 @@ Route::get('/forgot-password',  [ForgotPasswordController::class, 'showForm'])->
 Route::post('/forgot-password', [ForgotPasswordController::class, 'send'])->name('password.email');
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm'])->name('password.reset');
 Route::post('/reset-password',        [ResetPasswordController::class, 'reset'])->name('password.reset.update');
-// NOTE: renamed from 'password.update' → 'password.reset.update'. Your
-// original file used 'password.update' here AND for the separate admin
-// "change my password" route below — same final name, two different
-// controllers. Whichever was registered last silently won for any
-// route('password.update') call. If anything in your Blade views calls
-// route('password.update') expecting THIS reset-password action (not the
-// admin one), update that call to route('password.reset.update').
 
 // ── Admin-only login portal ────────────────────────────────────────────────
 Route::middleware('admin.route.only')->group(function () {
@@ -105,13 +90,12 @@ Route::middleware('admin.route.only')->group(function () {
     Route::post('/adlogin', [AuthController::class, 'login']);
 });
 
-// ── OTP — registered ONCE (previous file had this block twice with
-//    conflicting route names: otp.verify.submit vs otp.submit) ─────────────
+// ── OTP verification ─────────────────────────────────────────────────────
 Route::get('/verify-otp',  [AuthController::class, 'showVerifyOtp'])->name('otp.verify');
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('otp.submit');
 Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('otp.resend');
 
-// ── Logout — registered ONCE (previous file had this 3 times) ──────────────
+// ── Logout ───────────────────────────────────────────────────────────────
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 
@@ -193,11 +177,6 @@ Route::prefix('customize')->name('customize.')->group(function () {
 // smaller dedicated admin groups further down that share the same
 // middleware/prefix/name pattern). This is the group that gives every
 // route inside it the "admin." name prefix and "/admin" URL prefix.
-//
-// NOTE: '/adlogin' → name 'admin.login' is registered ONCE, above, inside
-// the 'admin.route.only' middleware group. Your original file registered
-// it a second time right here — removed, since both pointed at the exact
-// same controller method and the same final route name.
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
@@ -247,12 +226,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('settings/sms/test', [SmsSettingsController::class, 'test'])->name('settings.sms.test');
 
     // ── Customization pricing settings ──────────────────────────────────────
-    // FIX: this used to be a standalone Route::prefix('settings') block
-    // sitting OUTSIDE this admin group, registering as
-    // "settings.customization-pricing.*" instead of
-    // "admin.settings.customization-pricing.*" — which is what the
-    // customization-pricing.blade.php view and its controller actually call.
-    // Moved inside this group so the names now match.
+    // ── Customization pricing settings ──────────────────────────────────────
     Route::get('settings/customization-pricing',
         [\App\Http\Controllers\Admin\CustomizationPricingSettingsController::class, 'edit'])
         ->name('settings.customization-pricing.edit');
@@ -275,6 +249,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/password', [AdminPasswordController::class, 'update'])->name('password.update');
 
     // ── Zones + monthly delivery schedules ───────────────────────────────────
+    // Direct entry to the merchant's Jordanian COD shipping matrix
+    Route::get('shipping', [\App\Http\Controllers\Admin\ShippingMatrixController::class, 'index'])->name('shipping.index');
     Route::resource('countries.zones', ZoneController::class)->only(['index', 'store', 'update', 'destroy']);
 
     Route::get('zones/{zone}/schedules',                       [\App\Http\Controllers\Admin\ZoneScheduleController::class, 'index'])     ->name('zones.schedules.index');
@@ -327,14 +303,15 @@ Route::prefix('admin/splash')->name('admin.splash.')->middleware(['auth', 'role:
 
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ADMIN LOCALE MODE — standalone (kept as-is, not part of role:admin group
-// in the original file, left unchanged to avoid altering its auth behavior)
+// ADMIN LOCALE MODE
 // ═══════════════════════════════════════════════════════════════════════════
 
-Route::get('/admin/locale-mode', [\App\Http\Controllers\Admin\LocaleModeController::class, 'index'])
-    ->name('admin.locale-mode');
-Route::post('/admin/locale-mode', [\App\Http\Controllers\Admin\LocaleModeController::class, 'update'])
-    ->name('admin.locale-mode.update');
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/locale-mode', [\App\Http\Controllers\Admin\LocaleModeController::class, 'index'])
+        ->name('admin.locale-mode');
+    Route::post('/admin/locale-mode', [\App\Http\Controllers\Admin\LocaleModeController::class, 'update'])
+        ->name('admin.locale-mode.update');
+});
 
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -342,7 +319,9 @@ Route::post('/admin/locale-mode', [\App\Http\Controllers\Admin\LocaleModeControl
 // ═══════════════════════════════════════════════════════════════════════════
 
 Route::post('/set-user-currency', function (Illuminate\Http\Request $request) {
-    session(['display_currency' => $request->currency_code]);
+    // Unified session key: the whole engine reads session('currency_code')
+    // via CurrencyService (the old 'display_currency' key was read by nothing).
+    app(\App\Services\CurrencyService::class)->switchTo((string) $request->currency_code);
     return back();
 })->name('currency.switch');
 
@@ -360,15 +339,9 @@ Route::get('/select-currency/{code}', function ($code) {
 // ═══════════════════════════════════════════════════════════════════════════
 // LANGUAGE SWITCHING — registered ONCE
 // ═══════════════════════════════════════════════════════════════════════════
-//
-// FIX: the previous file defined POST /language/switch TWICE with the same
-// name 'language.switch'. The second definition silently overwrote the
-// first, making the first block's simpler logic permanently dead code.
-// Keeping only the second (more complete) version, which respects the
-// admin-controlled "langsetting" toggle.
 
 Route::post('/language/switch', function (\Illuminate\Http\Request $request) {
-    $globalMode = DB::table('settings')->where('key', 'langsetting')->value('value') ?? 'both';
+    $globalMode = \App\Models\Setting::where('key', 'langsetting')->value('value') ?? 'both';
 
     if ($globalMode === 'both') {
         $locale = $request->input('locale');

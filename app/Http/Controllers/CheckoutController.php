@@ -45,13 +45,6 @@ class CheckoutController extends Controller
         ));
     }
 
-    // ─── AJAX: zones for a given country ─────────────────────────────────────
-
-    public function zonesForCountry(Country $country): JsonResponse
-    {
-        return response()->json(['zones' => $this->checkout->zonesForCountry($country)]);
-    }
-
     // ─── Place the order ──────────────────────────────────────────────────────
 
     public function placeOrder(Request $request): RedirectResponse

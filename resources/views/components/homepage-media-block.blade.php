@@ -49,8 +49,9 @@
         class="relative overflow-hidden block w-full {{ $frameClass }}">
 
         {{-- Layer 0: media --}}
-        @if($section->hasMedia() && $section->media_type === 'video')
-            <video src="{{ $section->media_url }}"
+        @if($section->hasMedia() && $section->media_type === 'video' && $section->effectiveVideoUrl())
+            {{-- Uploaded file wins; otherwise the admin's external video_url --}}
+            <video src="{{ $section->effectiveVideoUrl() }}"
                    class="mb-video absolute inset-0 z-0 w-full h-full object-cover"
                    autoplay loop muted playsinline controlslist="nodownload"></video>
 

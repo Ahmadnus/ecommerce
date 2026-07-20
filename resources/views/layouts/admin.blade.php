@@ -192,6 +192,11 @@
                         النظام والمالية
                     </div>
 
+                    <x-admin-nav-link href="{{ route('admin.shipping.index') }}" icon="truck"
+                        :active="request()->routeIs('admin.shipping.*')">
+                        أسعار الشحن (الدفع عند التوصيل)
+                    </x-admin-nav-link>
+
                     <x-admin-nav-link href="{{ route('admin.countries.index') }}" icon="globe"
                         :active="request()->routeIs('admin.countries.*') || request()->routeIs('admin.zones.*')">
                         الدول والمناطق

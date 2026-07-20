@@ -10,7 +10,7 @@ class SetLocale
     public function handle(Request $request, Closure $next)
     {
         $globalMode = cache()->remember('langsetting', 3600, function () {
-            return DB::table('settings')->where('key', 'langsetting')->value('value') ?? 'both';
+            return \App\Models\Setting::where('key', 'langsetting')->value('value') ?? 'both';
         });
 
         if ($globalMode === 'ar') {

@@ -29,12 +29,14 @@ use Illuminate\Support\Facades\Log;
  */
 class UpdateExchangeRates extends Command
 {
-    protected $signature   = 'currency:update-rates {--base=JOD : Base currency code}';
+    protected $signature   = 'currency:update-rates {--base= : Base currency code (defaults to the Main Store Currency)}';
     protected $description = 'Fetch and update exchange rates from the open exchange rate API';
 
     public function handle(): int
     {
-        $base = strtoupper($this->option('base'));
+        // Default to the admin-chosen Main Store Currency, never a hardcode.
+        $base = strtoupper((string) $this->option('base'))
+            ?: app(\App\Services\CurrencyService::class)->getBase()->code;
 
         $this->info("Fetching rates from open.er-api.com (base: {$base})...");
 
@@ -61,11 +63,10 @@ class UpdateExchangeRates extends Command
 
             foreach ($currencies as $currency) {
                 if ($currency->code === $base) {
-                    // Base currency always stays at 1.000000
-                    $currency->update([
-                        'exchange_rate' => '1.000000',
-                        'is_base'       => true,
-                    ]);
+                    // The reference currency always stays at 1.000000.
+                    // (is_base is managed exclusively by the admin panel —
+                    // touching it here could create two base rows.)
+                    $currency->update(['exchange_rate' => '1.000000']);
                     continue;
                 }
 

@@ -13,7 +13,9 @@ class ZoneService
 {
     public function getZonesForCountry(Country $country)
     {
-        return $country->zones()->ordered()->get();
+        // currentSchedule is eager-loaded so the matrix can show this month's
+        // effective delivery estimate without an extra query per governorate.
+        return $country->zones()->ordered()->with('currentSchedule')->get();
     }
 
     public function create(Country $country, array $validated): Zone

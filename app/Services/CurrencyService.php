@@ -42,7 +42,7 @@ class CurrencyService
 
         $code = session('currency_code');
 
-        // 1. Session-stored code
+        // 1. Session-stored code — the visitor explicitly switched
         if ($code) {
             $currency = Currency::active()->where('code', $code)->first();
             if ($currency) {
@@ -52,26 +52,32 @@ class CurrencyService
             session()->forget('currency_code');
         }
 
-        // 2. Hard-coded JOD default (base currency for this project)
-        $jod = Currency::active()->where('code', 'JOD')->first();
-        if ($jod) {
-            return $this->resolved = $jod;
-        }
-
-        // 3. DB row flagged is_base = true
+        // 2. The admin-chosen Main Store Currency (العملة الرئيسية للمتجر)
         $base = Currency::active()->where('is_base', true)->first();
         if ($base) {
             return $this->resolved = $base;
         }
 
-        // 4. Any active row
+        // 3. Any active row
         $any = Currency::active()->first();
         if ($any) {
             return $this->resolved = $any;
         }
 
-        // 5. Emergency in-memory placeholder — never throws, even with an empty DB
+        // 4. Emergency in-memory placeholder — never throws, even with an empty DB
         return $this->resolved = $this->makePlaceholder();
+    }
+
+    /**
+     * The Main Store Currency (العملة الرئيسية) — the currency every stored
+     * price and every saved order amount is denominated in. All exchange
+     * rates are manual rates relative to this currency (its own rate = 1).
+     */
+    public function getBase(): Currency
+    {
+        return Currency::where('is_base', true)->first()
+            ?? Currency::active()->orderBy('sort_order')->first()
+            ?? $this->makePlaceholder();
     }
 
     /**
@@ -231,9 +237,15 @@ class CurrencyService
                     Currency::where('is_base', true)->update([
                         'is_base' => false,
                     ]);
+                    // The Main Store Currency is the reference: its rate is 1.
+                    $validated['exchange_rate'] = '1.000000';
                 }
 
-                return Currency::create($validated);
+                $currency = Currency::create($validated);
+
+                Cache::forget('currencies.active');
+
+                return $currency;
             });
         } catch (\Throwable $e) {
             report($e);
@@ -259,7 +271,14 @@ class CurrencyService
                         ]);
                 }
 
+                // The Main Store Currency is the reference: its rate is 1.
+                if (!empty($validated['is_base'])) {
+                    $validated['exchange_rate'] = '1.000000';
+                }
+
                 $currency->update($validated);
+
+                Cache::forget('currencies.active');
 
                 return $currency;
             });
@@ -269,9 +288,20 @@ class CurrencyService
         }
     }
 
+    /**
+     * @throws \InvalidArgumentException when deleting the Main Store Currency
+     */
     public function deleteCurrency(Currency $currency): void
     {
+        if ($currency->is_base) {
+            throw new \InvalidArgumentException(
+                'لا يمكن حذف العملة الرئيسية للمتجر — عيّن عملة رئيسية أخرى أولاً.'
+            );
+        }
+
         $currency->delete();
+
+        Cache::forget('currencies.active');
     }
 
     /**

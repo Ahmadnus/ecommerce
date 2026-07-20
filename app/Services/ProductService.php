@@ -133,6 +133,8 @@ class ProductService
             ->ordered()
             ->get();
 
+        $categoryGridItems = null;
+
         foreach ($homepageSections as $section) {
             if ($section->isProductGrid()) {
                 try {
@@ -141,6 +143,16 @@ class ProductService
                     report($e);
                     $section->setRelation('resolvedProducts', new \Illuminate\Database\Eloquent\Collection());
                 }
+            } elseif ($section->isCategoriesGrid()) {
+                // Fetched once per request and shared, so multiple
+                // categories-grid cubes never repeat the query.
+                $categoryGridItems ??= Category::active()->roots()
+                    ->with(['allActiveChildren', 'media'])
+                    ->orderBy('sort_order')
+                    ->take(20)
+                    ->get();
+
+                $section->setRelation('resolvedCategories', $categoryGridItems);
             }
         }
 

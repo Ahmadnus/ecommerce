@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -21,27 +22,50 @@ class HomepageSection extends Model
         self::POSITION_ABOVE_FOOTER     => 'قسم اسفل الشاشة فوق الفوتر (Above Footer)',
     ];
 
-    // ── Section type (modular page-builder block) ───────────────────────────
-    // Every structural element of the homepage is a sortable section type, so
-    // the admin can position ANYTHING, ANYWHERE via sort_order alone.
+    // ── Section type (modular Block/Cube Builder) ───────────────────────────
+    // Every structural element of the homepage is a sortable, self-contained
+    // cube — the admin positions ANYTHING, ANYWHERE via sort_order alone.
     public const TYPE_HERO_BANNER     = 'hero_banner';
+    public const TYPE_PORTRAIT_MEDIA  = 'portrait_media';
+    public const TYPE_CUSTOM_MEDIA    = 'custom_media';
+    public const TYPE_PURE_TEXT_CTA   = 'pure_text_cta';
     public const TYPE_CATEGORIES_GRID = 'categories_grid';
     public const TYPE_PRODUCT_GRID    = 'product_grid';
-    public const TYPE_CUSTOM_IMAGE    = 'custom_image';
-    public const TYPE_TEXT_BLOCK      = 'text_block';
 
-    // Legacy alias — pre-unification media/text sections were stored as
-    // 'banner'; still rendered (as a hero banner) for backward compatibility.
-    public const TYPE_BANNER = 'banner';
+    // Legacy aliases — earlier builder iterations stored these values; they
+    // keep rendering forever (mapped onto the same cube renderers).
+    public const TYPE_BANNER       = 'banner';        // stacked media + text
+    public const TYPE_CUSTOM_IMAGE = 'custom_image';  // → custom_media
+    public const TYPE_TEXT_BLOCK   = 'text_block';    // → pure_text_cta
 
+    /** The pure cube palette offered in the admin "نوع المكعب" selector. */
     public const SECTION_TYPES = [
-        self::TYPE_HERO_BANNER     => 'بانر رئيسي — النص فوق الصورة (Hero Overlay)',
-        self::TYPE_BANNER          => 'بانر مقسم — الصورة ثم النص أسفلها (Stacked Banner)',
+        self::TYPE_HERO_BANNER     => 'بانر رئيسي فاخر — نص وأزرار فوق صورة/فيديو (Hero Banner)',
+        self::TYPE_PORTRAIT_MEDIA  => 'بلوك طولي (مجلة) — صورة أو فيديو عمودي (Portrait Media)',
+        self::TYPE_CUSTOM_MEDIA    => 'وسائط حرة — صورة أو فيديو مستقل (Custom Media)',
+        self::TYPE_PURE_TEXT_CTA   => 'نص حر / زر مستقل — عناوين فاخرة و CTA (Pure Text & CTA)',
         self::TYPE_CATEGORIES_GRID => 'شبكة التصنيفات (Categories Grid)',
-        self::TYPE_PRODUCT_GRID    => 'شبكة منتجات (Product Grid)',
-        self::TYPE_CUSTOM_IMAGE    => 'صورة ترويجية مستقلة (Custom Image)',
-        self::TYPE_TEXT_BLOCK      => 'كتلة نصية (عنوان ووصف)',
+        self::TYPE_PRODUCT_GRID    => 'شبكة منتجات ديناميكية (Product Grid)',
     ];
+
+    /** Labels for legacy stored values (table display + validation only). */
+    public const LEGACY_SECTION_TYPES = [
+        self::TYPE_BANNER       => 'بانر مقسم قديم — الصورة ثم النص (Stacked Banner)',
+        self::TYPE_CUSTOM_IMAGE => 'صورة ترويجية مستقلة (Custom Image — قديم)',
+        self::TYPE_TEXT_BLOCK   => 'كتلة نصية (Text Block — قديم)',
+    ];
+
+    public static function allTypeKeys(): array
+    {
+        return array_merge(array_keys(self::SECTION_TYPES), array_keys(self::LEGACY_SECTION_TYPES));
+    }
+
+    public function typeLabel(): string
+    {
+        return self::SECTION_TYPES[$this->section_type]
+            ?? self::LEGACY_SECTION_TYPES[$this->section_type]
+            ?? $this->section_type;
+    }
 
     /**
      * Section types that render an uploaded image/video (media fields shown
@@ -51,9 +75,35 @@ class HomepageSection extends Model
     {
         return in_array($this->section_type, [
             self::TYPE_HERO_BANNER,
+            self::TYPE_PORTRAIT_MEDIA,
+            self::TYPE_CUSTOM_MEDIA,
             self::TYPE_CUSTOM_IMAGE,
             self::TYPE_BANNER,
         ], true);
+    }
+
+    // ── Padding presets (المسافة الرأسية للمكعب) ────────────────────────────
+    public const PADDING_OPTIONS = [
+        'none'     => 'بدون مسافات (None)',
+        'compact'  => 'مسافة خفيفة (Compact)',
+        'normal'   => 'مسافة متوسطة (Normal)',
+        'spacious' => 'مسافة واسعة (Spacious)',
+    ];
+
+    private const PADDING_CLASSES = [
+        'none'     => 'py-0',
+        'compact'  => 'py-3 md:py-4',
+        'normal'   => 'py-6 md:py-10',
+        'spacious' => 'py-12 md:py-20',
+    ];
+
+    /**
+     * Extra vertical breathing space for this cube, or null to rely purely
+     * on the builder's uniform rhythm.
+     */
+    public function paddingClasses(): ?string
+    {
+        return self::PADDING_CLASSES[$this->padding_settings] ?? null;
     }
 
     // ── Product source (only when section_type = product_grid) ──────────────
@@ -133,6 +183,9 @@ class HomepageSection extends Model
         'paragraph',
         'media_path',
         'media_type',
+        'video_url',
+        'background_color',
+        'padding_settings',
         'position',
         'section_type',
         'product_source',
@@ -209,9 +262,25 @@ class HomepageSection extends Model
         };
     }
 
+    /**
+     * The ratio actually used for rendering: the admin choice, with a
+     * type-aware default — portrait_media cubes default to the tall magazine
+     * frame, every other media cube defaults to full-screen.
+     */
+    public function effectiveAspectRatio(): string
+    {
+        if ($this->aspect_ratio && isset(self::ASPECT_RATIOS[$this->aspect_ratio])) {
+            return $this->aspect_ratio;
+        }
+
+        return $this->section_type === self::TYPE_PORTRAIT_MEDIA
+            ? self::RATIO_PORTRAIT
+            : self::RATIO_FULL;
+    }
+
     public function isFullScreenMedia(): bool
     {
-        return ($this->aspect_ratio ?? self::RATIO_FULL) === self::RATIO_FULL;
+        return $this->effectiveAspectRatio() === self::RATIO_FULL;
     }
 
     /**
@@ -220,7 +289,7 @@ class HomepageSection extends Model
      */
     public function aspectRatioClasses(): ?string
     {
-        return self::ASPECT_RATIO_CLASSES[$this->aspect_ratio] ?? null;
+        return self::ASPECT_RATIO_CLASSES[$this->effectiveAspectRatio()] ?? null;
     }
 
     // ── Section-type helpers ────────────────────────────────────────────────
@@ -234,9 +303,14 @@ class HomepageSection extends Model
         return $this->section_type === self::TYPE_CATEGORIES_GRID;
     }
 
-    public function isCustomImage(): bool
+    public function isPortraitMedia(): bool
     {
-        return $this->section_type === self::TYPE_CUSTOM_IMAGE;
+        return $this->section_type === self::TYPE_PORTRAIT_MEDIA;
+    }
+
+    public function isCustomMedia(): bool
+    {
+        return in_array($this->section_type, [self::TYPE_CUSTOM_MEDIA, self::TYPE_CUSTOM_IMAGE], true);
     }
 
     public function isBanner(): bool
@@ -246,7 +320,7 @@ class HomepageSection extends Model
 
     public function isTextBlock(): bool
     {
-        return $this->section_type === self::TYPE_TEXT_BLOCK;
+        return in_array($this->section_type, [self::TYPE_PURE_TEXT_CTA, self::TYPE_TEXT_BLOCK], true);
     }
 
     public function isProductGrid(): bool
@@ -340,7 +414,21 @@ class HomepageSection extends Model
 
     public function hasMedia(): bool
     {
-        return $this->media_type !== 'none' && ! empty($this->media_path);
+        return $this->media_type !== 'none'
+            && (! empty($this->media_path) || ! empty($this->video_url));
+    }
+
+    /**
+     * The video source to render: an uploaded file wins; otherwise the
+     * admin-provided external video_url.
+     */
+    public function effectiveVideoUrl(): ?string
+    {
+        if ($this->media_type !== 'video') {
+            return null;
+        }
+
+        return $this->media_path ? $this->media_url : ($this->video_url ?: null);
     }
 
     public function hasButton(): bool

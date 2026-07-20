@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Country;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 /**
  * ShippingZoneApiService — builds the zone + delivery-schedule payload for
@@ -12,39 +11,6 @@ use Illuminate\Support\Facades\Log;
  */
 class ShippingZoneApiService
 {
-    /**
-     * Active zones + default currency payload for the checkout Fetch API
-     * (used by ShippingApiController::zones).
-     */
-    public function getCheckoutZonesPayload(Country $country): array
-    {
-        if (!$country->is_active) {
-            return ['zones' => [], 'currency' => null];
-        }
-
-        $zones = $country->activeZones()
-            ->select('id', 'name', 'shipping_price', 'delivery_days')
-            ->get()
-            ->map(fn($z) => [
-                'id'             => $z->id,
-                'name'           => $z->name,
-                'shipping_price' => (float) $z->shipping_price,
-                'delivery_days'  => $z->delivery_days,
-            ]);
-
-        // Default currency for this country
-        $currency = $country->defaultCurrency()->first();
-
-        return [
-            'zones'    => $zones,
-            'currency' => $currency ? [
-                'code'          => $currency->code,
-                'symbol'        => $currency->symbol,
-                'exchange_rate' => (float) $currency->exchange_rate,
-            ] : null,
-        ];
-    }
-
     /**
      * All active countries for a country selector.
      */
@@ -69,11 +35,6 @@ class ShippingZoneApiService
             ->active()
             ->ordered()
             ->get();
-
-        Log::info('Zone schedules debug', [
-            'month' => $currentMonth,
-            'zones' => $zones->toArray(),
-        ]);
 
         if ($zones->isEmpty()) {
             return [

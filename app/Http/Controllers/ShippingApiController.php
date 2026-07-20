@@ -14,12 +14,19 @@ class ShippingApiController extends Controller
 
     /**
      * GET /api/shipping/zones/{country}
-     * Returns active zones for a country as JSON.
-     * Called by the checkout page via Fetch API.
+     *
+     * THE single zones endpoint for the storefront (checkout + post-purchase
+     * zone selection). Returns active zones enriched with this month's
+     * delivery schedule — the exact payload the checkout JS renders
+     * (has_schedule / schedule / schedule_month badges).
      */
     public function zones(Country $country): JsonResponse
     {
-        return response()->json($this->shipping->getCheckoutZonesPayload($country));
+        if (! $country->is_active) {
+            return response()->json(['zones' => [], 'current_month' => now()->format('Y-m')]);
+        }
+
+        return response()->json($this->shipping->getZonesWithSchedules($country));
     }
 
     /**

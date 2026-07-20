@@ -138,8 +138,8 @@
                         </span>
                     </div>
 
-                    {{-- Delivery fee (tax_amount column) --}}
-                    @php $deliveryFee = (float)($order->tax_amount ?? 0); @endphp
+                    {{-- Delivery fee — stored in the Main Store Currency --}}
+                    @php $deliveryFee = (float)($order->delivery_fee ?? 0); @endphp
                     <div class="flex justify-between text-gray-500">
                         <span class="flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

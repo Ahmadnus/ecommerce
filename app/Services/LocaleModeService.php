@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\DB;
+use App\Models\Setting;
 
 /**
  * LocaleModeService — business logic for the admin language-mode setting
@@ -12,7 +12,7 @@ class LocaleModeService
 {
     public function getMode(): string
     {
-        return DB::table('settings')->where('key', 'langsetting')->value('value') ?? 'both';
+        return Setting::where('key', 'langsetting')->value('value') ?? 'both';
     }
 
     /**
@@ -22,7 +22,7 @@ class LocaleModeService
     public function setMode(?string $mode): void
     {
         if (in_array($mode, ['ar', 'en', 'both'])) {
-            DB::table('settings')->updateOrInsert(
+            Setting::updateOrCreate(
                 ['key' => 'langsetting'],
                 ['value' => $mode]
             );

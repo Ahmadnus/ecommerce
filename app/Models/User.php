@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+
 use Filament\Panel;
 use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\FilamentUser;

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,17 +38,22 @@ class Order extends Model
     // ─── Fillable ─────────────────────────────────────────────────────────────
  
  protected $fillable = [
-    'user_id', 'order_number', 'status', 'payment_method', 'payment_status',
+    'user_id', 'guest_email', 'guest_session_id',
+    'order_number', 'status', 'payment_method', 'payment_status',
+    'zone_id', 'shipping_area', 'delivery_days',
     'subtotal', 'delivery_fee', 'shipping_amount', 'total_amount',
-    'shipping_name', 'shipping_email', 'shipping_phone', 'shipping_address', 
-    'shipping_city', 'shipping_zip', 'shipping_country', 'notes'
+    'currency_code', 'display_currency_code', 'display_exchange_rate',
+    'shipping_name', 'shipping_email', 'shipping_phone', 'shipping_address',
+    'shipping_city', 'shipping_zip', 'shipping_country', 'notes',
 ];
     protected $casts = [
-        'subtotal'        => 'decimal:2',
-        'tax_amount'      => 'decimal:2',
-        'shipping_amount' => 'decimal:2',
-        'total_amount'    => 'decimal:2',
-        'paid_at'         => 'datetime',
+        'subtotal'              => 'decimal:2',
+        'delivery_fee'          => 'decimal:2',
+        'shipping_amount'       => 'decimal:2',
+        'total_amount'          => 'decimal:2',
+        'display_exchange_rate' => 'decimal:6',
+        'delivery_days'         => 'integer',
+        'paid_at'               => 'datetime',
     ];
  
     // ─── Relationships ────────────────────────────────────────────────────────

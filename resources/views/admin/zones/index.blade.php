@@ -67,7 +67,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1.5">
-                            سعر sss ($) <span class="text-red-500">*</span>
+                            سعر الشحن (د.أ) <span class="text-red-500">*</span>
                         </label>
                        <div>
  
@@ -121,33 +121,50 @@
 
         @else
         <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-            <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between gap-4">
+                <span id="zones-count" class="text-xs font-bold text-gray-500 uppercase tracking-wider flex-shrink-0">
                     {{ $zones->count() }} منطقة
                 </span>
+
+                {{-- بحث فوري عن محافظة --}}
+                <div class="relative w-full max-w-xs">
+                    <svg class="w-4 h-4 text-gray-300 absolute top-1/2 -translate-y-1/2 right-3 pointer-events-none"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/>
+                    </svg>
+                    <input type="search" id="zone-search"
+                           placeholder="ابحث عن محافظة… (عمان، إربد…)"
+                           class="w-full border border-gray-200 rounded-xl py-2 pr-9 pl-3 bg-gray-50 text-xs
+                                  focus:bg-white focus:outline-none focus:ring-2 focus:border-brand transition-all">
+                </div>
+            </div>
+
+            <div id="zone-search-empty" class="hidden px-5 py-8 text-center text-xs text-gray-400">
+                لا توجد محافظة مطابقة لبحثك.
             </div>
 
             <div class="divide-y divide-gray-100">
                 @foreach($zones as $zone)
-                <div x-data="{ editing: false }" class="group">
+                <div x-data="{ editing: false }" class="group js-zone-row" data-zone-name="{{ $zone->name }}">
 
                     {{-- View row --}}
                     <div x-show="!editing" class="flex items-center gap-4 px-5 py-4 hover:bg-gray-50/60 transition-colors">
                         <div class="flex-1 min-w-0">
                             <p class="font-semibold text-gray-900 text-sm">{{ $zone->name }}</p>
-                            @if($zone->delivery_days)
+                            @if($zone->deliveryEstimate())
                             <p class="text-xs text-gray-400 mt-0.5">
                                 <svg class="w-3 h-3 inline-block ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                {{ $zone->delivery_days }} أيام
+                                التوصيل خلال {{ $zone->deliveryEstimate() }}
                             </p>
                             @endif
                         </div>
 
                         <div class="flex items-center gap-3 flex-shrink-0">
                             <span class="font-black text-gray-900 tabular-nums text-sm">
-                                ${{ number_format($zone->shipping_price, 2) }}
+                                {{ number_format($zone->shipping_price, 2) }} د.أ
                             </span>
                             @if($zone->is_active)
                             <span class="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" title="نشطة"></span>
@@ -230,4 +247,28 @@
     </div>
 
 </div>
+
+<script>
+// بحث فوري: يُخفي صفوف المحافظات غير المطابقة أثناء الكتابة مباشرة.
+(function () {
+    const input = document.getElementById('zone-search');
+    if (!input) return;
+    const rows  = Array.from(document.querySelectorAll('.js-zone-row'));
+    const empty = document.getElementById('zone-search-empty');
+    const count = document.getElementById('zones-count');
+    const total = rows.length;
+
+    input.addEventListener('input', function () {
+        const q = this.value.trim();
+        let visible = 0;
+        rows.forEach(row => {
+            const match = !q || (row.dataset.zoneName || '').includes(q);
+            row.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+        if (empty) empty.classList.toggle('hidden', visible > 0);
+        if (count) count.textContent = (q ? visible + ' من ' + total : total) + ' منطقة';
+    });
+})();
+</script>
 @endsection

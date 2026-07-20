@@ -43,17 +43,6 @@ class CheckoutService
     }
 
     /**
-     * Active zones of a country for the AJAX dropdown.
-     */
-    public function zonesForCountry(Country $country)
-    {
-        return $country->activeZones()
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'shipping_price', 'delivery_days']);
-    }
-
-    /**
      * Resolve an active zone belonging to the given country.
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
@@ -87,11 +76,20 @@ class CheckoutService
     {
         $zone = $this->resolveZone((int) $validated['zone_id'], (int) $validated['country_id']);
 
+        // ── Financial consolidation (قاعدة العملة الرئيسية) ──────────────────
+        // Cart prices and zone shipping prices are stored in the Main Store
+        // Currency, so all amounts below are already denominated in it — no
+        // matter which display currency the customer was browsing in. The
+        // display currency is recorded as a reference snapshot only.
         $summary     = $this->cart->getSummary();
-        $deliveryFee = (float) $zone->shipping_price;
-        $total       = round($summary['subtotal'] + $deliveryFee, 2);
+        $deliveryFee = round((float) $zone->shipping_price, 2);
+        $total       = round((float) $summary['subtotal'] + $deliveryFee, 2);
 
-        $order = DB::transaction(function () use ($validated, $summary, $zone, $deliveryFee, $total) {
+        $currencies   = app(\App\Services\CurrencyService::class);
+        $baseCurrency = $currencies->getBase();
+        $displayed    = $currencies->getActive();
+
+        $order = DB::transaction(function () use ($validated, $summary, $zone, $deliveryFee, $total, $baseCurrency, $displayed) {
 
             $userId     = Auth::check() ? Auth::user()->getAttributes()['id'] : null;
             $guestEmail = !$userId ? ($validated['guest_email'] ?? null) : null;
@@ -109,11 +107,17 @@ class CheckoutService
                 'zone_id'          => $zone->id,
                 'shipping_area'    => $zone->name . ' (' . $zone->country->name . ')',
                 'delivery_days'    => $zone->delivery_days,
-                'tax_amount'       => $deliveryFee,
 
-                'subtotal'         => (float) $summary['subtotal'],
-                'shipping_amount'  => 0.00,
+                // All amounts strictly in the Main Store Currency.
+                'subtotal'         => round((float) $summary['subtotal'], 2),
+                'delivery_fee'     => $deliveryFee,
+                'shipping_amount'  => $deliveryFee,
                 'total_amount'     => $total,
+                'currency_code'    => $baseCurrency->code,
+
+                // Reference snapshot of what the customer was browsing in.
+                'display_currency_code' => $displayed->code,
+                'display_exchange_rate' => (string) $displayed->exchange_rate,
 
                 'shipping_name'    => $validated['shipping_name'],
               'shipping_phone' => ($validated['shipping_phone_code'] ?? '')
@@ -179,13 +183,14 @@ class CheckoutService
             return null;
         }
 
-        $deliveryFee = (float) $zone->shipping_price;
+        $deliveryFee = round((float) $zone->shipping_price, 2);
         $order->update([
-            'zone_id'       => $zone->id,
-            'shipping_area' => $zone->name . ' (' . $zone->country->name . ')',
-            'delivery_days' => $zone->delivery_days,
-            'tax_amount'    => $deliveryFee,
-            'total_amount'  => round((float) $order->subtotal + $deliveryFee, 2),
+            'zone_id'         => $zone->id,
+            'shipping_area'   => $zone->name . ' (' . $zone->country->name . ')',
+            'delivery_days'   => $zone->delivery_days,
+            'delivery_fee'    => $deliveryFee,
+            'shipping_amount' => $deliveryFee,
+            'total_amount'    => round((float) $order->subtotal + $deliveryFee, 2),
         ]);
 
         return $order;

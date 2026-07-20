@@ -30,7 +30,7 @@ class HomepageSectionController extends Controller
     {
         $mediaType = $request->input('media_type', 'none');
 
-        $request->validate($this->rules($mediaType, true));
+        $request->validate($this->rules($mediaType, true, $request->filled('video_url')));
 
         try {
             $this->sections->create(
@@ -38,8 +38,11 @@ class HomepageSectionController extends Controller
                     'title'       => $request->input('title'),
                     'paragraph'   => $request->input('paragraph'),
                     'media_type'  => $mediaType,
+                    'video_url'   => $request->input('video_url'),
+                    'background_color' => $request->input('background_color'),
+                    'padding_settings' => $request->input('padding_settings'),
                     'position'    => $request->input('position'),
-                    'section_type'   => $request->input('section_type', HomepageSection::TYPE_TEXT_BLOCK),
+                    'section_type'   => $request->input('section_type', HomepageSection::TYPE_PURE_TEXT_CTA),
                     'product_source' => $this->resolveProductSource($request),
                     'text_position'  => $request->input('text_position', HomepageSection::POS_OVERLAY_CENTER),
                     'aspect_ratio'   => $request->input('aspect_ratio', HomepageSection::RATIO_LANDSCAPE),
@@ -69,7 +72,7 @@ class HomepageSectionController extends Controller
     {
         $mediaType = $request->input('media_type', $homepageSection->media_type);
 
-        $request->validate($this->rules($mediaType, false));
+        $request->validate($this->rules($mediaType, false, $request->filled('video_url')));
 
         try {
             $this->sections->update(
@@ -78,6 +81,9 @@ class HomepageSectionController extends Controller
                     'title'       => $request->input('title'),
                     'paragraph'   => $request->input('paragraph'),
                     'media_type'  => $mediaType,
+                    'video_url'   => $request->input('video_url'),
+                    'background_color' => $request->input('background_color'),
+                    'padding_settings' => $request->input('padding_settings'),
                     'position'    => $request->input('position', $homepageSection->position),
                     'section_type'   => $request->input('section_type', $homepageSection->section_type ?? HomepageSection::TYPE_BANNER),
                     'product_source' => $this->resolveProductSource($request),
@@ -127,9 +133,13 @@ class HomepageSectionController extends Controller
         return $source !== '' ? $source : null;
     }
 
-    private function rules(string $mediaType, bool $requireFile): array
+    private function rules(string $mediaType, bool $requireFile, bool $hasVideoUrl = false): array
     {
-        $needsFile = $requireFile && in_array($mediaType, ['image', 'video'], true);
+        // A video cube may be fueled by an external video_url instead of an
+        // uploaded file — never demand a file when a URL was provided.
+        $needsFile = $requireFile
+            && in_array($mediaType, ['image', 'video'], true)
+            && ! ($mediaType === 'video' && $hasVideoUrl);
 
         $fileRule = $mediaType === 'video'
             ? 'mimes:mp4,webm|max:51200'
@@ -139,8 +149,11 @@ class HomepageSectionController extends Controller
             'title'       => 'nullable|string|max:255',
             'paragraph'   => 'nullable|string',
             'media_type'  => 'required|in:image,video,none',
+            'video_url'   => 'nullable|url|max:500',
+            'background_color' => ['nullable', 'string', 'regex:/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/'],
+            'padding_settings' => ['nullable', Rule::in(array_keys(HomepageSection::PADDING_OPTIONS))],
             'position'    => 'nullable|in:top_hero,below_categories,above_footer',
-            'section_type'   => ['required', Rule::in(array_keys(HomepageSection::SECTION_TYPES))],
+            'section_type'   => ['required', Rule::in(HomepageSection::allTypeKeys())],
             // Free string: one of the smart sources or a numeric category id.
             // Only meaningful when section_type = product_grid.
             'product_source' => 'nullable|string|max:100',

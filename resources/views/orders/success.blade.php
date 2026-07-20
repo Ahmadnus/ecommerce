@@ -64,9 +64,9 @@
     $sym  = $cur->symbol;
     $cv   = fn(float $jod): string => number_format(round($jod * $rate, 2), 2);
 
-    // Pull stored values from the order
-    // tax_amount column stores the delivery fee (zone shipping_price in JOD)
-    $deliveryFeeJod = (float) ($order->tax_amount ?? 0);
+    // Pull stored values from the order — all amounts are recorded in the
+    // Main Store Currency; $cv converts for display only.
+    $deliveryFeeJod = (float) ($order->delivery_fee ?? 0);
     $subtotalJod    = (float) ($order->subtotal   ?? 0);
     $totalJod       = (float) ($order->total_amount ?? $subtotalJod + $deliveryFeeJod);
     $shippingArea   = $order->shipping_area ?? null;
