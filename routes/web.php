@@ -71,9 +71,7 @@ Route::middleware('guest.checkout')->group(function () {
 Route::get('/checkout/select-zone',  [CheckoutController::class, 'selectZone'])->name('checkout.select-zone');
 Route::post('/checkout/confirm-zone',[CheckoutController::class, 'confirmZone'])->name('checkout.confirm-zone');
 
-// Zones API (called by JS — no auth required)
-Route::get('/api/shipping/zones/{country}', [CheckoutController::class, 'zonesForCountry'])
-     ->name('checkout.zones');
+// Zones API for checkout: served by the api.shipping.zones route below.
 
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -165,7 +163,8 @@ Route::get('/orders/success/{orderNumber}', [OrderController::class, 'success'])
 
 Route::prefix('api/shipping')->name('api.shipping.')->group(function () {
     Route::get('countries', [ShippingApiController::class, 'countries'])->name('countries');
-    Route::get('zones/{country}', [ShippingApiController::class, 'zones'])->name('zones');
+    // Rich payload (zones + monthly delivery schedules) consumed by the checkout JS.
+    Route::get('zones/{country}', [\App\Http\Controllers\Api\ShippingZoneApiController::class, 'index'])->name('zones');
 });
 
 

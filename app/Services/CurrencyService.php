@@ -231,6 +231,8 @@ class CurrencyService
                     Currency::where('is_base', true)->update([
                         'is_base' => false,
                     ]);
+                    // Base currency is the reference — its rate must stay 1.00
+                    $validated['exchange_rate'] = '1.000000';
                 }
 
                 return Currency::create($validated);
@@ -257,6 +259,11 @@ class CurrencyService
                         ->update([
                             'is_base' => false,
                         ]);
+                }
+
+                if (!empty($validated['is_base'])) {
+                    // Base currency is the reference — its rate must stay 1.00
+                    $validated['exchange_rate'] = '1.000000';
                 }
 
                 $currency->update($validated);

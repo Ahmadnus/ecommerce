@@ -80,7 +80,7 @@
         subtotalJod:  {{ (float) $summary['subtotal'] }},
         rate:         {{ $rate }},
         symbol:       '{{ $sym }}',
-   zonesApiBase: '{{ url('/shipping/zones') }}',
+   zonesApiBase: '{{ url('/api/shipping/zones') }}',
     };
 
 </script>
