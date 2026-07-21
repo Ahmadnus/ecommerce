@@ -47,7 +47,7 @@
 <{{ $tag }}
     @if($link_url && ! $overlay) href="{{ $link_url }}" @endif
     id="{{ $bannerId }}"
-    class="banner-container block w-full {{ $height }} overflow-hidden relative">
+    class="banner-container block w-full max-w-none m-0 p-0 {{ $height }} overflow-hidden relative">
 
     @if($hasOverlay)
         <div class="absolute inset-x-0 bottom-0 z-10 pt-24 pb-6 px-5 md:px-10
@@ -79,7 +79,8 @@
 
     @if($media_type === 'video')
         <video src="{{ $file_path }}"
-               class="banner-video w-full h-full object-cover"
+               class="banner-video block w-full h-full object-cover"
+               style="object-fit: cover !important;"
                autoplay loop muted playsinline controlslist="nodownload">
         </video>
 
@@ -111,7 +112,7 @@
             </button>
         </div>
     @else
-        <img src="{{ $file_path }}" alt="" class="w-full h-full object-cover">
+        <img src="{{ $file_path }}" alt="" class="block w-full h-full object-cover" style="object-fit: cover !important;">
     @endif
 </{{ $tag }}>
 

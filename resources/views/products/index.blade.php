@@ -585,10 +585,16 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
             ->groupBy('position');
     @endphp
 
-    {{-- ── LOCATION 1 (Top of Page): position = top_hero ───────────────── --}}
-    @foreach($sections->get('top_hero', collect()) as $dynSection)
-        <x-homepage-section-block :section="$dynSection" :is-rtl="$isRtl" />
-    @endforeach
+    {{-- ── LOCATION 1 (Top of Page): position = top_hero ─────────────────
+         Full-bleed breakout: the parent container below applies
+         max-w-screen-2xl + px padding, so this wrapper cancels both with
+         negative margins + max-w-none, letting the hero media touch the
+         exact left/right edges of the viewport. ──────────────────────── --}}
+    <div class="w-screen max-w-none -mx-3 sm:-mx-5 lg:-mx-8 p-0 overflow-hidden">
+        @foreach($sections->get('top_hero', collect()) as $dynSection)
+            <x-homepage-section-block :section="$dynSection" :is-rtl="$isRtl" />
+        @endforeach
+    </div>
 
     {{-- ── SECTION 3: Categories ───────────────────────────────────── --}}
     @php
@@ -600,10 +606,13 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
         <x-category-grid :categories="$topCategories" :current="$currentCategory ?? null" :show-all="true" />
     </div>
 
-    {{-- ── LOCATION 2 (Middle of Page): position = below_categories ────── --}}
-    @foreach($sections->get('below_categories', collect()) as $dynSection)
-        <x-homepage-section-block :section="$dynSection" :is-rtl="$isRtl" />
-    @endforeach
+    {{-- ── LOCATION 2 (Middle of Page): position = below_categories ──────
+         Same full-bleed breakout as top_hero above. ───────────────────── --}}
+    <div class="w-screen max-w-none -mx-3 sm:-mx-5 lg:-mx-8 p-0 overflow-hidden">
+        @foreach($sections->get('below_categories', collect()) as $dynSection)
+            <x-homepage-section-block :section="$dynSection" :is-rtl="$isRtl" />
+        @endforeach
+    </div>
 
     @foreach($banners as $banner)
         @if($banner->position === 'top')
