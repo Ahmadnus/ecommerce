@@ -12,7 +12,7 @@
 
     @if($title)
     <div class="flex items-center justify-between mb-3 px-1">
-        <h2 class="font-display text-base font-bold text-gray-900 flex items-center gap-2">
+        <h2 class="font-sans-modern text-base font-bold text-gray-900 flex items-center gap-2">
             <span class="w-1 h-4 rounded-full" style="background:var(--brand-color,#0ea5e9)"></span>
             {{ $title }}
         </h2>

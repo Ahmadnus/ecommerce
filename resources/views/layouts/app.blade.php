@@ -140,6 +140,10 @@
             --font-ar: {!! $fontArCss !!};
             --font-en: {!! $fontEnCss !!};
 
+            /* ── Modern sans-serif stack (category grid + admin "Sans-serif"
+                   typography choice on /admin/homepage-sections) ──────────── */
+            --font-sans-modern: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
             /* ── Font sizes (NEW — from settings table) ────────────────── */
             --base-font-size:          {{ $ts['base_font_size'] }};
             --navbar-font-size:        {{ $ts['navbar_font_size'] }};
@@ -319,6 +323,11 @@
 
         /* ── Misc (existing) ───────────────────────────────────────────── */
         .font-display { font-family: 'Playfair Display', serif; }
+
+        /* ── Modern sans-serif utility (category grid + admin "Sans-serif"
+               typography choice) — !important so it always wins over the
+               inherited body/app font and any element-level font rules. ─── */
+        .font-sans-modern { font-family: var(--font-sans-modern) !important; }
         .cart-badge   { animation: pop 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
 
         @keyframes pop {

@@ -27,8 +27,8 @@
    class="flex flex-col w-full group"
    title="{{ $category->name }}">
 
-    {{-- Tall portrait image ───────────────────────────────────────── --}}
-    <div class="relative w-full aspect-[3/4] rounded-[2px] overflow-hidden">
+    {{-- Perfect 1:1 square image ─────────────────────────────────────── --}}
+    <div class="relative w-full aspect-square rounded-[2px] overflow-hidden">
 
         {{-- Shimmer skeleton (hidden once image loads) --}}
         <div class="shimmer absolute inset-0 z-0 rounded-[2px]"
@@ -52,7 +52,7 @@
 
     {{-- Label ─────────────────────────────────────────────────────── --}}
     <div class="pt-1.5 flex flex-col gap-0.5 text-start">
-        <p class="text-xs font-medium line-clamp-2 leading-snug"
+        <p class="font-sans-modern text-xs font-medium line-clamp-2 leading-snug"
            style="color: var(--text-product-title);">
             {{ $category->name }}
         </p>

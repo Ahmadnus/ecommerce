@@ -13,6 +13,11 @@
       - link_url   : string|null (optional wrap-in-<a> link)
       - height     : string  (Tailwind height classes, default cinematic sizing)
       - is_rtl     : bool    (controls placement of the control cluster)
+      - overlay    : array|null  Bottom-left text overlay (TikTok-style hero):
+                       ['title', 'text', 'linkText', 'linkUrl', 'titleColor',
+                        'textColor', 'linkColor', 'titleFont', 'textFont', 'linkFont']
+                       Renders over the media with a dark gradient backdrop so
+                       the media itself stays a plain img/video underneath.
 --}}
 @props([
     'media_type' => 'image',
@@ -20,18 +25,57 @@
     'link_url'   => null,
     'height'     => 'h-[50vh] md:h-[65vh] lg:h-[85vh]',
     'is_rtl'     => false,
+    'overlay'    => null,
 ])
 
 @if($file_path)
 @php
     $bannerId = 'hero-banner-' . \Illuminate\Support\Str::random(8);
-    $tag      = $link_url ? 'a' : 'div';
+    // The overlay owns its own links (title/link), so never wrap the whole
+    // banner in an <a> when there's an overlay — an <a> can't contain
+    // another interactive <a> without breaking semantics/click targets.
+    $tag      = ($link_url && ! $overlay) ? 'a' : 'div';
+
+    $hasOverlay = $overlay && (($overlay['title'] ?? null) || ($overlay['text'] ?? null) || ($overlay['linkText'] ?? null));
+    if ($hasOverlay) {
+        $ovTitleFont = \App\Models\HomepageSection::fontFamilyValue($overlay['titleFont'] ?? null);
+        $ovTextFont  = \App\Models\HomepageSection::fontFamilyValue($overlay['textFont'] ?? null);
+        $ovLinkFont  = \App\Models\HomepageSection::fontFamilyValue($overlay['linkFont'] ?? null);
+    }
 @endphp
 
 <{{ $tag }}
-    @if($link_url) href="{{ $link_url }}" @endif
+    @if($link_url && ! $overlay) href="{{ $link_url }}" @endif
     id="{{ $bannerId }}"
     class="banner-container block w-full {{ $height }} overflow-hidden relative">
+
+    @if($hasOverlay)
+        <div class="absolute inset-x-0 bottom-0 z-10 pt-24 pb-6 px-5 md:px-10
+                    bg-gradient-to-t from-black/80 via-black/30 to-transparent
+                    {{ $is_rtl ? 'text-right' : 'text-left' }}">
+            <div class="max-w-xl {{ $is_rtl ? 'mr-auto' : 'ml-0' }}">
+                @if($overlay['title'] ?? null)
+                    <h1 class="text-white text-2xl md:text-4xl font-extrabold mb-2 drop-shadow-md"
+                        style="{{ ($overlay['titleColor'] ?? null) ? 'color: ' . $overlay['titleColor'] . ' !important;' : '' }}{{ $ovTitleFont['family'] ? 'font-family: ' . $ovTitleFont['family'] . ' !important;' : '' }}{{ $ovTitleFont['style'] === 'italic' ? 'font-style: italic;' : '' }}">
+                        {{ $overlay['title'] }}
+                    </h1>
+                @endif
+                @if($overlay['text'] ?? null)
+                    <p class="text-white/90 text-sm md:text-base mb-2 drop-shadow-md"
+                       style="{{ ($overlay['textColor'] ?? null) ? 'color: ' . $overlay['textColor'] . ';' : '' }}{{ $ovTextFont['family'] ? 'font-family: ' . $ovTextFont['family'] . ' !important;' : '' }}{{ $ovTextFont['style'] === 'italic' ? 'font-style: italic;' : '' }}">
+                        {{ $overlay['text'] }}
+                    </p>
+                @endif
+                @if($overlay['linkText'] ?? null)
+                    <a href="{{ ($overlay['linkUrl'] ?? null) ?: '#' }}"
+                       class="inline-block underline text-xs text-white/90 hover:text-white transition-colors"
+                       style="{{ ($overlay['linkColor'] ?? null) ? 'color: ' . $overlay['linkColor'] . ';' : '' }}{{ $ovLinkFont['family'] ? 'font-family: ' . $ovLinkFont['family'] . ' !important;' : '' }}{{ $ovLinkFont['style'] === 'italic' ? 'font-style: italic;' : '' }}">
+                        {{ $overlay['linkText'] }}
+                    </a>
+                @endif
+            </div>
+        </div>
+    @endif
 
     @if($media_type === 'video')
         <video src="{{ $file_path }}"

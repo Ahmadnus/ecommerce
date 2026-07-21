@@ -83,8 +83,39 @@
                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
                 </div>
 
+                {{-- ── Small underlined text link (independent of the CTA button) ── --}}
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <div>
+                        <label class="text-xs font-bold mb-1 block">نص الرابط الصغير (Link Text)</label>
+                        <input type="text" name="link_text" value="{{ old('link_text') }}"
+                               class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        @error('link_text')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold mb-1 block">رابط الوجهة (Link URL)</label>
+                        <input type="text" name="link_url" value="{{ old('link_url') }}"
+                               placeholder="https://example.com/..."
+                               class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                        @error('link_url')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold mb-1 block">شكل الرابط (Link Style)</label>
+                        <select name="link_style"
+                                class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                            @foreach(\App\Models\HomepageSection::LINK_STYLES as $value => $label)
+                            <option value="{{ $value }}" {{ old('link_style', 'underline') === $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <p class="text-[10px] text-gray-400 md:col-span-3">
+                        رابط نصي صغير تحته خط — مستقل تماماً عن زر الـ CTA أعلاه.
+                    </p>
+                </div>
+
                 {{-- ── Custom colors ────────────────────────────────────── --}}
-                <div class="md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div class="md:col-span-2 grid grid-cols-2 md:grid-cols-5 gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
                     <div>
                         <label class="text-xs font-bold mb-1 block">لون تمييز عنوان القسم (Section Title Accent Color)</label>
                         <input type="color" name="section_title_accent_color" value="{{ old('section_title_accent_color', '#111827') }}"
@@ -98,6 +129,12 @@
                         @error('text_color')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
                     </div>
                     <div>
+                        <label class="text-xs font-bold mb-1 block">لون الرابط الصغير</label>
+                        <input type="color" name="link_color" value="{{ old('link_color', '#111827') }}"
+                               class="w-full h-10 rounded-lg border cursor-pointer">
+                        @error('link_color')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
                         <label class="text-xs font-bold mb-1 block">لون خلفية الزر</label>
                         <input type="color" name="button_bg_color" value="{{ old('button_bg_color', '#0ea5e9') }}"
                                class="w-full h-10 rounded-lg border cursor-pointer">
@@ -109,9 +146,46 @@
                                class="w-full h-10 rounded-lg border cursor-pointer">
                         @error('button_text_color')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
                     </div>
-                    <p class="text-[10px] text-gray-400 col-span-2 md:col-span-4">
+                    <p class="text-[10px] text-gray-400 col-span-2 md:col-span-5">
                         اترك بدون تغيير لاستخدام الألوان الافتراضية للموقع.
                     </p>
+                </div>
+
+                {{-- ── Typography (independent font family per text element) ── --}}
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <div>
+                        <label class="text-xs font-bold mb-1 block">خط العنوان (Title Font)</label>
+                        <select name="title_font_family"
+                                class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                            @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
+                            <option value="{{ $value }}" {{ old('title_font_family', 'default') === $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold mb-1 block">خط الفقرة (Paragraph Font)</label>
+                        <select name="paragraph_font_family"
+                                class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                            @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
+                            <option value="{{ $value }}" {{ old('paragraph_font_family', 'default') === $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold mb-1 block">خط الرابط (Link Font)</label>
+                        <select name="link_font_family"
+                                class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                            @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
+                            <option value="{{ $value }}" {{ old('link_font_family', 'default') === $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <div>
@@ -128,10 +202,14 @@
                     @error('text_alignment')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
                 </div>
 
-                <div class="md:col-span-2 flex items-center gap-3">
+                <div class="md:col-span-2 flex flex-wrap items-center gap-6">
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }}>
                         <span>نشط (يظهر في الصفحة الرئيسية)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="show_text_below_media" value="1" {{ old('show_text_below_media', true) ? 'checked' : '' }}>
+                        <span>إظهار النص أسفل/فوق الوسائط (Show Text)</span>
                     </label>
                 </div>
 
@@ -284,8 +362,33 @@
                                            class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
                                 </div>
 
+                                {{-- ── Small underlined text link ─────────────────────── --}}
+                                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl bg-white border border-gray-200">
+                                    <div>
+                                        <label class="text-xs font-bold mb-1 block">نص الرابط الصغير (Link Text)</label>
+                                        <input type="text" name="link_text" value="{{ $item->link_text }}"
+                                               class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold mb-1 block">رابط الوجهة (Link URL)</label>
+                                        <input type="text" name="link_url" value="{{ $item->link_url }}"
+                                               class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold mb-1 block">شكل الرابط (Link Style)</label>
+                                        <select name="link_style"
+                                                class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                            @foreach(\App\Models\HomepageSection::LINK_STYLES as $value => $label)
+                                            <option value="{{ $value }}" {{ ($item->link_style ?: 'underline') === $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
                                 {{-- ── Custom colors ────────────────────────────────────── --}}
-                                <div class="md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-xl bg-white border border-gray-200">
+                                <div class="md:col-span-2 grid grid-cols-2 md:grid-cols-5 gap-4 p-4 rounded-xl bg-white border border-gray-200">
                                     <div>
                                         <label class="text-xs font-bold mb-1 block">لون تمييز عنوان القسم (Section Title Accent Color)</label>
                                         <input type="color" name="section_title_accent_color" value="{{ $item->section_title_accent_color ?: '#111827' }}"
@@ -297,6 +400,11 @@
                                                class="w-full h-10 rounded-lg border cursor-pointer">
                                     </div>
                                     <div>
+                                        <label class="text-xs font-bold mb-1 block">لون الرابط الصغير</label>
+                                        <input type="color" name="link_color" value="{{ $item->link_color ?: '#111827' }}"
+                                               class="w-full h-10 rounded-lg border cursor-pointer">
+                                    </div>
+                                    <div>
                                         <label class="text-xs font-bold mb-1 block">لون خلفية الزر</label>
                                         <input type="color" name="button_bg_color" value="{{ $item->button_bg_color ?: '#0ea5e9' }}"
                                                class="w-full h-10 rounded-lg border cursor-pointer">
@@ -305,6 +413,43 @@
                                         <label class="text-xs font-bold mb-1 block">لون نص الزر</label>
                                         <input type="color" name="button_text_color" value="{{ $item->button_text_color ?: '#ffffff' }}"
                                                class="w-full h-10 rounded-lg border cursor-pointer">
+                                    </div>
+                                </div>
+
+                                {{-- ── Typography ──────────────────────────────────────── --}}
+                                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl bg-white border border-gray-200">
+                                    <div>
+                                        <label class="text-xs font-bold mb-1 block">خط العنوان (Title Font)</label>
+                                        <select name="title_font_family"
+                                                class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                            @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
+                                            <option value="{{ $value }}" {{ ($item->title_font_family ?: 'default') === $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold mb-1 block">خط الفقرة (Paragraph Font)</label>
+                                        <select name="paragraph_font_family"
+                                                class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                            @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
+                                            <option value="{{ $value }}" {{ ($item->paragraph_font_family ?: 'default') === $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold mb-1 block">خط الرابط (Link Font)</label>
+                                        <select name="link_font_family"
+                                                class="w-full px-4 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-brand">
+                                            @foreach(\App\Models\HomepageSection::FONT_FAMILIES as $value => $label)
+                                            <option value="{{ $value }}" {{ ($item->link_font_family ?: 'default') === $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
 
@@ -321,10 +466,14 @@
                                     </select>
                                 </div>
 
-                                <div class="md:col-span-2 flex items-center gap-3">
+                                <div class="md:col-span-2 flex flex-wrap items-center gap-6">
                                     <label class="inline-flex items-center gap-2 text-sm">
                                         <input type="checkbox" name="is_active" value="1" {{ $item->is_active ? 'checked' : '' }}>
                                         <span>نشط</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-2 text-sm">
+                                        <input type="checkbox" name="show_text_below_media" value="1" {{ ($item->show_text_below_media ?? true) ? 'checked' : '' }}>
+                                        <span>إظهار النص أسفل/فوق الوسائط</span>
                                     </label>
 
                                     <button type="submit"

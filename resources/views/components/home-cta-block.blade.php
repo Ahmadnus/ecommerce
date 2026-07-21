@@ -34,8 +34,15 @@
     'text'              => null,
     'button_text'       => null,
     'button_url'        => null,
+    'linkText'          => null,
+    'linkUrl'           => null,
+    'linkColor'         => null,
+    'linkFontFamily'    => null,
+    'linkStyle'         => 'underline',
     'titleAccentColor'  => null,
     'textColor'         => null,
+    'titleFontFamily'   => null,
+    'paragraphFontFamily' => null,
     'buttonBgColor'     => null,
     'buttonTextColor'   => null,
     'textAlignment'     => null,
@@ -53,11 +60,29 @@
     $alignment      = $alignmentMap[$textAlignment] ?? $alignmentMap['center'];
     $sectionAlign   = $alignment['section'];
     $buttonAlign    = $alignment['button'];
+
+    $titleFont = \App\Models\HomepageSection::fontFamilyValue($titleFontFamily);
+    $textFont  = \App\Models\HomepageSection::fontFamilyValue($paragraphFontFamily);
+    $linkFont  = \App\Models\HomepageSection::fontFamilyValue($linkFontFamily);
 @endphp
 
 <section class="home-block reveal {{ $sectionAlign }}">
-    @if($title)<h1 @if($titleAccentColor) style="color: {{ $titleAccentColor }} !important;" @endif>{{ $title }}</h1>@endif
-    @if($text)<p @if($textColor) style="color: {{ $textColor }};" @endif>{{ $text }}</p>@endif
+    @if($title)
+        <h1 style="{{ $titleAccentColor ? 'color: ' . $titleAccentColor . ' !important;' : '' }}{{ $titleFont['family'] ? 'font-family: ' . $titleFont['family'] . ' !important;' : '' }}{{ $titleFont['style'] === 'italic' ? 'font-style: italic;' : '' }}">{{ $title }}</h1>
+    @endif
+    @if($text)
+        <p style="{{ $textColor ? 'color: ' . $textColor . ';' : '' }}{{ $textFont['family'] ? 'font-family: ' . $textFont['family'] . ' !important;' : '' }}{{ $textFont['style'] === 'italic' ? 'font-style: italic;' : '' }}">{{ $text }}</p>
+    @endif
+
+    {{-- Small underlined text link — independent of the big CTA button below. --}}
+    @if($linkText)
+        <a href="{{ $linkUrl ?: '#' }}"
+           class="inline-block underline text-xs md:text-sm mt-1 opacity-90 hover:opacity-100 transition-opacity"
+           style="{{ $linkColor ? 'color: ' . $linkColor . ';' : '' }}{{ $linkFont['family'] ? 'font-family: ' . $linkFont['family'] . ' !important;' : '' }}{{ $linkFont['style'] === 'italic' ? 'font-style: italic;' : '' }}">
+            {{ $linkText }}
+        </a>
+    @endif
+
     {{-- Button renders whenever button_text is present, even if the admin
          left button_url empty — falls back to "#" so the CTA never
          silently disappears. Custom colors apply via inline style with a
