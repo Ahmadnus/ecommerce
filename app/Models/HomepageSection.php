@@ -122,7 +122,10 @@ class HomepageSection extends Model
             return null;
         }
 
-        return Storage::disk('public')->url($this->media_path);
+        // Must match the disk HomepageSectionService actually stores to
+        // (config('media-library.disk_name'), same disk the rest of the
+        // app's media — Category/Product/HeroBanner — already uses).
+        return Storage::disk(config('media-library.disk_name', 'public'))->url($this->media_path);
     }
 
     public function hasMedia(): bool
