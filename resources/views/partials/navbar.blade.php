@@ -38,15 +38,15 @@
                 {{-- Currency switcher --}}
                 <div class="relative" x-data="{ open: false }">
                     <button @click.stop="open = !open" type="button"
-                            class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100
-                                   rounded-xl shadow-sm hover:border-gray-200 transition-all">
-                        <span class="text-xs font-bold text-gray-900">
+                            class="flex items-center gap-2 px-3 py-2 bg-transparent border-0 shadow-none
+                                   hover:opacity-75 transition-opacity">
+                        <span class="text-xs font-bold text-gray-900 font-medium">
                             {{ $activeCurrency->symbol }}
                         </span>
                         <span class="text-xs font-black" style="color: var(--brand-color);">
                             {{ $activeCurrency->code }}
                         </span>
-                        <svg class="w-3 h-3 text-gray-400 transition-transform"
+                        <svg class="w-3 h-3 text-gray-900 transition-transform"
                              :class="open ? 'rotate-180' : ''"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
