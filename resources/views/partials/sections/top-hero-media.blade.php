@@ -18,12 +18,14 @@
     @php $heroMediaUrl = $heroMedia->getFirstMediaUrl('hero_media'); @endphp
 
     @if($heroMediaUrl)
-        <x-hero-media-banner
-            :media_type="$heroMedia->type"
-            :file_path="$heroMediaUrl"
-            :link_url="$heroMedia->link_url"
-            :is_rtl="$isRtl ?? false"
-            :height="$height ?? 'h-[70vh] md:h-[90vh]'"
-        />
+        <div @if($pullUnderNavbar ?? false) class="-mt-16 md:-mt-20" @endif>
+            <x-hero-media-banner
+                :media_type="$heroMedia->type"
+                :file_path="$heroMediaUrl"
+                :link_url="$heroMedia->link_url"
+                :is_rtl="$isRtl ?? false"
+                :height="$height ?? 'h-[70vh] md:h-[90vh]'"
+            />
+        </div>
     @endif
 @endif

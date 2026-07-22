@@ -324,7 +324,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 @section('content')
 <div class="page-shop">
 
-@include('partials.sections.top-hero-media', ['position' => 'top'])
+@include('partials.sections.top-hero-media', ['position' => 'top', 'pullUnderNavbar' => true])
 
 {{-- ── Announcement banners ──────────────────────────────────────────── --}}
 @php

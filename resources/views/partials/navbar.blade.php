@@ -3,19 +3,19 @@
     $locale = app()->getLocale();
 @endphp
 
-<header class="sticky top-0 z-40 backdrop-blur-md border-b border-gray-100 shadow-sm"
-        style="background-color: var(--nav-bg-color);"
+<header id="site-header" class="fixed top-0 left-0 w-full z-50"
+        style="background-color: rgba(255, 255, 255, 0.5) !important; backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important;"
         dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
     <nav class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
-        <div class="relative flex items-center justify-between h-14 md:h-16">
+        <div class="relative flex items-center justify-between h-16 md:h-20">
 
-            {{-- Logo: absolutely centered on all breakpoints --}}
+            {{-- Logo: absolutely centered on all breakpoints, enlarged but capped so it never collides with the side controls --}}
             <a href="/" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
                                 flex-shrink-0 hover:opacity-80 transition-opacity z-10">
-                <img src="{{ $logoUrl }}" alt="Logo" class="h-5 md:h-6 w-auto max-h-[24px] md:max-h-[28px] object-contain">
+                <img src="{{ $logoUrl }}" alt="Logo" class="h-10 md:h-14 w-auto max-h-[48px] md:max-h-[56px] object-contain">
             </a>
 
             <div class="flex items-center gap-6 lg:gap-10">
@@ -24,7 +24,7 @@
                     <button @click.stop="open = !open" type="button"
                             class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100
                                    rounded-xl shadow-sm hover:border-gray-200 transition-all">
-                        <span class="text-xs font-bold" style="color: var(--text-navbar);">
+                        <span class="text-xs font-bold text-gray-900">
                             {{ $activeCurrency->symbol }}
                         </span>
                         <span class="text-xs font-black" style="color: var(--brand-color);">
@@ -156,7 +156,7 @@
                 {{-- Mobile cart icon (moved here from bottombar) --}}
                 <a href="{{ route('cart.index') }}"
                    class="md:hidden relative p-2 rounded-xl hover:bg-gray-50 transition-colors">
-                    <svg class="w-5 h-5" style="color: var(--text-navbar);"
+                    <svg class="w-5 h-5 text-gray-900"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
@@ -181,8 +181,8 @@
                         <input type="hidden" name="locale" value="{{ $locale === 'ar' ? 'en' : 'ar' }}">
                         <button type="submit"
                                 class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black
-                                       border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
-                                style="color: var(--text-navbar);">
+                                       border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all
+                                       text-gray-900">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
@@ -195,8 +195,7 @@
                     @auth
                     <a href="{{ route('wishlist.index') }}"
                        class="relative p-2 rounded-xl hover:bg-gray-50 group transition-colors">
-                        <svg class="w-5 h-5 group-hover:text-red-500 transition-colors"
-                             style="color: var(--text-navbar);"
+                        <svg class="w-5 h-5 text-gray-900 group-hover:text-red-500 transition-colors"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
@@ -214,8 +213,7 @@
 
                     <a href="{{ route('cart.index') }}"
                        class="relative p-2 rounded-xl hover:bg-gray-50 group transition-colors">
-                        <svg class="w-5 h-5 group-hover:text-brand-600 transition-colors"
-                             style="color: var(--text-navbar);"
+                        <svg class="w-5 h-5 text-gray-900 group-hover:text-brand-600 transition-colors"
                              fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
@@ -236,8 +234,7 @@
                     @guest
                     <div class="flex items-center gap-2">
                         <a href="{{ route('login') }}"
-                           class="text-sm font-bold px-2 hover:opacity-70 transition-opacity"
-                           style="color: var(--text-navbar);">
+                           class="text-sm font-bold px-2 hover:opacity-70 transition-opacity text-gray-900">
                             {{ __('app.login') }}
                         </a>
                         <a href="{{ route('register') }}"
@@ -263,7 +260,7 @@
                                      style="background: var(--brand-color);">
                                     {{ mb_substr(auth()->user()->name, 0, 1) }}
                                 </div>
-                                <span class="text-sm font-medium" style="color: var(--text-navbar);">
+                                <span class="text-sm font-medium text-gray-900">
                                     {{ auth()->user()->name }}
                                 </span>
                             </a>
@@ -339,8 +336,7 @@
 
                 {{-- Mobile menu button: covers mobile + tablet, since the inline desktop search/nav only shows at lg+ --}}
                 <button id="mobile-menu-btn"
-                        class="lg:hidden p-2 rounded-xl hover:bg-gray-50 transition-colors"
-                        style="color: var(--text-navbar);">
+                        class="lg:hidden p-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-900">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                               d="M4 6h16M4 12h16M4 18h16"/>

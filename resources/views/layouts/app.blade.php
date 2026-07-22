@@ -200,11 +200,14 @@
         }
 
         /* ── Navbar ────────────────────────────────────────────────────── */
-        nav, .navbar-custom, header {
+        nav:not(#site-header *), .navbar-custom, header:not(#site-header) {
             background-color: var(--nav-bg-color) !important;
         }
-        nav a, nav button, .nav-link {
+        nav a:not(#site-header *), nav button:not(#site-header *), .nav-link:not(#site-header *) {
             color: var(--text-navbar) !important;
+            font-size: var(--navbar-font-size);
+        }
+        #site-header nav a, #site-header nav button, #site-header .nav-link {
             font-size: var(--navbar-font-size);
         }
 
@@ -361,7 +364,7 @@
 
     {{-- Flash messages --}}
     @if(session('success') || session('error'))
-    <div class="max-w-7xl mx-auto px-4 pt-4">
+    <div class="max-w-7xl mx-auto px-4 pt-20 md:pt-24">
         @if(session('success'))
         <div class="flex items-center gap-3 bg-green-50 border border-green-200 text-green-800
                     px-4 py-3 rounded-lg text-sm">
@@ -383,7 +386,7 @@
     </div>
     @endif
 
-    <main class="min-h-screen">
+    <main class="min-h-screen pt-16 md:pt-20">
         @yield('content')
     </main>
 
