@@ -81,7 +81,7 @@
         <video src="{{ $file_path }}"
                class="banner-video block w-full h-full object-cover"
                style="object-fit: cover !important;"
-               autoplay loop muted playsinline controlslist="nodownload">
+               autoplay loop muted playsinline preload="auto" controlslist="nodownload">
         </video>
 
         <div class="absolute bottom-4 {{ $is_rtl ? 'left-4' : 'right-4' }} z-20 flex items-center gap-2">

@@ -4,10 +4,26 @@
 @endphp
 
 <header id="site-header" class="fixed top-0 left-0 w-full z-50"
-        style="background-color: rgba(255, 255, 255, 0.5) !important; backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important;"
+        style="background-color: rgba(255, 255, 255, 0.5) !important; backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; transform: translateZ(0); -webkit-transform: translateZ(0); will-change: backdrop-filter;"
         dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <script>
+    // Some Chromium/WebKit builds don't composite a fixed element's
+    // backdrop-filter until the first repaint (scroll/resize), so it can
+    // render opaque-looking for an instant on initial load. Forcing a
+    // synchronous reflow immediately after paint makes the browser
+    // composite the blur layer right away instead of waiting for scroll.
+    (function () {
+        var el = document.getElementById('site-header');
+        if (!el) return;
+        requestAnimationFrame(function () {
+            void el.offsetHeight; // force reflow
+            el.style.transform = 'translateZ(0)';
+        });
+    })();
+    </script>
 
     <nav class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
         <div class="relative flex items-center justify-between h-16 md:h-20">
