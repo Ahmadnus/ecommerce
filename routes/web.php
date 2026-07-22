@@ -71,9 +71,9 @@ Route::middleware('guest.checkout')->group(function () {
 Route::get('/checkout/select-zone',  [CheckoutController::class, 'selectZone'])->name('checkout.select-zone');
 Route::post('/checkout/confirm-zone',[CheckoutController::class, 'confirmZone'])->name('checkout.confirm-zone');
 
-// Zones API (called by JS — no auth required)
-Route::get('/api/shipping/zones/{country}', [CheckoutController::class, 'zonesForCountry'])
-     ->name('checkout.zones');
+// Zones API is registered once, below, under the dedicated
+// "API ROUTES (Shipping)" group via ShippingApiController — see
+// Route::prefix('api/shipping') further down this file.
 
 
 // ═══════════════════════════════════════════════════════════════════════════
