@@ -122,7 +122,7 @@ class HomepageSection extends Model
             return null;
         }
 
-        return Storage::disk('public')->url($this->media_path);
+        return Storage::disk(config('media-library.disk_name', 'public'))->url($this->media_path);
     }
 
     public function hasMedia(): bool

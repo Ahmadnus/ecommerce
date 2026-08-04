@@ -14,8 +14,12 @@ use Illuminate\Support\Facades\Storage;
  */
 class HomepageSectionService
 {
-    private const DISK = 'public';
     private const DIR  = 'homepage-sections';
+
+    private function disk(): string
+    {
+        return config('media-library.disk_name', 'public');
+    }
 
     public function getAll()
     {
@@ -35,7 +39,7 @@ class HomepageSectionService
         try {
             return DB::transaction(function () use ($attributes, $file) {
                 if ($file) {
-                    $attributes['media_path'] = $file->store(self::DIR, self::DISK);
+                    $attributes['media_path'] = $file->store(self::DIR, $this->disk());
                 }
 
                 return HomepageSection::create($attributes);
@@ -55,9 +59,9 @@ class HomepageSectionService
             return DB::transaction(function () use ($section, $attributes, $file) {
                 if ($file) {
                     if ($section->media_path) {
-                        Storage::disk(self::DISK)->delete($section->media_path);
+                        Storage::disk($this->disk())->delete($section->media_path);
                     }
-                    $attributes['media_path'] = $file->store(self::DIR, self::DISK);
+                    $attributes['media_path'] = $file->store(self::DIR, $this->disk());
                 }
 
                 $section->update($attributes);
@@ -73,7 +77,7 @@ class HomepageSectionService
     public function delete(HomepageSection $section): void
     {
         if ($section->media_path) {
-            Storage::disk(self::DISK)->delete($section->media_path);
+            Storage::disk($this->disk())->delete($section->media_path);
         }
 
         $section->delete();
