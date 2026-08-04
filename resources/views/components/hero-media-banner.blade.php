@@ -13,6 +13,10 @@
       - link_url   : string|null (optional wrap-in-<a> link)
       - height     : string  (Tailwind height classes, default cinematic sizing)
       - is_rtl     : bool    (controls placement of the control cluster)
+      - contained  : bool    (renders as a centered, rounded max-w-sm/md
+                       aspect-[9/16] Reels-style frame instead of the
+                       full-bleed viewport banner; used for the top hero
+                       when a compact portrait presentation is wanted)
       - overlay    : array|null  Bottom-left text overlay (TikTok-style hero):
                        ['title', 'text', 'linkText', 'linkUrl', 'titleColor',
                         'textColor', 'linkColor', 'titleFont', 'textFont', 'linkFont']
@@ -25,6 +29,7 @@
     'link_url'   => null,
     'height'     => 'h-[50vh] md:h-[65vh] lg:h-[85vh]',
     'is_rtl'     => false,
+    'contained'  => false,
     'overlay'    => null,
 ])
 
@@ -42,12 +47,16 @@
         $ovTextFont  = \App\Models\HomepageSection::fontFamilyValue($overlay['textFont'] ?? null);
         $ovLinkFont  = \App\Models\HomepageSection::fontFamilyValue($overlay['linkFont'] ?? null);
     }
+
+    $containerClass = $contained
+        ? 'banner-container block w-full max-w-sm md:max-w-md mx-auto my-6 md:my-10 rounded-2xl overflow-hidden relative aspect-[9/16] shadow-lg'
+        : "banner-container block w-full {$height} overflow-hidden relative";
 @endphp
 
 <{{ $tag }}
     @if($link_url && ! $overlay) href="{{ $link_url }}" @endif
     id="{{ $bannerId }}"
-    class="banner-container block w-full {{ $height }} overflow-hidden relative">
+    class="{{ $containerClass }}">
 
     @if($hasOverlay)
         <div class="absolute inset-x-0 bottom-0 z-10 pt-24 pb-6 px-5 md:px-10
@@ -85,9 +94,8 @@
 
         <div class="absolute bottom-4 {{ $is_rtl ? 'left-4' : 'right-4' }} z-20 flex items-center gap-2">
             <button type="button"
-                    class="banner-mute-btn w-8 h-8 md:w-9 md:h-9 rounded-full bg-black/30 backdrop-blur-sm
-                           flex items-center justify-center text-white
-                           hover:bg-black/50 transition-colors duration-200"
+                    class="banner-mute-btn bg-black/60 hover:bg-black/80 text-white p-2.5 rounded-full backdrop-blur-md transition
+                           flex items-center justify-center"
                     aria-label="Mute / Unmute">
                 <svg data-icon="muted" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 9.75H3a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h2.25l3.9 3.15a.375.375 0 00.6-.3V6.9a.375.375 0 00-.6-.3L5.25 9.75z"/>
@@ -100,9 +108,8 @@
             </button>
 
             <button type="button"
-                    class="banner-restart-btn w-8 h-8 md:w-9 md:h-9 rounded-full bg-black/30 backdrop-blur-sm
-                           flex items-center justify-center text-white
-                           hover:bg-black/50 transition-colors duration-200"
+                    class="banner-restart-btn bg-black/60 hover:bg-black/80 text-white p-2.5 rounded-full backdrop-blur-md transition
+                           flex items-center justify-center"
                     aria-label="Restart">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0113.06-5.03M19.5 12a7.5 7.5 0 01-13.06 5.03"/>

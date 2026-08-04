@@ -29,7 +29,7 @@
             :media_type="$section->media_type"
             :file_path="$section->media_url"
             :is_rtl="$isRtl"
-            height="h-screen"
+            :contained="true"
             :overlay="$showText ? [
                 'title'      => $section->title,
                 'text'       => $section->paragraph,
