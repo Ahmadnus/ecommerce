@@ -118,6 +118,13 @@
         }
     </script>
 
+    {{-- Font Awesome — the footer's social links render admin-managed icon
+         classes (e.g. "fa-brands fa-facebook"). Without this the <i> element
+         has no glyph font and collapses to an empty circle. Kept on the same
+         version as layouts/admin.blade.php so the admin preview and the
+         storefront resolve identical icon names. --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;500;700&family=Almarai:wght@400;700&family=Amiri:wght@400;700&family=Changa:wght@400;600;700&family=El+Messiri:wght@400;500;700&family=Readex+Pro:wght@400;500;700&family=Reem+Kufi:wght@400;500;700&family=Markazi+Text:wght@400;500;700&family=Noto+Kufi+Arabic:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Inter:wght@400;500;700&family=Roboto:wght@400;500;700&family=DM+Sans:wght@400;500;700&family=Poppins:wght@400;500;700&family=Montserrat:wght@400;500;700&family=Playfair+Display:wght@400;600;700&family=Great+Vibes&family=Allura&family=Alex+Brush&family=Dancing+Script:wght@400;700&family=Mea+Culpa&display=swap" rel="stylesheet">
 

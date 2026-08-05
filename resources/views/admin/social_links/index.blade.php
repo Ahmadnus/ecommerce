@@ -26,6 +26,7 @@
                     <option value="fa-brands fa-instagram" data-platform="Instagram">Instagram</option>
                     <option value="fa-brands fa-whatsapp" data-platform="WhatsApp">WhatsApp</option>
                     <option value="fa-brands fa-tiktok" data-platform="TikTok">TikTok</option>
+                    <option value="fa-brands fa-x-twitter" data-platform="X">X</option>
                 </select>
                 <p class="text-xs text-gray-400 mr-2">
                     سيتم حفظ اسم المنصة تلقائيًا حسب الاختيار.
