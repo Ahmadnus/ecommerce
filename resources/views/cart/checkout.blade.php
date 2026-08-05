@@ -334,7 +334,7 @@
                             </label>
                             <select name="country_id" id="country-select"
                                     class="field @error('country_id') has-error @enderror"
-                                  onchange="Shipping.loadZones(this.value); PhoneSync.update(this.value)"
+                                    onchange="Shipping.loadZones(this.value); PhoneSync.update(this.value)">
                                 <option value="">{{ __('app.checkout.country_placeholder') }}</option>
                                 @foreach($countries as $country)
                                 <option value="{{ $country->id }}"
