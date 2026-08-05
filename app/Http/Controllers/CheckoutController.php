@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Country;
 use App\Services\CartService;
 use App\Services\CheckoutService;
+use App\Services\ShippingZoneApiService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -47,9 +48,19 @@ class CheckoutController extends Controller
 
     // ─── AJAX: zones for a given country ─────────────────────────────────────
 
-    public function zonesForCountry(Country $country): JsonResponse
+    /**
+     * The checkout page renders each zone card from `schedule`,
+     * `has_schedule` and `schedule_month`. CheckoutService::zonesForCountry()
+     * only selects id/name/shipping_price/delivery_days, so those fields came
+     * back undefined. Use the schedule-enriched payload instead.
+     */
+    public function zonesForCountry(Country $country, ShippingZoneApiService $shipping): JsonResponse
     {
-        return response()->json(['zones' => $this->checkout->zonesForCountry($country)]);
+        if (! $country->is_active) {
+            return response()->json(['zones' => [], 'current_month' => now()->format('Y-m')]);
+        }
+
+        return response()->json($shipping->getZonesWithSchedules($country));
     }
 
     // ─── Place the order ──────────────────────────────────────────────────────

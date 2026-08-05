@@ -48,11 +48,21 @@
         $ovLinkFont  = \App\Models\HomepageSection::fontFamilyValue($overlay['linkFont'] ?? null);
     }
 
-    $containerClass = $contained
-        ? 'banner-container block w-full h-[65vh] mx-auto my-3 md:my-6 relative rounded-2xl [clip-path:inset(0_round_1rem)]'
-        : 'banner-container block w-full h-[65vh] mx-auto my-3 md:my-6 relative rounded-2xl [clip-path:inset(0_round_1rem)]';
+    // Full-bleed width: the banner is rendered inside the page's
+    // `max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8` wrapper, which is what
+    // produced the unwanted side margins. Breaking out with
+    // `w-screen + left-1/2 + -translate-x-1/2` makes the container span the
+    // full viewport width regardless of that wrapper — WITHOUT touching any
+    // height value (h-[65vh] stays exactly as-is).
+    $breakout = 'w-screen max-w-none relative left-1/2 -translate-x-1/2';
 
-    $mediaClass = 'w-full h-full object-contain mx-auto';
+    $containerClass = $contained
+        ? 'banner-container block ' . $breakout . ' h-[65vh] my-3 md:my-6 rounded-2xl [clip-path:inset(0_round_1rem)]'
+        : 'banner-container block ' . $breakout . ' h-[65vh] my-3 md:my-6 rounded-2xl [clip-path:inset(0_round_1rem)]';
+
+    // object-cover so the media actually fills the newly-widened container
+    // (object-contain would letterbox and leave the same visual side gaps).
+    $mediaClass = 'w-full h-full object-cover mx-auto';
 @endphp
 
 <{{ $tag }}

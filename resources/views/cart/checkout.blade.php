@@ -80,7 +80,11 @@
         subtotalJod:  {{ (float) $summary['subtotal'] }},
         rate:         {{ $rate }},
         symbol:       '{{ $sym }}',
-   zonesApiBase: '{{ url('/shipping/zones') }}',
+        // NOTE: the registered route is `/api/shipping/zones/{country}`
+        // (routes/web.php → checkout.zones). The old value pointed at
+        // `/shipping/zones/{id}`, which 404'd, so the zone list never
+        // populated on the checkout page.
+        zonesApiBase: '{{ url('/api/shipping/zones') }}',
     };
 
 </script>

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Country;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 /**
  * ShippingZoneApiService — builds the zone + delivery-schedule payload for
@@ -22,21 +21,18 @@ class ShippingZoneApiService
             return ['zones' => [], 'currency' => null];
         }
 
-        $zones = $country->activeZones()
-            ->select('id', 'name', 'shipping_price', 'delivery_days')
-            ->get()
-            ->map(fn($z) => [
-                'id'             => $z->id,
-                'name'           => $z->name,
-                'shipping_price' => (float) $z->shipping_price,
-                'delivery_days'  => $z->delivery_days,
-            ]);
+        // The checkout page builds each zone card from `schedule`,
+        // `has_schedule` and `schedule_month`. The previous flat select()
+        // omitted them, so those reads were undefined — reuse the
+        // schedule-enriched payload here.
+        $payload = $this->getZonesWithSchedules($country);
 
         // Default currency for this country
         $currency = $country->defaultCurrency()->first();
 
         return [
-            'zones'    => $zones,
+            'zones'         => $payload['zones'],
+            'current_month' => $payload['current_month'],
             'currency' => $currency ? [
                 'code'          => $currency->code,
                 'symbol'        => $currency->symbol,
@@ -69,11 +65,6 @@ class ShippingZoneApiService
             ->active()
             ->ordered()
             ->get();
-
-        Log::info('Zone schedules debug', [
-            'month' => $currentMonth,
-            'zones' => $zones->toArray(),
-        ]);
 
         if ($zones->isEmpty()) {
             return [
