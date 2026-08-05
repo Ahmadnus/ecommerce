@@ -94,26 +94,26 @@
                autoplay loop muted playsinline controlslist="nodownload">
         </video>
 
-        <div class="absolute bottom-4 {{ $is_rtl ? 'left-4' : 'right-4' }} z-20 flex items-center gap-2">
+        <div class="absolute bottom-2 md:bottom-4 {{ $is_rtl ? 'left-2 md:left-4' : 'right-2 md:right-4' }} z-20 flex items-center gap-1.5 md:gap-2">
             <button type="button"
-                    class="banner-mute-btn bg-black/60 hover:bg-black/80 text-white p-2.5 rounded-full backdrop-blur-md transition
+                    class="banner-mute-btn bg-black/60 hover:bg-black/80 text-white p-1.5 md:p-2.5 rounded-full backdrop-blur-md transition
                            flex items-center justify-center"
                     aria-label="Mute / Unmute">
-                <svg data-icon="muted" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <svg data-icon="muted" class="w-3 h-3 md:w-4 md:h-4 hidden" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 9.75H3a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h2.25l3.9 3.15a.375.375 0 00.6-.3V6.9a.375.375 0 00-.6-.3L5.25 9.75z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" d="M18 9l4.5 6M22.5 9L18 15"/>
                 </svg>
-                <svg data-icon="unmuted" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <svg data-icon="unmuted" class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 9.75H3a.75.75 0 00-.75.75v3c0 .414.336.75.75.75h2.25l3.9 3.15a.375.375 0 00.6-.3V6.9a.375.375 0 00-.6-.3L5.25 9.75z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9.75a3 3 0 010 4.5M18.5 7.5a6.5 6.5 0 010 9"/>
                 </svg>
             </button>
 
             <button type="button"
-                    class="banner-restart-btn bg-black/60 hover:bg-black/80 text-white p-2.5 rounded-full backdrop-blur-md transition
+                    class="banner-restart-btn bg-black/60 hover:bg-black/80 text-white p-1.5 md:p-2.5 rounded-full backdrop-blur-md transition
                            flex items-center justify-center"
                     aria-label="Restart">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0113.06-5.03M19.5 12a7.5 7.5 0 01-13.06 5.03"/>
                     <path stroke-linecap="round" stroke-linejoin="round" d="M17.5 3.5v3.5H14M6.5 20.5V17H10"/>
                 </svg>
