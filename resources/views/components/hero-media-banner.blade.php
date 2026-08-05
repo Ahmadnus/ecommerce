@@ -31,14 +31,6 @@
     'is_rtl'     => false,
     'contained'  => false,
     'overlay'    => null,
-    // Set only by call sites that render INSIDE the page's
-    // `max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8` wrapper. The banner then
-    // cancels exactly that wrapper's horizontal padding to sit edge-to-edge.
-    // Deliberately NOT `w-screen`/100vw — that unit counts the scrollbar and
-    // overflowed the viewport. Negative margins can't overflow, because the
-    // element still lays out inside its parent's content box. Call sites that
-    // already render outside the wrapper must leave this false.
-    'bleed'      => false,
 ])
 
 @if($file_path)
@@ -56,24 +48,16 @@
         $ovLinkFont  = \App\Models\HomepageSection::fontFamilyValue($overlay['linkFont'] ?? null);
     }
 
-    // Width sizing. These two branches are mutually exclusive on purpose:
-    //
-    //   $bleed  -> w-auto + negative margins mirroring the page wrapper's
-    //              `px-3 sm:px-5 lg:px-8`. Width MUST stay `auto` here. With an
-    //              explicit `width:100%` (w-full) a block box is already fully
-    //              sized, so negative margins cannot widen it — the box just
-    //              shifts left and leaves a gap of exactly the padding width on
-    //              the right. `mx-auto` must not be present either; it competes
-    //              with `-mx-*` for the same two properties and which one wins
-    //              depends on stylesheet order, not class order.
-    //
-    //   default -> w-full + mx-auto, the normal in-flow centred banner.
-    //
-    // Negative margins are used rather than `w-screen`/100vw because 100vw
-    // counts the scrollbar and overflows the viewport.
-    $widthClass = $bleed
-        ? 'w-auto -mx-3 sm:-mx-5 lg:-mx-8'
-        : 'w-full mx-auto';
+    // Symmetric side gutters. `w-auto` is load-bearing: for a block box, an
+    // explicit `width:100%` (w-full) already fixes the used width, so adding
+    // horizontal margins cannot shrink it — the box shifts sideways instead and
+    // CSS resolves the over-constrained equation against margin-right, which
+    // leaves an uneven gap on one side. With `width:auto` the used width is
+    // computed as (containing block − margins), so both gutters are equal by
+    // construction at every breakpoint. Do not add `mx-auto` alongside `mx-*`:
+    // they set the same two properties and the winner depends on stylesheet
+    // order rather than class order.
+    $widthClass = 'w-auto mx-4 sm:mx-6 lg:mx-8';
 
     // rounded-2xl draws the radius; the clip-path is what actually holds the
     // corners round over a <video>, which Safari otherwise paints square.

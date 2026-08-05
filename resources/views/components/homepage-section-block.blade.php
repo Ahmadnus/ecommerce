@@ -30,7 +30,6 @@
             :file_path="$section->media_url"
             :is_rtl="$isRtl"
             :contained="true"
-            :bleed="true"
             :overlay="$showText ? [
                 'title'      => $section->title,
                 'text'       => $section->paragraph,
@@ -85,7 +84,6 @@
             :file_path="$section->media_url"
             :link_url="$section->button_url"
             :is_rtl="$isRtl"
-            :bleed="true"
             height="h-[70vh] md:h-[90vh]" />
     @endif
 @else
