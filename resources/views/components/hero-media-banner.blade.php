@@ -49,8 +49,8 @@
     }
 
     $containerClass = $contained
-        ? 'banner-container block w-[92%] max-w-2xl mx-auto my-3 md:my-8 rounded-2xl overflow-hidden relative aspect-video max-h-[35vh] md:max-h-[60vh] shadow-lg'
-        : 'banner-container block w-[92%] max-w-2xl mx-auto px-2 sm:px-6 my-3 md:my-8 aspect-video max-h-[35vh] md:max-h-[60vh] overflow-hidden relative';
+        ? 'banner-container block w-full aspect-video max-h-[35vh] md:max-h-[60vh] overflow-hidden relative'
+        : 'banner-container block w-full aspect-video max-h-[35vh] md:max-h-[60vh] overflow-hidden relative';
 
     $mediaClass = 'w-full h-full object-contain mx-auto';
 @endphp
