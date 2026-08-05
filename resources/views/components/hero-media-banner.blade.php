@@ -31,6 +31,14 @@
     'is_rtl'     => false,
     'contained'  => false,
     'overlay'    => null,
+    // Set only by call sites that render INSIDE the page's
+    // `max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8` wrapper. The banner then
+    // cancels exactly that wrapper's horizontal padding to sit edge-to-edge.
+    // Deliberately NOT `w-screen`/100vw — that unit counts the scrollbar and
+    // overflowed the viewport. Negative margins can't overflow, because the
+    // element still lays out inside its parent's content box. Call sites that
+    // already render outside the wrapper must leave this false.
+    'bleed'      => false,
 ])
 
 @if($file_path)
@@ -48,11 +56,33 @@
         $ovLinkFont  = \App\Models\HomepageSection::fontFamilyValue($overlay['linkFont'] ?? null);
     }
 
-    $containerClass = $contained
-        ? 'banner-container block w-full h-[65vh] mx-auto my-3 md:my-6 relative rounded-2xl [clip-path:inset(0_round_1rem)]'
-        : 'banner-container block w-full h-[65vh] mx-auto my-3 md:my-6 relative rounded-2xl [clip-path:inset(0_round_1rem)]';
+    // Width sizing. These two branches are mutually exclusive on purpose:
+    //
+    //   $bleed  -> w-auto + negative margins mirroring the page wrapper's
+    //              `px-3 sm:px-5 lg:px-8`. Width MUST stay `auto` here. With an
+    //              explicit `width:100%` (w-full) a block box is already fully
+    //              sized, so negative margins cannot widen it — the box just
+    //              shifts left and leaves a gap of exactly the padding width on
+    //              the right. `mx-auto` must not be present either; it competes
+    //              with `-mx-*` for the same two properties and which one wins
+    //              depends on stylesheet order, not class order.
+    //
+    //   default -> w-full + mx-auto, the normal in-flow centred banner.
+    //
+    // Negative margins are used rather than `w-screen`/100vw because 100vw
+    // counts the scrollbar and overflows the viewport.
+    $widthClass = $bleed
+        ? 'w-auto -mx-3 sm:-mx-5 lg:-mx-8'
+        : 'w-full mx-auto';
 
-    $mediaClass = 'w-full h-full object-contain mx-auto';
+    // rounded-2xl draws the radius; the clip-path is what actually holds the
+    // corners round over a <video>, which Safari otherwise paints square.
+    $containerClass = 'banner-container block ' . $widthClass . ' h-[65vh] my-3 md:my-6 relative rounded-2xl [clip-path:inset(0_round_1rem)]';
+
+    // object-cover so the media fills the full-width container edge-to-edge.
+    // This crops the frame instead of letterboxing it — unavoidable unless the
+    // source file's aspect ratio matches the container's.
+    $mediaClass = 'w-full h-full object-cover object-center mx-auto';
 @endphp
 
 <{{ $tag }}
