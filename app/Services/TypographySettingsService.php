@@ -55,6 +55,7 @@ class TypographySettingsService
     {
         return [
             'base_font_size'          => 'Base / Body Font Size',
+            'logo_size'               => 'Logo Size (Navbar)',
             'navbar_font_size'        => 'Navbar Font Size',
             'card_font_size'          => 'Card Text Font Size',
             'heading_font_size'       => 'Heading (H1 / H2) Font Size',

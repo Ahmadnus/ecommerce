@@ -146,6 +146,7 @@
 
             /* ── Font sizes (NEW — from settings table) ────────────────── */
             --base-font-size:          {{ $ts['base_font_size'] }};
+            --logo-size:               {{ $ts['logo_size'] }};
             --navbar-font-size:        {{ $ts['navbar_font_size'] }};
             --card-font-size:          {{ $ts['card_font_size'] }};
             --heading-font-size:       {{ $ts['heading_font_size'] }};
@@ -206,6 +207,13 @@
         nav a, nav button, .nav-link {
             color: var(--text-navbar) !important;
             font-size: var(--navbar-font-size);
+        }
+        .navbar-inner {
+            min-height: calc(var(--logo-size) + 24px);
+        }
+        .navbar-logo {
+            height: var(--logo-size);
+            max-height: var(--logo-size);
         }
 
         /* ── Headings ──────────────────────────────────────────────────── */

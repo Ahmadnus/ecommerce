@@ -10,12 +10,12 @@
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
     <nav class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
-        <div class="relative flex items-center justify-between h-14 md:h-16">
+        <div class="navbar-inner relative flex items-center justify-between">
 
             {{-- Logo: absolutely centered on all breakpoints --}}
             <a href="/" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
                                 flex-shrink-0 hover:opacity-80 transition-opacity z-10">
-                <img src="{{ $logoUrl }}" alt="Logo" class="h-5 md:h-6 w-auto max-h-[24px] md:max-h-[28px] object-contain">
+                <img src="{{ $logoUrl }}" alt="Logo" class="navbar-logo w-auto object-contain">
             </a>
 
             <div class="flex items-center gap-6 lg:gap-10">

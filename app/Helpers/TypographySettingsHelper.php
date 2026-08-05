@@ -8,6 +8,7 @@ class TypographySettingsHelper
 {
     private static array $fontSizeDefaults = [
         'base_font_size'          => '16px',
+        'logo_size'               => '24px',
         'navbar_font_size'        => '14px',
         'card_font_size'          => '13px',
         'heading_font_size'       => '32px',
