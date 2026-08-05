@@ -50,7 +50,7 @@
 
     $containerClass = $contained
         ? 'banner-container block w-full max-w-sm md:max-w-md mx-auto my-6 md:my-10 rounded-2xl overflow-hidden relative aspect-[9/16] shadow-lg'
-        : 'banner-container block w-[85%] max-w-2xl mx-auto px-2 sm:px-6 my-2 md:my-6 aspect-video max-h-[26vh] md:max-h-[calc(60vh-150px)] overflow-hidden relative';
+        : 'banner-container block w-[75%] max-w-xl mx-auto px-2 sm:px-6 my-2 md:my-6 aspect-video max-h-[18vh] md:max-h-[35vh] overflow-hidden relative';
 
     $mediaClass = $contained
         ? 'w-full h-full object-cover'
