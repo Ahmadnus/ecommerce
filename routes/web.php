@@ -43,10 +43,36 @@ use App\Services\SmsService;
 // PUBLIC ROUTES
 // ═══════════════════════════════════════════════════════════════════════════
 
-Route::get('/', function () {
-    return view('splash.splash');
-});
+// ═══════════════════════════════════════════════════════════════════════════
+// CAR RENTAL STOREFRONT
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The site is a car rental platform; '/' is the rental homepage. The legacy
+// e-commerce storefront routes below are left registered but are no longer
+// linked from the navigation.
 
+Route::get('/', [\App\Http\Controllers\Rental\FleetController::class, 'home'])->name('rental.home');
+Route::get('/cars',         [\App\Http\Controllers\Rental\FleetController::class, 'index'])->name('rental.fleet');
+Route::get('/branches',     [\App\Http\Controllers\Rental\FleetController::class, 'branches'])->name('rental.branches');
+Route::get('/cars/{slug}',  [\App\Http\Controllers\Rental\FleetController::class, 'show'])->name('rental.vehicles.show');
+
+// ── Booking flow ────────────────────────────────────────────────────────────
+Route::get('/book/{slug}',  [\App\Http\Controllers\Rental\BookingController::class, 'create'])->name('rental.booking.create');
+Route::post('/book/{slug}', [\App\Http\Controllers\Rental\BookingController::class, 'store'])->name('rental.booking.store');
+Route::get('/booking/confirmed/{reference}', [\App\Http\Controllers\Rental\BookingController::class, 'success'])
+    ->name('rental.booking.success');
+
+// ── Manage Booking (public reference + phone lookup) ────────────────────────
+Route::get('/manage-booking',  [\App\Http\Controllers\Rental\BookingController::class, 'manage'])->name('rental.booking.manage');
+Route::post('/manage-booking', [\App\Http\Controllers\Rental\BookingController::class, 'lookup'])->name('rental.booking.lookup');
+Route::post('/manage-booking/{reference}/cancel', [\App\Http\Controllers\Rental\BookingController::class, 'cancel'])
+    ->name('rental.booking.cancel');
+
+Route::get('/my-bookings', [\App\Http\Controllers\Rental\BookingController::class, 'myBookings'])
+    ->middleware('auth')->name('rental.my-bookings');
+
+
+// ── Legacy e-commerce storefront (kept registered, unlinked) ────────────────
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/p/{slug}', [PageController::class, 'show'])->name('pages.show');
@@ -208,6 +234,25 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('attributes', AttributeController::class);
     Route::resource('attribute-values', AttributeValueController::class);
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // ── CAR RENTAL: fleet, bookings, branches, vehicle classes ──────────────
+    Route::resource('vehicles', \App\Http\Controllers\Admin\VehicleController::class)->except(['show']);
+    Route::patch('vehicles/{vehicle}/status', [\App\Http\Controllers\Admin\VehicleController::class, 'updateStatus'])
+        ->name('vehicles.status');
+
+    Route::resource('vehicle-categories', \App\Http\Controllers\Admin\VehicleCategoryController::class)->except(['show']);
+
+    Route::resource('locations', \App\Http\Controllers\Admin\RentalLocationController::class)
+        ->except(['show'])
+        ->parameters(['locations' => 'location']);
+
+    Route::get('bookings',            [\App\Http\Controllers\Admin\BookingController::class, 'index'])->name('bookings.index');
+    Route::get('bookings/{booking}',  [\App\Http\Controllers\Admin\BookingController::class, 'show'])->name('bookings.show');
+    Route::put('bookings/{booking}',  [\App\Http\Controllers\Admin\BookingController::class, 'update'])->name('bookings.update');
+    Route::patch('bookings/{booking}/status', [\App\Http\Controllers\Admin\BookingController::class, 'updateStatus'])
+        ->name('bookings.status');
+    Route::delete('bookings/{booking}', [\App\Http\Controllers\Admin\BookingController::class, 'destroy'])
+        ->name('bookings.destroy');
 
     // ── المحتوى والمنتجات ──────────────────────────────────────────────────
     Route::resource('categories', CategoryController::class);

@@ -61,11 +61,40 @@
                         الرئيسية
                     </x-admin-nav-link>
 
+                    {{-- ── تأجير السيارات ────────────────────────────────────── --}}
+                    <div x-show="sidebarOpen"
+                         class="px-3 mt-4 mb-2 text-[10px] font-bold uppercase tracking-wider"
+                         style="color:rgba(255,255,255,0.4);">
+                        تأجير السيارات
+                    </div>
+
+                    <x-admin-nav-link href="{{ route('admin.vehicles.index') }}" icon="truck"
+                        :active="request()->routeIs('admin.vehicles.*')">
+                        أسطول السيارات
+                    </x-admin-nav-link>
+
+                    <x-admin-nav-link href="{{ route('admin.bookings.index') }}" icon="calendar"
+                        :active="request()->routeIs('admin.bookings.*')">
+                        الحجوزات والتأجير
+                    </x-admin-nav-link>
+
+                    <x-admin-nav-link href="{{ route('admin.vehicle-categories.index') }}" icon="collection"
+                        :active="request()->routeIs('admin.vehicle-categories.*')">
+                        فئات السيارات
+                    </x-admin-nav-link>
+
+                    <x-admin-nav-link href="{{ route('admin.locations.index') }}" icon="location-marker"
+                        :active="request()->routeIs('admin.locations.*')">
+                        الفروع ومواقع الاستلام
+                    </x-admin-nav-link>
+
+                    <hr class="my-2 mx-2" style="border-color:rgba(255,255,255,0.1);">
+
                     {{-- ── محتوى المتجر ──────────────────────────────────────── --}}
                     <div x-show="sidebarOpen"
                          class="px-3 mt-4 mb-2 text-[10px] font-bold uppercase tracking-wider"
                          style="color:rgba(255,255,255,0.4);">
-                        محتوى المتجر
+                        محتوى الموقع
                     </div>
 
                     <x-admin-nav-link href="{{ route('admin.announcements.index') }}" icon="speakerphone"
