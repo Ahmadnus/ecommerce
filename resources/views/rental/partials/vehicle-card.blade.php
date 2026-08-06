@@ -25,8 +25,10 @@
     {{-- Image --}}
     <a href="{{ $showUrl }}" class="relative block aspect-[16/10] bg-gray-50 overflow-hidden">
         @if($image)
+            {{-- object-cover: fleet listings are photographs, so filling the
+                 frame reads better than letterboxing a contained image. --}}
             <img src="{{ $image }}" alt="{{ $vehicle->full_title }}" loading="lazy"
-                 class="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500">
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
         @else
             <div class="w-full h-full flex items-center justify-center text-gray-300">
                 <i class="fa-solid fa-car text-6xl"></i>

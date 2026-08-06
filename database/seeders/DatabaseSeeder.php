@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             LangSettingSeeder::class,
             TypographySettingsSeeder::class,
             CarRentalSeeder::class,
+            VehiclePhotoSeeder::class,
         ]);
     }
 }
