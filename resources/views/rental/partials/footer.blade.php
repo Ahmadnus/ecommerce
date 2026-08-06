@@ -4,7 +4,7 @@
             fn($q) => $q->where('is_active', true))
         ->get();
 
-    $supportNo    = \App\Models\Setting::get('rental_support_phone', '920000000');
+    $supportNo    = \App\Models\Setting::get('rental_support_phone', '+962 6 500 0000');
     $supportEmail = \App\Models\Setting::get('rental_support_email');
     $supportAddr  = \App\Models\Setting::get('rental_support_address');
     $footerPages = \App\Models\Page::query()
@@ -96,8 +96,9 @@
             </div>
         </div>
 
-        <div class="mt-12 pt-6 border-t border-white/10 text-center text-xs text-white/40">
-            &copy; {{ date('Y') }} {{ __('rental.brand') }}. All rights reserved.
+        <div class="mt-12 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-2 text-xs text-white/40">
+            <x-jordan-flag class="w-5 h-3 rounded-sm shadow ring-1 ring-white/20" />
+            <span>&copy; {{ date('Y') }} {{ __('rental.brand') }} — {{ __('rental.rights_reserved') }}</span>
         </div>
     </div>
 </footer>

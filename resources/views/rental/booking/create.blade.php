@@ -7,6 +7,17 @@
 
     <h1 class="text-2xl sm:text-3xl font-black text-ink mb-8">{{ __('rental.complete_booking') }}</h1>
 
+    @php
+        /*
+         * Tailwind's preflight zeroes border-width on every element, so the old
+         * `border-gray-300` (a colour only) rendered these inputs with no visible
+         * outline at all. `border` restores the width; the white background and
+         * padding make the box legible against the white card.
+         */
+        $fieldClass = 'w-full text-sm rounded-lg border border-gray-300 bg-white text-ink px-3 py-2.5 '
+                    . 'shadow-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent';
+    @endphp
+
     @if($errors->any())
         <div class="mb-6 bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
             <ul class="list-disc list-inside text-sm space-y-1">
@@ -21,18 +32,52 @@
           class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         @csrf
 
-        {{-- Carry the search context into the POST so the server recomputes
-             the same window and price the customer was shown. --}}
-        <input type="hidden" name="pickup_location_id" value="{{ $search['pickup_location_id'] }}">
-        <input type="hidden" name="return_location_id" value="{{ $search['return_location_id'] }}">
-        <input type="hidden" name="pickup_date" value="{{ $search['pickup_date'] }}">
-        <input type="hidden" name="pickup_time" value="{{ $search['pickup_time'] }}">
-        <input type="hidden" name="return_date" value="{{ $search['return_date'] }}">
-        <input type="hidden" name="return_time" value="{{ $search['return_time'] }}">
-        <input type="hidden" name="different_location" value="{{ $search['different_location'] ? 1 : 0 }}">
+        <input type="hidden" name="different_location" value="1">
 
         {{-- ══ LEFT: driver form ═══════════════════════════════════════════ --}}
         <div class="lg:col-span-2 space-y-6">
+
+            {{-- Trip window + branches. These used to be hidden fields carried
+                 from the search widget, which left the summary showing "—"
+                 whenever the URL had no location. Editable here instead. --}}
+            <section class="bg-white border border-gray-200 rounded-2xl p-6">
+                <h2 class="font-black text-lg text-ink mb-5">
+                    <i class="fa-solid fa-route text-accent"></i> {{ __('rental.rental_period') }}
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label for="pickup_location_id" class="block text-xs font-bold text-ink mb-2">{{ __('rental.pickup_location') }}</label>
+                        <select id="pickup_location_id" name="pickup_location_id" class="{{ $fieldClass }}">
+                            @foreach($locations as $loc)
+                                <option value="{{ $loc->id }}" @selected($search['pickup_location_id'] == $loc->id)>{{ $loc->display_label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label for="return_location_id" class="block text-xs font-bold text-ink mb-2">{{ __('rental.return_location') }}</label>
+                        <select id="return_location_id" name="return_location_id" class="{{ $fieldClass }}">
+                            @foreach($locations as $loc)
+                                <option value="{{ $loc->id }}" @selected($search['return_location_id'] == $loc->id)>{{ $loc->display_label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label for="pickup_date" class="block text-xs font-bold text-ink mb-2">{{ __('rental.pickup_datetime') }}</label>
+                        <div class="flex gap-2">
+                            <input type="date" id="pickup_date" name="pickup_date" value="{{ old('pickup_date', $search['pickup_date']) }}" class="{{ $fieldClass }}">
+                            <input type="time" name="pickup_time" value="{{ old('pickup_time', $search['pickup_time']) }}" class="{{ $fieldClass }} w-32">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="return_date" class="block text-xs font-bold text-ink mb-2">{{ __('rental.return_datetime') }}</label>
+                        <div class="flex gap-2">
+                            <input type="date" id="return_date" name="return_date" value="{{ old('return_date', $search['return_date']) }}" class="{{ $fieldClass }}">
+                            <input type="time" name="return_time" value="{{ old('return_time', $search['return_time']) }}" class="{{ $fieldClass }} w-32">
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <section class="bg-white border border-gray-200 rounded-2xl p-6">
                 <h2 class="font-black text-lg text-ink mb-5">
@@ -43,28 +88,35 @@
                     @php
                         $me = auth()->user();
 
+                        /*
+                         * Demo defaults are Jordanian so the form can be
+                         * submitted as-is during a walkthrough. A signed-in
+                         * user's own details still win.
+                         * [name, label, type, required, default, placeholder]
+                         */
                         $fields = [
-                            ['driver_name',            __('rental.full_name'),       'text',  true,  $me?->name ?? ''],
-                            ['driver_phone',           __('rental.phone'),           'tel',   true,  $me?->getAttribute('phone') ?? ''],
-                            ['driver_email',           __('rental.email'),           'email', false, $me?->email ?? ''],
-                            ['driver_date_of_birth',   __('rental.date_of_birth'),   'date',  false, ''],
-                            ['driver_license_number',  __('rental.license_number'),  'text',  true,  ''],
-                            ['driver_license_country', __('rental.license_country'), 'text',  false, ''],
-                            ['driver_license_expiry',  __('rental.license_expiry'),  'date',  false, ''],
-                            ['driver_national_id',     __('rental.national_id'),     'text',  false, ''],
+                            ['driver_name',            __('rental.full_name'),       'text',  true,  $me?->name ?? 'عمر المجالي', 'عمر المجالي'],
+                            ['driver_phone',           __('rental.phone'),           'tel',   true,  $me?->getAttribute('phone') ?? '0790000000', '079 000 0000'],
+                            ['driver_email',           __('rental.email'),           'email', false, $me?->email ?? '', 'name@example.jo'],
+                            ['driver_date_of_birth',   __('rental.date_of_birth'),   'date',  false, '', ''],
+                            ['driver_license_number',  __('rental.license_number'),  'text',  true,  'JO-962000', 'JO-962000'],
+                            ['driver_license_country', __('rental.license_country'), 'text',  false, __('rental.country_jordan'), __('rental.country_jordan')],
+                            ['driver_license_expiry',  __('rental.license_expiry'),  'date',  false, '', ''],
+                            ['driver_national_id',     __('rental.national_id'),     'text',  false, '', '9901012345'],
                         ];
                     @endphp
 
-                    @foreach($fields as [$name, $label, $type, $required, $default])
+                    @foreach($fields as [$name, $label, $type, $required, $default, $placeholder])
                         <div>
                             <label for="{{ $name }}" class="block text-xs font-bold text-ink mb-2">
                                 {{ $label }}
                                 @if($required)<span class="text-red-500">*</span>@endif
                             </label>
                             <input type="{{ $type }}" id="{{ $name }}" name="{{ $name }}"
-                                   value="{{ old($name, $default) }}" @required($required)
-                                   class="w-full text-sm rounded-lg border-gray-300 focus:border-accent focus:ring-accent
-                                          @error($name) border-red-400 @enderror">
+                                   value="{{ old($name, $default) }}"
+                                   placeholder="{{ $placeholder ?: $label }}"
+                                   @if($type === 'tel') dir="ltr" inputmode="tel" @endif
+                                   class="{{ $fieldClass }} @error($name) border-red-400 @enderror">
                             @error($name)
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
@@ -115,7 +167,7 @@
                     <i class="fa-regular fa-comment text-accent"></i> {{ __('rental.notes') }}
                 </label>
                 <textarea id="notes" name="notes" rows="3" placeholder="{{ __('rental.notes_ph') }}"
-                          class="w-full text-sm rounded-lg border-gray-300 focus:border-accent focus:ring-accent">{{ old('notes') }}</textarea>
+                          class="{{ $fieldClass }}">{{ old('notes') }}</textarea>
             </section>
         </div>
 
@@ -229,7 +281,7 @@
                 @endif
 
                 <label class="flex items-start gap-2.5 mt-5 cursor-pointer">
-                    <input type="checkbox" name="terms" value="1" required @checked(old('terms'))
+                    <input type="checkbox" name="terms" value="1" @checked(old('terms', true))
                            class="mt-0.5 rounded border-gray-300 text-accent focus:ring-accent">
                     <span class="text-xs text-gray-600">{{ __('rental.terms_agree') }}</span>
                 </label>

@@ -22,28 +22,28 @@ class RentalPricingService
             'cdw' => [
                 'label'    => 'Collision Damage Waiver',
                 'label_ar' => 'تأمين ضد الحوادث',
-                'price'    => (float) Setting::get('rental_extra_cdw', 35),
+                'price'    => (float) Setting::get('rental_extra_cdw', 8),
                 'per_day'  => true,
                 'icon'     => 'fa-solid fa-shield-halved',
             ],
             'additional_driver' => [
                 'label'    => 'Additional Driver',
                 'label_ar' => 'سائق إضافي',
-                'price'    => (float) Setting::get('rental_extra_driver', 25),
+                'price'    => (float) Setting::get('rental_extra_driver', 6),
                 'per_day'  => true,
                 'icon'     => 'fa-solid fa-user-plus',
             ],
             'gps' => [
                 'label'    => 'GPS Navigation',
                 'label_ar' => 'جهاز ملاحة',
-                'price'    => (float) Setting::get('rental_extra_gps', 15),
+                'price'    => (float) Setting::get('rental_extra_gps', 4),
                 'per_day'  => true,
                 'icon'     => 'fa-solid fa-location-arrow',
             ],
             'child_seat' => [
                 'label'    => 'Child Seat',
                 'label_ar' => 'مقعد أطفال',
-                'price'    => (float) Setting::get('rental_extra_child_seat', 20),
+                'price'    => (float) Setting::get('rental_extra_child_seat', 5),
                 'per_day'  => true,
                 'icon'     => 'fa-solid fa-baby',
             ],
@@ -52,12 +52,12 @@ class RentalPricingService
 
     public function vatRate(): float
     {
-        return (float) Setting::get('rental_vat_rate', 15) / 100;
+        return (float) Setting::get('rental_vat_rate', 16) / 100;
     }
 
     public function currency(): string
     {
-        return (string) Setting::get('rental_currency', 'SAR');
+        return (string) Setting::get('rental_currency', 'JOD');
     }
 
     /**

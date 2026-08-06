@@ -86,9 +86,10 @@
                     </a>
                 @endauth
 
-                {{-- Language switcher --}}
+                {{-- Language switcher — mobile gets it in the slide-out drawer
+                     instead, where the top bar has no room for it. --}}
                 @if(($locale_mode ?? 'both') === 'both')
-                    <form method="POST" action="{{ route('language.switch') }}" class="shrink-0">
+                    <form method="POST" action="{{ route('language.switch') }}" class="hidden sm:block shrink-0">
                         @csrf
                         <input type="hidden" name="locale" value="{{ $altLocale }}">
                         <button type="submit"
@@ -99,6 +100,13 @@
                         </button>
                     </form>
                 @endif
+
+                {{-- Region marker --}}
+                <span class="hidden sm:inline-flex items-center gap-2 px-2.5 py-2 rounded-md border border-gray-200"
+                      title="{{ __('rental.country_jordan') }}">
+                    <x-jordan-flag class="w-5 h-3 rounded-sm ring-1 ring-gray-200" />
+                    <span class="text-xs font-bold text-ink">{{ __('rental.country_jordan') }}</span>
+                </span>
             </div>
         </div>
     </div>
@@ -152,6 +160,29 @@
                             {{ __('rental.login_register') }}
                         </a>
                     @endauth
+
+                    {{-- Language switcher (mobile only — hidden in the top bar
+                         from the sm breakpoint up, where it reappears there). --}}
+                    @if(($locale_mode ?? 'both') === 'both')
+                        <form method="POST" action="{{ route('language.switch') }}" class="sm:hidden">
+                            @csrf
+                            <input type="hidden" name="locale" value="{{ $altLocale }}">
+                            <button type="submit"
+                                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg font-semibold text-sm
+                                           text-start hover:bg-gray-50 transition-colors">
+                                <i class="fa-solid fa-globe text-accent"></i>
+                                {{ __('rental.language') }}
+                            </button>
+                        </form>
+                    @endif
+                </div>
+
+                {{-- Region marker (mobile only) --}}
+                <div class="sm:hidden pt-4 mt-4 border-t border-gray-100">
+                    <span class="flex items-center gap-2 px-4 py-2">
+                        <x-jordan-flag class="w-5 h-3 rounded-sm ring-1 ring-gray-200" />
+                        <span class="text-xs font-bold text-ink">{{ __('rental.country_jordan') }}</span>
+                    </span>
                 </div>
             </nav>
         </aside>

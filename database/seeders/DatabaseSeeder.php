@@ -16,6 +16,10 @@ class DatabaseSeeder extends Seeder
             TypographySettingsSeeder::class,
             CarRentalSeeder::class,
             VehiclePhotoSeeder::class,
+
+            // Demo build only: catalogue + orders behind the legacy store
+            // dashboard, so /admin doesn't present empty tables.
+            DemoStoreSeeder::class,
         ]);
     }
 }

@@ -151,15 +151,25 @@ class FleetController extends Controller
         return RentalLocation::active()->ordered()->get();
     }
 
+    /** The branch every search falls back to when the URL names none. */
+    private function primaryLocationId(): ?int
+    {
+        return RentalLocation::active()->ordered()->value('id');
+    }
+
     /**
      * Sensible defaults for the search widget on a cold visit: pick up
      * tomorrow at 10:00, return three days later.
      */
     private function searchDefaults(): array
     {
+        // Preselect the primary branch so the homepage widget never opens on a
+        // blank location.
+        $primary = $this->primaryLocationId();
+
         return [
-            'pickup_location_id' => null,
-            'return_location_id' => null,
+            'pickup_location_id' => $primary,
+            'return_location_id' => $primary,
             'pickup_location'    => null,
             'return_location'    => null,
             'pickup_at'          => null,
@@ -205,9 +215,19 @@ class FleetController extends Controller
         $search['return_location_id'] = $request->integer('return_location_id') ?: null;
         $search['different_location'] = $request->boolean('different_location');
 
+        /*
+         * A URL that carries dates but no branch used to leave both locations
+         * null, which rendered as "—" on the booking page. Fall back to the
+         * primary branch (first by sort order — Queen Alia International
+         * Airport) so a location is always resolved.
+         */
+        $search['pickup_location_id'] ??= $this->primaryLocationId();
+
         if (! $search['different_location']) {
             $search['return_location_id'] = $search['pickup_location_id'];
         }
+
+        $search['return_location_id'] ??= $search['pickup_location_id'];
 
         $search['pickup_location'] = $search['pickup_location_id']
             ? RentalLocation::find($search['pickup_location_id'])

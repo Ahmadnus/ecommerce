@@ -14,7 +14,7 @@
         $accent    = \App\Models\Setting::get('rental_accent_color', '#F47B20');
         $ink       = \App\Models\Setting::get('rental_ink_color', '#2B2B2B');
         $logoUrl   = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo');
-        $supportNo = \App\Models\Setting::get('rental_support_phone', '920000000');
+        $supportNo = \App\Models\Setting::get('rental_support_phone', '+962 6 500 0000');
 
         /*
          * Derive the accent tint/shade ramp from the single admin-chosen colour

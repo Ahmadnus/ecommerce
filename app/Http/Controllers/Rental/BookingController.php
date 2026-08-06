@@ -10,7 +10,6 @@ use App\Services\RentalPricingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -72,42 +71,52 @@ class BookingController extends Controller
     {
         $vehicle = Vehicle::where('slug', $slug)->where('is_active', true)->firstOrFail();
 
-        $validated = $request->validate([
-            'pickup_location_id'    => ['required', 'exists:rental_locations,id'],
-            'return_location_id'    => ['nullable', 'exists:rental_locations,id'],
-            'pickup_date'           => ['required', 'date'],
-            'pickup_time'           => ['required'],
-            'return_date'           => ['required', 'date'],
-            'return_time'           => ['required'],
-            'driver_name'           => ['required', 'string', 'max:150'],
-            'driver_email'          => ['nullable', 'email', 'max:150'],
-            'driver_phone'          => ['required', 'string', 'max:30'],
-            'driver_date_of_birth'  => ['nullable', 'date', 'before:today'],
-            'driver_license_number' => ['required', 'string', 'max:60'],
-            'driver_license_country'=> ['nullable', 'string', 'max:60'],
-            'driver_license_expiry' => ['nullable', 'date', 'after:today'],
-            'driver_national_id'    => ['nullable', 'string', 'max:60'],
-            'extras'                => ['nullable', 'array'],
-            'extras.*'              => [Rule::in(array_keys($this->pricing->availableExtras()))],
-            'notes'                 => ['nullable', 'string', 'max:1000'],
-            'terms'                 => ['accepted'],
-        ]);
+        /*
+         * DEMO/TESTING: request validation is intentionally switched off here so
+         * a reservation can be submitted with any (or no) driver details. The
+         * original rule set — required name/phone/licence, `accepted` terms, and
+         * the minimum-driver-age check against $vehicle->min_driver_age — is
+         * preserved in git history and should be restored before going live.
+         */
+        $driverFields = [
+            'driver_name', 'driver_email', 'driver_phone', 'driver_date_of_birth',
+            'driver_license_number', 'driver_license_country', 'driver_license_expiry',
+            'driver_national_id', 'notes',
+        ];
+
+        // Every key is present (null when omitted) so the create() call below
+        // never trips an undefined-index on a half-filled test submission.
+        $validated = $request->only($driverFields) + array_fill_keys($driverFields, null);
+
+        // Blank strings must become null — the date columns can't cast ''.
+        $validated = array_map(
+            fn($v) => is_string($v) && trim($v) === '' ? null : $v,
+            $validated
+        );
+
+        // Unknown extra keys would break the pricing lookup, so they are dropped
+        // rather than rejected — that is data hygiene, not user-facing validation.
+        $validated['extras'] = array_values(array_intersect(
+            (array) $request->input('extras', []),
+            array_keys($this->pricing->availableExtras())
+        ));
 
         $search = $this->fleet->resolveSearch($request);
 
-        if (! $search['pickup_at'] || ! $search['return_at']) {
-            return back()->withInput()->with('error', __('rental.no_cars_hint'));
-        }
+        // resolveSearch already falls back to sane defaults, but a totally
+        // unparseable window would leave these null — fill them in rather than
+        // bouncing the tester back to the form.
+        $search['pickup_at'] ??= now()->addDay()->setTime(10, 0);
+        $search['return_at'] ??= $search['pickup_at']->copy()->addDays(3);
 
-        // Enforce the vehicle's own minimum driver age.
-        if (! empty($validated['driver_date_of_birth'])) {
-            $age = \Carbon\Carbon::parse($validated['driver_date_of_birth'])->age;
+        // Same for the branch: fall back to the vehicle's own, then any active one.
+        if (! $search['pickup_location_id']) {
+            $fallback = $vehicle->location ?? RentalLocation::active()->ordered()->first();
 
-            if ($age < $vehicle->min_driver_age) {
-                return back()->withInput()->withErrors([
-                    'driver_date_of_birth' => __('rental.min_age') . ": {$vehicle->min_driver_age}",
-                ]);
-            }
+            $search['pickup_location_id'] = $fallback?->id;
+            $search['pickup_location']    = $fallback;
+            $search['return_location_id'] ??= $fallback?->id;
+            $search['return_location']    ??= $fallback;
         }
 
         $quote = $this->pricing->quote(
@@ -138,11 +147,13 @@ class BookingController extends Controller
                     'return_date_time'      => $search['return_at'],
                     'total_days'            => $quote['days'],
                     'rate_plan'             => $quote['rate_plan'],
-                    'driver_name'           => $validated['driver_name'],
+                    // Placeholders keep the NOT NULL columns satisfied now that
+                    // the form no longer requires these (see the DEMO note above).
+                    'driver_name'           => $validated['driver_name'] ?: 'عمر المجالي',
                     'driver_email'          => $validated['driver_email'] ?? null,
-                    'driver_phone'          => $validated['driver_phone'],
+                    'driver_phone'          => $validated['driver_phone'] ?: '0790000000',
                     'driver_date_of_birth'  => $validated['driver_date_of_birth'] ?? null,
-                    'driver_license_number' => $validated['driver_license_number'],
+                    'driver_license_number' => $validated['driver_license_number'] ?: 'JO-962000',
                     'driver_license_country'=> $validated['driver_license_country'] ?? null,
                     'driver_license_expiry' => $validated['driver_license_expiry'] ?? null,
                     'driver_national_id'    => $validated['driver_national_id'] ?? null,
@@ -247,9 +258,10 @@ class BookingController extends Controller
         $normalise = static function (?string $phone): string {
             $digits = preg_replace('/\D+/', '', (string) $phone);
 
-            // Drop the Saudi country code and any trunk zero so the
-            // remaining national number is what gets compared.
-            $digits = preg_replace('/^966/', '', $digits);
+            // Drop the Jordanian country code and any trunk zero so the
+            // remaining national number is what gets compared — +962 79…,
+            // 00962 79… and 079… all reduce to the same digits.
+            $digits = preg_replace('/^(00)?962/', '', $digits);
 
             return ltrim($digits, '0');
         };

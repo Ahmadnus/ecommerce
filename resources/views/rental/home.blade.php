@@ -4,10 +4,50 @@
 
 @section('content')
 
+@php
+    /*
+     * Hero slides. An admin banner supplies its own artwork via the
+     * 'banner_image' media collection; when no banners exist we build the
+     * slider straight from the featured fleet, reusing $vehicle->main_image_url
+     * — the exact accessor the fleet cards use. Same source means that if the
+     * cards show photos on the server, so does the hero.
+     */
+    $slides = $banners->map(fn($b) => [
+        'image'       => $b->getFirstMediaUrl('banner_image'),
+        'badge'       => $b->badge,
+        'title'       => $b->title,
+        'subtitle'    => $b->subtitle,
+        'description' => $b->description,
+        'cta_text'    => $b->button_text,
+        'cta_url'     => $b->button_url,
+        'bg'          => $b->background_color ?: '#1a1a1a',
+        'color'       => $b->text_color ?: '#ffffff',
+    ]);
+
+    if ($slides->isEmpty()) {
+        $slides = $featured
+            ->filter(fn($v) => $v->main_image_url)
+            ->take(5)
+            ->map(fn($v) => [
+                'image'       => $v->main_image_url,
+                'badge'       => $v->category?->name,
+                'title'       => $v->full_title,
+                'subtitle'    => number_format($v->effective_daily_rate, 0)
+                                 . ' ' . __('rental.currency') . ' ' . __('rental.per_day'),
+                'description' => null,
+                'cta_text'    => __('rental.book_now'),
+                'cta_url'     => route('rental.vehicles.show', $v->slug),
+                'bg'          => '#1a1a1a',
+                'color'       => '#ffffff',
+            ])
+            ->values();
+    }
+@endphp
+
 {{-- ══ HERO CAROUSEL ═══════════════════════════════════════════════════════ --}}
 <section x-data="{
              active: 0,
-             count: {{ max($banners->count(), 1) }},
+             count: {{ max($slides->count(), 1) }},
              next() { this.active = (this.active + 1) % this.count },
              prev() { this.active = (this.active - 1 + this.count) % this.count }
          }"
@@ -15,34 +55,46 @@
          class="relative bg-ink overflow-hidden">
 
     <div class="relative h-[380px] sm:h-[460px] lg:h-[560px]">
-        @forelse($banners as $i => $banner)
+        @forelse($slides as $i => $slide)
             <div x-show="active === {{ $i }}"
                  x-transition:enter="transition ease-out duration-700"
                  x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                  class="absolute inset-0 flex items-center"
-                 style="background: linear-gradient(115deg, {{ $banner->background_color ?: '#1a1a1a' }} 0%, #111 100%);">
+                 style="background: linear-gradient(115deg, {{ $slide['bg'] }} 0%, #111 100%);">
 
-                <div class="max-w-[1300px] mx-auto px-6 sm:px-10 w-full">
-                    <div class="max-w-2xl" style="color: {{ $banner->text_color ?: '#ffffff' }};">
-                        @if($banner->badge)
+                @if($slide['image'])
+                    {{-- Photo fills the frame; the scrim keeps the headline
+                         readable over a bright car body. --}}
+                    <img src="{{ $slide['image'] }}" alt="{{ $slide['title'] }}"
+                         @if($i === 0) fetchpriority="high" @else loading="lazy" @endif
+                         class="absolute inset-0 w-full h-full object-cover">
+                    <div class="absolute inset-0"
+                         style="background: linear-gradient(
+                             {{ app()->getLocale() === 'ar' ? '270deg' : '90deg' }},
+                             rgba(0,0,0,.78) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.15) 100%);"></div>
+                @endif
+
+                <div class="relative max-w-[1300px] mx-auto px-6 sm:px-10 w-full">
+                    <div class="max-w-2xl" style="color: {{ $slide['color'] }};">
+                        @if($slide['badge'])
                             <span class="inline-block bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full mb-4">
-                                {{ $banner->badge }}
+                                {{ $slide['badge'] }}
                             </span>
                         @endif
-                        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black leading-tight">
-                            {{ $banner->title }}
+                        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black leading-tight drop-shadow">
+                            {{ $slide['title'] }}
                         </h1>
-                        @if($banner->subtitle)
-                            <p class="mt-3 text-lg sm:text-2xl font-bold opacity-90">{{ $banner->subtitle }}</p>
+                        @if($slide['subtitle'])
+                            <p class="mt-3 text-lg sm:text-2xl font-bold opacity-90">{{ $slide['subtitle'] }}</p>
                         @endif
-                        @if($banner->description)
-                            <p class="mt-3 text-sm sm:text-base opacity-75 leading-relaxed">{{ $banner->description }}</p>
+                        @if($slide['description'])
+                            <p class="mt-3 text-sm sm:text-base opacity-75 leading-relaxed">{{ $slide['description'] }}</p>
                         @endif
-                        @if($banner->button_text && $banner->button_url)
-                            <a href="{{ $banner->button_url }}"
+                        @if($slide['cta_text'] && $slide['cta_url'])
+                            <a href="{{ $slide['cta_url'] }}"
                                class="inline-block mt-6 bg-accent hover:bg-accent-600 text-white font-bold
                                       px-8 py-3.5 rounded-md transition-colors">
-                                {{ $banner->button_text }}
+                                {{ $slide['cta_text'] }}
                             </a>
                         @endif
                     </div>
@@ -71,7 +123,7 @@
         @endforelse
 
         {{-- Arrows --}}
-        @if($banners->count() > 1)
+        @if($slides->count() > 1)
             <button @click="prev()" aria-label="Previous"
                     class="absolute {{ app()->getLocale() === 'ar' ? 'right-4' : 'left-4' }} top-1/2 -translate-y-1/2
                            w-11 h-11 rounded-full bg-white/25 hover:bg-white/40 backdrop-blur text-white transition-colors">
@@ -84,7 +136,7 @@
             </button>
 
             <div class="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2">
-                @foreach($banners as $i => $b)
+                @foreach($slides as $i => $b)
                     <button @click="active = {{ $i }}" aria-label="Slide {{ $i + 1 }}"
                             :class="active === {{ $i }} ? 'bg-accent w-7' : 'bg-white/50 w-2.5'"
                             class="h-2.5 rounded-full transition-all"></button>

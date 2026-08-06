@@ -143,7 +143,7 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-5">
                 @foreach([
-                    ['daily_rate',          'السعر اليومي (ر.س)', true,  $vehicle?->daily_rate],
+                    ['daily_rate',          'السعر اليومي (د.أ)', true,  $vehicle?->daily_rate],
                     ['discount_daily_rate', 'سعر العرض اليومي',   false, $vehicle?->discount_daily_rate],
                     ['weekly_rate',         'السعر الأسبوعي',     false, $vehicle?->weekly_rate],
                     ['monthly_rate',        'السعر الشهري',       false, $vehicle?->monthly_rate],

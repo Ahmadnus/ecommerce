@@ -48,7 +48,7 @@
                             </td>
                             <td class="p-4">
                                 @php $rate = $category->lowestDailyRate(); @endphp
-                                {{ $rate ? number_format($rate, 0) . ' ر.س' : '—' }}
+                                {{ $rate ? number_format($rate, 0) . ' د.أ' : '—' }}
                             </td>
                             <td class="p-4 font-semibold">{{ $category->vehicles_count }}</td>
                             <td class="p-4 text-gray-500">{{ $category->sort_order }}</td>
