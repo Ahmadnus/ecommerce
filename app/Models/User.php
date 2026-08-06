@@ -7,6 +7,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 class User extends Authenticatable  // أضف implements FilamentUser
 {
@@ -61,5 +62,35 @@ protected $primaryKey = 'id';
     public function bookings(): HasMany
     {
         return $this->hasMany(\App\Models\Booking::class);
+    }
+
+    // ─── Legacy store relations ───────────────────────────────────────────────
+
+    public function wishlistedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Models\Product::class,
+            'wishlists',
+            'user_id',
+            'product_id'
+        )->withTimestamps();
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(\App\Models\Order::class);
+    }
+
+    /**
+     * Check if the user has wishlisted a specific product.
+     * Use when the wishlist is already eager-loaded to avoid N+1.
+     */
+    public function hasWishlisted(int $productId): bool
+    {
+        if ($this->relationLoaded('wishlistedProducts')) {
+            return $this->wishlistedProducts->contains('id', $productId);
+        }
+
+        return $this->wishlistedProducts()->where('product_id', $productId)->exists();
     }
 }

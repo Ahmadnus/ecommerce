@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Currency;
+use App\Repositories\Eloquent\OrderRepository;
+use App\Repositories\Eloquent\ProductRepository;
+use App\Repositories\Interfaces\OrderRepositoryInterface;
+use App\Repositories\Interfaces\ProductRepositoryInterface;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
@@ -19,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function register(): void
     {
+        // Repository bindings — the interface is what controllers/services depend on
+        $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
+        $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
         $this->app->singleton(\App\Services\SmsService::class);
         $this->app->bind('currency', fn() => new \App\Helpers\CurrencyHelper());
         
@@ -37,10 +44,19 @@ class AppServiceProvider extends ServiceProvider
        $logoUrl = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo')
            ?: asset('images/default-logo.png');
 
-        // 3. تمرير كل المتغيرات لجميع الصفحات
+        // 3. منطق المفضلة (Wishlist)
+        $wishlistedIds = [];
+        if (auth()->check()) {
+            $wishlistedIds = auth()->user()->wishlistedProducts()
+                ->pluck('product_id')
+                ->toArray();
+        }
+
+        // 4. تمرير كل المتغيرات لجميع الصفحات
         $view->with([
-            'logoUrl'      => $logoUrl,
-            'siteSettings' => $siteSettings,
+            'logoUrl'       => $logoUrl,
+            'siteSettings'  => $siteSettings,
+            'wishlistedIds' => $wishlistedIds,
         ]);
     });
 View::composer('admin.*', function ($view) {

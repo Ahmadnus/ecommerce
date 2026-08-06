@@ -2,26 +2,48 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\{ContactController, PageController, ProfileController};
+use App\Http\Controllers\{
+    CartController,
+    CheckoutController,
+    ContactController,
+    CustomizableProductsController,
+    CustomizationController,
+    OrderController,
+    PageController,
+    ProductController,
+    ProfileController,
+    WishlistController
+};
 use App\Http\Controllers\Auth\{AuthController, ForgotPasswordController, ResetPasswordController};
 use App\Http\Controllers\Rental\{BookingController, FleetController};
 
 use App\Http\Controllers\Admin\{
     AdminPasswordController,
     AnnouncementController,
+    AttributeController,
+    AttributeValueController,
     BookingController as AdminBookingController,
+    CategoryController,
+    CheckoutSettingsController,
     ContactMessageController,
     CountryController,
     CurrencyController as AdminCurrencyController,
+    CustomizationPricingSettingsController,
     DashboardController,
     FooterCompanyInfoController,
     FooterTextController,
     HeroBannerController,
+    HomeSectionController,
     HomepageSectionController,
+    OrderController as AdminOrderController,
+    OrderCustomizationController,
     PageController as AdminPageController,
+    ProductController as AdminProductController,
     RentalLocationController,
+    ReviewController,
     SeoSettingController,
     SettingController,
+    ShippingApiController,
     SiteFeatureController,
     SmsSettingsController,
     SocialLinkController,
@@ -65,6 +87,71 @@ Route::get('/my-bookings', [BookingController::class, 'myBookings'])
 // ═══════════════════════════════════════════════════════════════════════════
 
 Route::get('/p/{slug}', [PageController::class, 'show'])->name('pages.show');
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LEGACY E-COMMERCE STOREFRONT
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The demo build keeps the car-rental UI on '/', but the legacy store routes
+// are registered again so the restored admin dashboard (and every legacy
+// Blade view it renders) can resolve route names like products.show,
+// cart.index or orders.index without throwing.
+
+Route::get('/products',        [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
+
+Route::post('/products/{product:slug}/reviews', [\App\Http\Controllers\ProductReviewController::class, 'store'])
+    ->name('products.reviews.store');
+
+// ── Cart ────────────────────────────────────────────────────────────────────
+Route::prefix('cart')->name('cart.')->group(function () {
+    Route::get('/',                    [CartController::class, 'index'])->name('index');
+    Route::post('/add',                [CartController::class, 'add'])->name('add');
+    Route::patch('/update',            [CartController::class, 'update'])->name('update');
+    Route::delete('/remove/{itemKey}', [CartController::class, 'remove'])->name('remove');
+    Route::get('/count',               [CartController::class, 'count'])->name('count');
+});
+
+// ── Checkout ────────────────────────────────────────────────────────────────
+Route::middleware('guest.checkout')->group(function () {
+    Route::get('/checkout',  [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'placeOrder'])->name('checkout.place');
+});
+
+Route::get('/checkout/select-zone',   [CheckoutController::class, 'selectZone'])->name('checkout.select-zone');
+Route::post('/checkout/confirm-zone', [CheckoutController::class, 'confirmZone'])->name('checkout.confirm-zone');
+
+Route::get('/api/shipping/zones/{country}', [CheckoutController::class, 'zonesForCountry'])
+    ->name('checkout.zones-for-country');
+
+Route::prefix('api/shipping')->name('api.shipping.')->group(function () {
+    Route::get('countries',     [ShippingApiController::class, 'countries'])->name('countries');
+    Route::get('zones/{country}', [ShippingApiController::class, 'zones'])->name('zones');
+});
+
+// ── Orders (customer) ───────────────────────────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('/wishlist',                    [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/toggle/{product}',  [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+
+    Route::get('/orders/{orderNumber}/select-city',  [OrderController::class, 'selectCity'])->name('orders.selectCity');
+    Route::post('/orders/{orderNumber}/update-city', [OrderController::class, 'updateCity'])->name('orders.updateCity');
+
+    Route::get('/orders',             [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/show/{order}', [OrderController::class, 'show'])->name('orders.show');
+});
+
+Route::get('/orders/success/{orderNumber}', [OrderController::class, 'success'])->name('orders.success');
+
+// ── Garment customization ───────────────────────────────────────────────────
+Route::prefix('customize')->name('customize.')->group(function () {
+    Route::get('/',          [CustomizableProductsController::class, 'index'])->name('index');
+    Route::get('/{garment}', [CustomizationController::class, 'show'])
+         ->name('show')->where('garment', '[a-zA-Z0-9_-]+');
+    Route::post('/{garment}', [CustomizationController::class, 'store'])
+         ->name('store')->where('garment', '[a-zA-Z0-9_-]+');
+});
 
 Route::get('/contact',  [ContactController::class, 'create'])->name('contact.create');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
@@ -118,6 +205,50 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // ── Legacy store: catalogue ─────────────────────────────────────────────
+    Route::resource('categories', CategoryController::class);
+    Route::resource('products', AdminProductController::class);
+    Route::patch('products/{product}/stock', [AdminProductController::class, 'updateStock'])
+        ->name('products.stock');
+    Route::resource('attributes', AttributeController::class);
+    Route::resource('attribute-values', AttributeValueController::class);
+    Route::resource('home-sections', HomeSectionController::class);
+    Route::post('home-sections/reorder', [HomeSectionController::class, 'reorder'])
+        ->name('home-sections.reorder');
+
+    // ── Legacy store: orders ────────────────────────────────────────────────
+    Route::get('/orders',                  [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}',          [AdminOrderController::class, 'show'])->name('orders.show');
+    Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
+
+    // ── Legacy store: reviews ───────────────────────────────────────────────
+    Route::get(   'reviews',                    [ReviewController::class, 'index'])     ->name('reviews.index');
+    Route::get(   'reviews/{review}',           [ReviewController::class, 'show'])      ->name('reviews.show');
+    Route::patch( 'reviews/{review}/approve',   [ReviewController::class, 'approve'])   ->name('reviews.approve');
+    Route::patch( 'reviews/{review}/reject',    [ReviewController::class, 'reject'])    ->name('reviews.reject');
+    Route::patch( 'reviews/{review}/pin',       [ReviewController::class, 'pin'])       ->name('reviews.pin');
+    Route::delete('reviews/{review}',           [ReviewController::class, 'destroy'])   ->name('reviews.destroy');
+    Route::get(   'products/{product}/reviews', [ReviewController::class, 'forProduct'])->name('products.reviews');
+
+    // ── Legacy store: garment customization orders ──────────────────────────
+    Route::get('/customizations',                 [OrderCustomizationController::class, 'index'])
+        ->name('customizations.index');
+    Route::get('/customizations/{customization}',  [OrderCustomizationController::class, 'show'])
+        ->name('customizations.show');
+    Route::get('/orders/{orderId}/customization',  [OrderCustomizationController::class, 'embedded'])
+        ->name('orders.customization.show');
+
+    // ── Legacy store: checkout + customization pricing settings ─────────────
+    Route::get('settings/checkout',  [CheckoutSettingsController::class, 'show'])
+        ->name('settings.checkout');
+    Route::post('settings/checkout', [CheckoutSettingsController::class, 'update'])
+        ->name('settings.checkout.update');
+
+    Route::get('settings/customization-pricing',
+        [CustomizationPricingSettingsController::class, 'edit'])->name('settings.customization-pricing.edit');
+    Route::put('settings/customization-pricing',
+        [CustomizationPricingSettingsController::class, 'update'])->name('settings.customization-pricing.update');
 
     // ── Fleet, bookings, branches, vehicle classes ──────────────────────────
     Route::resource('vehicles', VehicleController::class)->except(['show']);

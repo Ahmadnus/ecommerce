@@ -51,7 +51,7 @@
         @empty
             {{-- Fallback hero when the admin hasn't added any banners yet --}}
             <div class="absolute inset-0 flex items-center"
-                 style="background: linear-gradient(115deg, #F47B20 0%, #1a1a1a 65%);">
+                 style="background: linear-gradient(115deg, var(--accent) 0%, var(--ink) 65%);">
                 <div class="max-w-[1300px] mx-auto px-6 sm:px-10 w-full">
                     <div class="max-w-2xl text-white">
                         <span class="inline-block bg-white/20 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full mb-4">

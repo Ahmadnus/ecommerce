@@ -2,41 +2,12 @@
 @section('title', 'لوحة التحكم')
 
 @section('admin-content')
-@php
-    $vehicleStats = [
-        ['label' => 'إجمالي السيارات', 'value' => \App\Models\Vehicle::count(),                    'icon' => 'fa-solid fa-car',                'color' => 'blue'],
-        ['label' => 'سيارات متاحة',    'value' => \App\Models\Vehicle::where('availability_status', \App\Models\Vehicle::STATUS_AVAILABLE)->count(), 'icon' => 'fa-solid fa-circle-check', 'color' => 'green'],
-        ['label' => 'الفروع',          'value' => \App\Models\RentalLocation::count(),             'icon' => 'fa-solid fa-location-dot',       'color' => 'amber'],
-        ['label' => 'العملاء',         'value' => \App\Models\User::count(),                       'icon' => 'fa-solid fa-users',             'color' => 'emerald'],
-    ];
-
-    $bookingStats = [
-        ['label' => 'بانتظار التأكيد', 'value' => \App\Models\Booking::status(\App\Models\Booking::STATUS_PENDING)->count(),   'color' => 'yellow'],
-        ['label' => 'مؤكدة',           'value' => \App\Models\Booking::status(\App\Models\Booking::STATUS_CONFIRMED)->count(), 'color' => 'blue'],
-        ['label' => 'جارية',           'value' => \App\Models\Booking::status(\App\Models\Booking::STATUS_ACTIVE)->count(),    'color' => 'indigo'],
-        ['label' => 'مكتملة',          'value' => \App\Models\Booking::status(\App\Models\Booking::STATUS_COMPLETED)->count(), 'color' => 'green'],
-    ];
-
-    $revenue = (float) \App\Models\Booking::whereIn('booking_status', [
-        \App\Models\Booking::STATUS_CONFIRMED,
-        \App\Models\Booking::STATUS_ACTIVE,
-        \App\Models\Booking::STATUS_COMPLETED,
-    ])->sum('total_amount');
-
-    $upcoming = \App\Models\Booking::with(['vehicle', 'pickupLocation'])
-        ->upcoming()
-        ->orderBy('pickup_date_time')
-        ->take(8)
-        ->get();
-@endphp
-
-<div class="p-6 space-y-8">
-
-    {{-- Header --}}
+<div class="space-y-8">
+    {{-- هيدر الصفحة بتصميم هادئ --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h2 class="text-3xl font-black text-gray-900 tracking-tight">نظرة عامة</h2>
-            <p class="text-gray-500 font-medium mt-1">مرحباً بك، إليك ما يحدث في منصة التأجير الآن.</p>
+            <p class="text-gray-500 font-medium mt-1">مرحباً بك، إليك ما يحدث في متجرك الآن.</p>
         </div>
         <div class="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-gray-200 shadow-sm">
             <span class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600">
@@ -46,89 +17,168 @@
         </div>
     </div>
 
-    {{-- Fleet stats --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        @foreach($vehicleStats as $stat)
-            <div class="bg-white border border-gray-200 rounded-2xl p-5">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-gray-500">{{ $stat['label'] }}</p>
-                        <p class="text-3xl font-black mt-1">{{ number_format($stat['value']) }}</p>
-                    </div>
-                    <span class="w-12 h-12 rounded-full bg-{{ $stat['color'] }}-50 text-{{ $stat['color'] }}-600 flex items-center justify-center">
-                        <i class="{{ $stat['icon'] }} text-lg"></i>
-                    </span>
+    @php
+        $stats = [
+            [
+                'label' => 'إجمالي المنتجات',
+                'value' => \App\Models\Product::count(),
+                'icon' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
+                'bg' => 'bg-blue-50',
+                'text' => 'text-blue-600',
+                'hoverBg' => 'group-hover:bg-blue-600',
+            ],
+            [
+                'label' => 'إجمالي المستخدمين',
+                'value' => \App\Models\User::count(),
+                'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+                'bg' => 'bg-emerald-50',
+                'text' => 'text-emerald-600',
+                'hoverBg' => 'group-hover:bg-emerald-600',
+            ],
+            [
+                'label' => 'التصنيفات',
+                'value' => \App\Models\Category::count(),
+                'icon' => 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z',
+                'bg' => 'bg-amber-50',
+                'text' => 'text-amber-600',
+                'hoverBg' => 'group-hover:bg-amber-600',
+            ],
+        ];
+
+        $orderStats = [
+            [
+                'label' => 'إجمالي الطلبات',
+                'value' => \App\Models\Order::count(),
+                'bg' => 'bg-slate-50',
+                'text' => 'text-slate-600',
+            ],
+            [
+                'label' => 'قيد المعالجة',
+                'value' => \App\Models\Order::where('status', 'processing')->count(),
+                'bg' => 'bg-yellow-50',
+                'text' => 'text-yellow-700',
+            ],
+            [
+                'label' => 'قيد التوصيل',
+                'value' => \App\Models\Order::where('status', 'shipped')->count(),
+                'bg' => 'bg-blue-50',
+                'text' => 'text-blue-700',
+            ],
+            [
+                'label' => 'تم التسليم',
+                'value' => \App\Models\Order::where('status', 'delivered')->count(),
+                'bg' => 'bg-emerald-50',
+                'text' => 'text-emerald-700',
+            ],
+            [
+                'label' => 'ملغي',
+                'value' => \App\Models\Order::where('status', 'cancelled')->count(),
+                'bg' => 'bg-red-50',
+                'text' => 'text-red-600',
+            ],
+        ];
+    @endphp
+
+    {{-- شبكة الإحصائيات --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        @foreach($stats as $stat)
+        <div class="relative group overflow-hidden bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            <div class="absolute -right-4 -top-4 w-24 h-24 {{ $stat['bg'] }} rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+
+            <div class="relative flex items-center gap-6">
+                <div class="flex-shrink-0 w-14 h-14 {{ $stat['bg'] }} {{ $stat['text'] }} rounded-2xl flex items-center justify-center {{ $stat['hoverBg'] }} group-hover:text-white transition-colors duration-300">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $stat['icon'] }}"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">{{ $stat['label'] }}</p>
+                    <h3 class="text-4xl font-black text-gray-900 leading-none">{{ number_format($stat['value']) }}</h3>
                 </div>
             </div>
+        </div>
         @endforeach
     </div>
 
-    {{-- Bookings + revenue --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div class="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-6">
-            <h3 class="font-bold text-lg mb-5">الحجوزات</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                @foreach($bookingStats as $stat)
-                    <div class="rounded-xl bg-{{ $stat['color'] }}-50 p-4 text-center">
-                        <p class="text-2xl font-black text-{{ $stat['color'] }}-700">{{ number_format($stat['value']) }}</p>
-                        <p class="text-xs text-{{ $stat['color'] }}-700/70 mt-1">{{ $stat['label'] }}</p>
-                    </div>
-                @endforeach
+    {{-- حالات الطلبات --}}
+    <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand/10 text-brand rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M9 8h6M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-black text-gray-800">حالات الطلبات</h3>
             </div>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col justify-center">
-            <p class="text-xs text-gray-500">إجمالي الإيرادات</p>
-            <p class="text-3xl font-black text-brand mt-2">{{ number_format($revenue, 2) }} <span class="text-base">ر.س</span></p>
-            <a href="{{ route('admin.bookings.index') }}" class="mt-4 text-sm font-semibold text-brand hover:underline">
-                عرض كل الحجوزات →
-            </a>
+        <div class="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            @foreach($orderStats as $stat)
+            <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                <div class="w-11 h-11 rounded-2xl {{ $stat['bg'] }} {{ $stat['text'] }} flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3M4 6h16M6 6v12m12-12v12"></path>
+                    </svg>
+                </div>
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{{ $stat['label'] }}</p>
+                <div class="text-3xl font-black text-gray-900">{{ number_format($stat['value']) }}</div>
+            </div>
+            @endforeach
         </div>
     </div>
 
-    {{-- Upcoming pickups --}}
-    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-            <h3 class="font-bold text-lg">الاستلامات القادمة</h3>
-            <a href="{{ route('admin.bookings.index') }}" class="text-sm font-semibold text-brand hover:underline">الكل</a>
+    {{-- جدول المنتجات: احترافي ونظيف --}}
+    <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand/10 text-brand rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-black text-gray-800">أحدث الإضافات</h3>
+            </div>
+            <a href="{{ route('admin.products.index') }}" class="px-5 py-2 text-sm font-bold text-brand hover:bg-brand/5 rounded-xl transition-colors">
+                عرض الكتالوج كاملاً
+            </a>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-50 text-gray-500 text-xs">
-                    <tr>
-                        <th class="text-start p-4 font-semibold">رقم الحجز</th>
-                        <th class="text-start p-4 font-semibold">العميل</th>
-                        <th class="text-start p-4 font-semibold">السيارة</th>
-                        <th class="text-start p-4 font-semibold">الاستلام</th>
-                        <th class="text-start p-4 font-semibold">الحالة</th>
+            <table class="w-full text-right">
+                <thead>
+                    <tr class="text-gray-400 text-xs font-bold uppercase tracking-tighter border-b border-gray-50">
+                        <th class="px-8 py-5">المنتج</th>
+                        <th class="px-8 py-5">التصنيف</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
-                    @forelse($upcoming as $booking)
-                        <tr class="hover:bg-gray-50">
-                            <td class="p-4 font-mono text-xs font-semibold" dir="ltr">
-                                <a href="{{ route('admin.bookings.show', $booking) }}" class="hover:text-brand">
-                                    {{ $booking->booking_reference }}
-                                </a>
-                            </td>
-                            <td class="p-4">{{ $booking->driver_name }}</td>
-                            <td class="p-4 text-gray-600">{{ $booking->vehicle?->title ?? '—' }}</td>
-                            <td class="p-4 text-xs">
-                                {{ $booking->pickup_date_time->format('d/m/Y H:i') }}
-                                <span class="text-gray-500">· {{ $booking->pickupLocation?->name ?? '—' }}</span>
-                            </td>
-                            <td class="p-4">
-                                <span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-full
-                                             bg-{{ $booking->status_color }}-50 text-{{ $booking->status_color }}-700">
-                                    {{ $booking->status_label }}
-                                </span>
-                            </td>
-                        </tr>
+                <tbody class="divide-y divide-gray-50">
+                    @forelse(\App\Models\Product::latest()->take(5)->get() as $p)
+                    <tr class="group hover:bg-gray-50/80 transition-all duration-200">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-4">
+                                <div class="relative flex-shrink-0 w-12 h-12">
+                                    <img src="{{ $p->getFirstMediaUrl('products') ?: asset('default.png') }}"
+                                         class="w-full h-full rounded-2xl object-cover shadow-sm group-hover:shadow-md transition-shadow">
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 group-hover:text-brand transition-colors">{{ $p->name }}</div>
+                                    <div class="text-xs text-gray-400 font-medium">تمت الإضافة {{ $p->created_at->diffForHumans() }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="inline-flex items-center px-3 py-1 rounded-lg bg-gray-100 text-gray-600 text-xs font-bold group-hover:bg-white transition-colors">
+                                {{ $p->category->first()->name ?? 'عام' }}
+                            </span>
+                        </td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="5" class="p-12 text-center text-gray-400">لا توجد استلامات قادمة</td>
-                        </tr>
+                    <tr>
+                        <td colspan="3" class="px-8 py-20 text-center">
+                            <div class="text-gray-300 font-bold">لا توجد بيانات لعرضها حالياً</div>
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>

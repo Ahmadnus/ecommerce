@@ -4,7 +4,9 @@
             fn($q) => $q->where('is_active', true))
         ->get();
 
-    $supportNo   = \App\Models\Setting::get('rental_support_phone', '920000000');
+    $supportNo    = \App\Models\Setting::get('rental_support_phone', '920000000');
+    $supportEmail = \App\Models\Setting::get('rental_support_email');
+    $supportAddr  = \App\Models\Setting::get('rental_support_address');
     $footerPages = \App\Models\Page::query()
         ->when(\Illuminate\Support\Facades\Schema::hasColumn('pages', 'is_active'),
             fn($q) => $q->where('is_active', true))
@@ -73,6 +75,19 @@
                         <i class="fa-solid fa-headset text-accent"></i>
                         <a href="tel:{{ $supportNo }}" dir="ltr" class="hover:text-accent transition-colors">{{ $supportNo }}</a>
                     </li>
+                    @if($supportEmail)
+                        <li class="flex items-center gap-3">
+                            <i class="fa-solid fa-envelope text-accent"></i>
+                            <a href="mailto:{{ $supportEmail }}" dir="ltr"
+                               class="hover:text-accent transition-colors">{{ $supportEmail }}</a>
+                        </li>
+                    @endif
+                    @if($supportAddr)
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-location-dot text-accent mt-1"></i>
+                            <span>{{ $supportAddr }}</span>
+                        </li>
+                    @endif
                     <li class="flex items-center gap-3">
                         <i class="fa-solid fa-clock text-accent"></i>
                         <span>{{ __('rental.why_support') }}</span>

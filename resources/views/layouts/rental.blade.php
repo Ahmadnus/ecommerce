@@ -15,6 +15,36 @@
         $ink       = \App\Models\Setting::get('rental_ink_color', '#2B2B2B');
         $logoUrl   = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo');
         $supportNo = \App\Models\Setting::get('rental_support_phone', '920000000');
+
+        /*
+         * Derive the accent tint/shade ramp from the single admin-chosen colour
+         * so hover states and soft backgrounds re-theme with it. Mixing towards
+         * white gives the 50–200 tints, towards black the 600–700 shades.
+         */
+        $mix = function (string $hex, string $towards, float $amount): string {
+            $hex = ltrim($hex, '#');
+            if (strlen($hex) === 3) {
+                $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+            }
+            if (! preg_match('/^[0-9a-fA-F]{6}$/', $hex)) {
+                $hex = 'F47B20';
+            }
+            $target = $towards === 'white' ? 255 : 0;
+
+            $out = '#';
+            foreach ([0, 2, 4] as $i) {
+                $c = hexdec(substr($hex, $i, 2));
+                $out .= str_pad(dechex((int) round($c + ($target - $c) * $amount)), 2, '0', STR_PAD_LEFT);
+            }
+
+            return $out;
+        };
+
+        $accent50  = $mix($accent, 'white', 0.92);
+        $accent100 = $mix($accent, 'white', 0.84);
+        $accent200 = $mix($accent, 'white', 0.68);
+        $accent600 = $mix($accent, 'black', 0.14);
+        $accent700 = $mix($accent, 'black', 0.30);
     @endphp
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,8 +61,8 @@
                     colors: {
                         accent: {
                             DEFAULT: '{{ $accent }}',
-                            50:  '#fff7ed', 100: '#ffedd5', 200: '#fed7aa',
-                            500: '{{ $accent }}', 600: '#e06a10', 700: '#b45309',
+                            50:  '{{ $accent50 }}', 100: '{{ $accent100 }}', 200: '{{ $accent200 }}',
+                            500: '{{ $accent }}', 600: '{{ $accent600 }}', 700: '{{ $accent700 }}',
                         },
                         ink: '{{ $ink }}',
                     },
@@ -45,6 +75,11 @@
     <style>
         :root {
             --accent: {{ $accent }};
+            --accent-50: {{ $accent50 }};
+            --accent-100: {{ $accent100 }};
+            --accent-200: {{ $accent200 }};
+            --accent-600: {{ $accent600 }};
+            --accent-700: {{ $accent700 }};
             --ink: {{ $ink }};
             --font-ar: 'Tajawal', sans-serif;
             --font-en: 'Inter', sans-serif;
