@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'تعديل سيارة')
 
-@section('content')
+@section('admin-content')
 <div class="p-6">
     <div class="mb-6">
         <a href="{{ route('admin.vehicles.index') }}" class="text-sm text-gray-500 hover:text-brand">

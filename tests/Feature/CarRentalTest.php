@@ -266,22 +266,25 @@ it('renders every car-rental admin page', function () {
         'driver_license_number' => 'L2',
     ]);
 
-    $urls = [
-        '/admin/vehicles',
-        '/admin/vehicles/create',
-        "/admin/vehicles/{$vehicle->id}/edit",
-        '/admin/bookings',
-        "/admin/bookings/{$booking->id}",
-        '/admin/locations',
-        '/admin/locations/create',
-        "/admin/locations/{$location->id}/edit",
-        '/admin/vehicle-categories',
-        '/admin/vehicle-categories/create',
-        "/admin/vehicle-categories/{$category->id}/edit",
+    // Each page is asserted on a string from its own body, not just a 200 —
+    // these views @extend the admin layout, so a wrong @section name renders
+    // the chrome with an empty content area and still returns 200.
+    $pages = [
+        '/admin/vehicles'                              => 'إدارة أسطول السيارات',
+        '/admin/vehicles/create'                       => 'إضافة سيارة جديدة',
+        "/admin/vehicles/{$vehicle->id}/edit"          => 'بيانات السيارة',
+        '/admin/bookings'                              => 'إدارة الحجوزات والتأجير',
+        "/admin/bookings/{$booking->id}"               => 'بيانات السائق',
+        '/admin/locations'                             => 'الفروع ومواقع الاستلام',
+        '/admin/locations/create'                      => 'إضافة فرع جديد',
+        "/admin/locations/{$location->id}/edit"        => 'رسوم الاستلام',
+        '/admin/vehicle-categories'                    => 'فئات السيارات',
+        '/admin/vehicle-categories/create'             => 'إضافة فئة جديدة',
+        "/admin/vehicle-categories/{$category->id}/edit" => 'ترتيب العرض',
     ];
 
-    foreach ($urls as $url) {
-        $this->actingAs($admin)->get($url)->assertOk();
+    foreach ($pages as $url => $expected) {
+        $this->actingAs($admin)->get($url)->assertOk()->assertSee($expected, false);
     }
 });
 

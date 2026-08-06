@@ -21,12 +21,12 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        // جلب آخر 5 طلبات للمستخدم
-        $orders = $this->profile->getRecentOrders($user);
+        // آخر 5 حجوزات للمستخدم
+        $bookings = $this->profile->getRecentBookings($user);
 
         return view('myprofile.show', [
-            'user' => $user,
-            'orders' => $orders
+            'user'     => $user,
+            'bookings' => $bookings
         ]);
     }
 

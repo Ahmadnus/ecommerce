@@ -1,7 +1,7 @@
 {{-- Public dynamic page — renders trusted admin-authored HTML content.
     {!! !!} is safe here: only authenticated admins can write this content.
 --}}
-@extends('layouts.app')
+@extends('layouts.rental')
 
 @php
     $locale   = app()->getLocale();           // 'ar' or 'en'

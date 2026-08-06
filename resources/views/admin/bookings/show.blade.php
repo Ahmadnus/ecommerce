@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'تفاصيل الحجز')
 
-@section('content')
+@section('admin-content')
 <div class="p-6 space-y-6">
 
     <div class="flex flex-wrap items-start justify-between gap-4">

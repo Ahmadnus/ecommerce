@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.rental')
 
 @section('title', __('app.contact_title') ?? 'اتصل بنا')
 

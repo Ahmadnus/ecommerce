@@ -85,7 +85,7 @@ class AuthController extends Controller
             return redirect('/admin');
         }
 
-        return redirect()->route('products.index');
+        return redirect()->route('rental.home');
     }
 
     public function register(Request $request): RedirectResponse
@@ -135,7 +135,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('products.index')->with('success', __('app.auth.register_success'));
+        return redirect()->route('rental.home')->with('success', __('app.auth.register_success'));
     }
 
     public function logout(Request $request): RedirectResponse

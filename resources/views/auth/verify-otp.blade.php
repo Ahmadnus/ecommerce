@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.rental')
 @section('title', 'التحقق من الهوية')
 
 @push('head')

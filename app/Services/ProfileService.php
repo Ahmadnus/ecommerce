@@ -11,12 +11,15 @@ use App\Models\User;
 class ProfileService
 {
     /**
-     * The user's most recent orders for the profile page.
+     * The user's most recent rental bookings for the profile page.
      */
-    public function getRecentOrders(User $user, int $limit = 5)
+    public function getRecentBookings(User $user, int $limit = 5)
     {
-        // تأكد أن علاقة orders موجودة في مودل User
-        return $user->orders()->latest()->take($limit)->get() ?? collect();
+        return $user->bookings()
+            ->with('vehicle')
+            ->latest()
+            ->take($limit)
+            ->get();
     }
 
     /**

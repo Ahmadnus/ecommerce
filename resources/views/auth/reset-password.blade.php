@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.rental')
 @section('title', 'إعادة تعيين كلمة المرور')
 
 @push('head')
@@ -56,7 +56,7 @@
                 <p class="text-gray-400 text-sm mt-1">{{ __('app.reset_hint') }}</p>
             </div>
 
-            <form action="{{ route('password.update') }}" method="POST" class="space-y-5">
+            <form action="{{ route('password.reset.update') }}" method="POST" class="space-y-5">
                 @csrf
 
                 <input type="hidden" name="token" value="{{ $token }}">

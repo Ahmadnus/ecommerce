@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.rental')
 @section('title', 'دخول الإدارة')
 
 @push('head')

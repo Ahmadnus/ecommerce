@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.rental')
 
 @section('title', __('app.profile.page_title'))
 
@@ -71,18 +71,18 @@
                     <p class="text-gray-400 text-sm mb-8">{{ $user->phone }}</p>
 
                     <div class="grid grid-cols-1 gap-3">
-                        <a href="{{ route('orders.index') }}" class="menu-item group">
+                        <a href="{{ route('rental.my-bookings') }}" class="menu-item group">
                             <div class="flex items-center gap-3">
-                                <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">📦</span>
-                                <span class="font-bold text-gray-700">{{ __('app.profile.my_orders') }}</span>
+                                <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">🚗</span>
+                                <span class="font-bold text-gray-700">{{ __('rental.my_bookings') }}</span>
                             </div>
                             <svg class="w-5 h-5 text-gray-300 {{ $isRtl ? '' : 'rotate-180' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </a>
 
-                        <a href="{{ route('wishlist.index') }}" class="menu-item group">
+                        <a href="{{ route('rental.fleet') }}" class="menu-item group">
                             <div class="flex items-center gap-3">
-                                <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-pink-50 text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-all">❤️</span>
-                                <span class="font-bold text-gray-700">{{ __('app.profile.wishlist') }}</span>
+                                <span class="w-10 h-10 flex items-center justify-center rounded-xl bg-orange-50 text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all">🔑</span>
+                                <span class="font-bold text-gray-700">{{ __('rental.search_cars') }}</span>
                             </div>
                             <svg class="w-5 h-5 text-gray-300 {{ $isRtl ? '' : 'rotate-180' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </a>
@@ -130,41 +130,44 @@
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-6 rounded-full" style="background-color: var(--brand-color);"></div>
-                            <h3 class="text-lg font-bold text-gray-900">{{ __('app.profile.latest_orders') }}</h3>
+                            <h3 class="text-lg font-bold text-gray-900">{{ __('rental.my_bookings') }}</h3>
                         </div>
                     </div>
 
-                    @forelse($orders as $order)
-                    <div class="flex items-center justify-between p-4 mb-3 rounded-2xl bg-gray-50/50 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
+                    @forelse($bookings as $booking)
+                    <a href="{{ route('rental.booking.success', $booking->booking_reference) }}"
+                       class="flex items-center justify-between p-4 mb-3 rounded-2xl bg-gray-50/50 hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200">
                         <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                                <span class="text-xs font-bold text-gray-400">#{{ $order->id }}</span>
+                            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                                <span class="text-lg">🚗</span>
                             </div>
-                            <div>
-                                <p class="text-sm font-bold text-gray-900">
-                                    {{ __('app.profile.order_no', ['id' => $order->id]) }}
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-gray-900 truncate">
+                                    {{ $booking->vehicle?->title ?? '—' }}
                                 </p>
-                                <p class="text-[10px] text-gray-400 font-medium">{{ $order->created_at->format('Y/m/d') }}</p>
+                                <p class="text-[10px] text-gray-400 font-medium" dir="ltr">
+                                    {{ $booking->booking_reference }} ·
+                                    {{ $booking->pickup_date_time->format('Y/m/d') }}
+                                </p>
                             </div>
                         </div>
-                        <div class="text-left">
+                        <div class="text-end shrink-0">
                             <div class="text-sm font-black mb-1" style="color: var(--brand-color);">
-                                <x-price :amount="$order->total_amount" />
+                                {{ number_format((float) $booking->total_amount, 2) }} {{ $booking->currency }}
                             </div>
-                            <span class="text-[9px] px-2 py-0.5 rounded-md font-bold uppercase {{ $order->status == 'completed' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600' }}">
-                                {{ $order->status_label }}
+                            <span class="text-[9px] px-2 py-0.5 rounded-md font-bold uppercase
+                                         bg-{{ $booking->status_color }}-100 text-{{ $booking->status_color }}-600">
+                                {{ $booking->status_label }}
                             </span>
                         </div>
-                    </div>
-                    
+                    </a>
                     @empty
                     <div class="text-center py-8">
-                        <p class="text-gray-400 text-sm">{{ __('app.profile.no_orders') }}</p>
+                        <p class="text-gray-400 text-sm">—</p>
                     </div>
                     @endforelse
                 </div>
 
-          @include('partials.bottombar')      
             </div>
         </div>
     </div>

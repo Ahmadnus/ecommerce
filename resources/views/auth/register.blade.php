@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.rental')
 @section('title', __('app.register_title'))
 
 @push('head')
