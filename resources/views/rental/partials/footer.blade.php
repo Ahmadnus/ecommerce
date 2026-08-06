@@ -4,6 +4,7 @@
             fn($q) => $q->where('is_active', true))
         ->get();
 
+    $logoUrl      = \App\Support\Brand::logoUrl();
     $supportNo    = \App\Models\Setting::get('rental_support_phone', '+962 6 500 0000');
     $supportEmail = \App\Models\Setting::get('rental_support_email');
     $supportAddr  = \App\Models\Setting::get('rental_support_address');
@@ -20,10 +21,17 @@
             {{-- Brand --}}
             <div>
                 <div class="flex items-center gap-2">
-                    <span class="text-xl font-black tracking-[0.2em]">KEY</span>
-                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-accent">
-                        <i class="fa-solid fa-key text-xs"></i>
-                    </span>
+                    @if($logoUrl)
+                        {{-- The mark is printed on a light card, so it needs a
+                             light plate of its own against the dark footer. --}}
+                        <img src="{{ $logoUrl }}" alt="{{ __('rental.brand') }}"
+                             class="h-14 w-auto object-contain bg-white rounded-lg p-1.5">
+                    @else
+                        <span class="text-xl font-black tracking-[0.2em]">KEY</span>
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-accent text-accent-fg">
+                            <i class="fa-solid fa-key text-xs"></i>
+                        </span>
+                    @endif
                 </div>
                 <p class="mt-4 text-sm text-white/60 leading-relaxed">{{ __('rental.why_sub') }}</p>
 
@@ -32,7 +40,7 @@
                         @foreach($socialLinks as $social)
                             <a href="{{ $social->url }}" target="_blank" rel="noopener noreferrer"
                                aria-label="{{ $social->name ?? 'social' }}"
-                               class="w-9 h-9 rounded-full bg-white/10 hover:bg-accent flex items-center justify-center transition-colors">
+                               class="w-9 h-9 rounded-full bg-white/10 hover:bg-accent hover:text-accent-fg flex items-center justify-center transition-colors">
                                 <i class="{{ $social->icon ?: 'fa-solid fa-link' }} text-sm"></i>
                             </a>
                         @endforeach

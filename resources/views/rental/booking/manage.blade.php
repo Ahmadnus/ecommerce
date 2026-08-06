@@ -32,7 +32,7 @@
 
         <div class="sm:col-span-1">
             <button type="submit"
-                    class="w-full bg-accent hover:bg-accent-600 text-white font-bold text-sm py-3 rounded-lg transition-colors">
+                    class="w-full bg-accent hover:bg-accent-600 text-accent-fg font-bold text-sm py-3 rounded-lg transition-colors">
                 {{ __('rental.lookup_btn') }}
             </button>
         </div>

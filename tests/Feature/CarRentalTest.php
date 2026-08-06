@@ -77,7 +77,10 @@ it('renders the rental homepage', function () {
     makeVehicle();
     makeLocation();
 
-    $this->get('/')->assertOk()->assertSee('KEY', false);
+    // The header shows the brand mark — the uploaded logo when there is one,
+    // otherwise the bundled WIND image. The old 'KEY' wordmark is only the
+    // last-resort fallback when neither exists.
+    $this->get('/')->assertOk()->assertSee(\App\Support\Brand::logoUrl() ?? 'KEY', false);
 });
 
 it('renders the fleet listing and the vehicle detail page', function () {

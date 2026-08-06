@@ -115,7 +115,7 @@
                 </div>
 
                 <button type="submit"
-                        class="w-full bg-accent hover:bg-accent-600 text-white font-bold text-sm py-3 rounded-lg transition-colors">
+                        class="w-full bg-accent hover:bg-accent-600 text-accent-fg font-bold text-sm py-3 rounded-lg transition-colors">
                     {{ __('rental.apply') }}
                 </button>
             </form>
@@ -157,7 +157,7 @@
                     <h2 class="mt-5 font-bold text-lg text-ink">{{ __('rental.no_cars') }}</h2>
                     <p class="mt-2 text-sm text-gray-500">{{ __('rental.no_cars_hint') }}</p>
                     <a href="{{ route('rental.fleet') }}"
-                       class="inline-block mt-6 bg-accent hover:bg-accent-600 text-white font-bold px-6 py-3 rounded-lg transition-colors">
+                       class="inline-block mt-6 bg-accent hover:bg-accent-600 text-accent-fg font-bold px-6 py-3 rounded-lg transition-colors">
                         {{ __('rental.clear_filters') }}
                     </a>
                 </div>

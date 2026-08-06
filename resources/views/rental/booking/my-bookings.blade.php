@@ -16,7 +16,7 @@
             <i class="fa-regular fa-calendar-xmark text-5xl text-gray-200"></i>
             <p class="mt-5 text-sm text-gray-500">—</p>
             <a href="{{ route('rental.fleet') }}"
-               class="inline-block mt-6 bg-accent hover:bg-accent-600 text-white font-bold px-6 py-3 rounded-lg transition-colors">
+               class="inline-block mt-6 bg-accent hover:bg-accent-600 text-accent-fg font-bold px-6 py-3 rounded-lg transition-colors">
                 {{ __('rental.search_cars') }}
             </a>
         </div>

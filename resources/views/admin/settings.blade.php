@@ -155,7 +155,7 @@
                             اللون المميز (الأزرار والشارات)
                         </label>
                         <input type="color" name="rental_accent_color"
-                               value="{{ \App\Models\Setting::get('rental_accent_color', '#F47B20') }}"
+                               value="{{ \App\Support\Brand::accent() }}"
                                class="h-12 w-full rounded-lg cursor-pointer border-0 shadow-sm">
                     </div>
 
@@ -165,7 +165,7 @@
                             اللون الثانوي الداكن (النصوص والتذييل)
                         </label>
                         <input type="color" name="rental_ink_color"
-                               value="{{ \App\Models\Setting::get('rental_ink_color', '#2B2B2B') }}"
+                               value="{{ \App\Support\Brand::ink() }}"
                                class="h-12 w-full rounded-lg cursor-pointer border-0 shadow-sm">
                     </div>
                 </div>

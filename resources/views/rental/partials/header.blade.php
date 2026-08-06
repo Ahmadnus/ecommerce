@@ -1,7 +1,7 @@
 @php
     $locale   = app()->getLocale();
     $altLocale = $locale === 'ar' ? 'en' : 'ar';
-    $logoUrl  = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo');
+    $logoUrl  = \App\Support\Brand::logoUrl();
     $navLinks = [
         ['route' => 'rental.home',  'label' => __('rental.home')],
         ['route' => 'rental.fleet', 'label' => __('rental.fleet')],
@@ -27,10 +27,11 @@
             {{-- Logo --}}
             <a href="{{ route('rental.home') }}" class="flex items-center gap-2 shrink-0">
                 @if($logoUrl)
-                    <img src="{{ $logoUrl }}" alt="{{ __('rental.brand') }}" class="h-12 w-auto object-contain">
+                    <img src="{{ $logoUrl }}" alt="{{ __('rental.brand') }}"
+                         class="h-11 sm:h-14 w-auto object-contain rounded-lg">
                 @else
                     <span class="text-xl sm:text-2xl font-black tracking-[0.2em] text-ink">KEY</span>
-                    <span class="inline-flex items-center justify-center w-9 h-9 rounded-md bg-accent text-white">
+                    <span class="inline-flex items-center justify-center w-9 h-9 rounded-md bg-accent text-accent-fg">
                         <i class="fa-solid fa-key text-sm"></i>
                     </span>
                 @endif
@@ -60,7 +61,7 @@
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open"
                                 class="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-accent hover:bg-accent-600
-                                       text-white text-sm font-semibold transition-colors">
+                                       text-accent-fg text-sm font-semibold transition-colors">
                             <i class="fa-regular fa-user"></i>
                             <span class="hidden md:inline">{{ Str::limit(auth()->user()->name, 12) }}</span>
                         </button>
@@ -80,7 +81,7 @@
                 @else
                     <a href="{{ route('login') }}"
                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-accent hover:bg-accent-600
-                              text-white text-sm font-semibold transition-colors">
+                              text-accent-fg text-sm font-semibold transition-colors">
                         <i class="fa-regular fa-user"></i>
                         <span class="hidden md:inline">{{ __('rental.login_register') }}</span>
                     </a>

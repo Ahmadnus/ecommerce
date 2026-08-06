@@ -11,40 +11,17 @@
     <title>@yield('title', __('rental.brand'))</title>
 
     @php
-        $accent    = \App\Models\Setting::get('rental_accent_color', '#F47B20');
-        $ink       = \App\Models\Setting::get('rental_ink_color', '#2B2B2B');
-        $logoUrl   = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo');
-        $supportNo = \App\Models\Setting::get('rental_support_phone', '+962 6 500 0000');
-
         /*
-         * Derive the accent tint/shade ramp from the single admin-chosen colour
-         * so hover states and soft backgrounds re-theme with it. Mixing towards
-         * white gives the 50–200 tints, towards black the 600–700 shades.
+         * The whole palette — tints, shades, and the on-accent text colour — is
+         * derived from the two admin-chosen colours by App\Support\Brand, so a
+         * new logo colour cascades everywhere from one setting.
          */
-        $mix = function (string $hex, string $towards, float $amount): string {
-            $hex = ltrim($hex, '#');
-            if (strlen($hex) === 3) {
-                $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
-            }
-            if (! preg_match('/^[0-9a-fA-F]{6}$/', $hex)) {
-                $hex = 'F47B20';
-            }
-            $target = $towards === 'white' ? 255 : 0;
+        $palette = \App\Support\Brand::palette();
+        $accent  = $palette['accent'];
+        $ink     = $palette['ink'];
 
-            $out = '#';
-            foreach ([0, 2, 4] as $i) {
-                $c = hexdec(substr($hex, $i, 2));
-                $out .= str_pad(dechex((int) round($c + ($target - $c) * $amount)), 2, '0', STR_PAD_LEFT);
-            }
-
-            return $out;
-        };
-
-        $accent50  = $mix($accent, 'white', 0.92);
-        $accent100 = $mix($accent, 'white', 0.84);
-        $accent200 = $mix($accent, 'white', 0.68);
-        $accent600 = $mix($accent, 'black', 0.14);
-        $accent700 = $mix($accent, 'black', 0.30);
+        $logoUrl   = \App\Support\Brand::logoUrl();
+        $supportNo = \App\Models\Setting::get('rental_support_phone', '+962 6 500 0000');
     @endphp
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -61,10 +38,20 @@
                     colors: {
                         accent: {
                             DEFAULT: '{{ $accent }}',
-                            50:  '{{ $accent50 }}', 100: '{{ $accent100 }}', 200: '{{ $accent200 }}',
-                            500: '{{ $accent }}', 600: '{{ $accent600 }}', 700: '{{ $accent700 }}',
+                            50:  '{{ $palette['accent-50'] }}',  100: '{{ $palette['accent-100'] }}',
+                            200: '{{ $palette['accent-200'] }}', 300: '{{ $palette['accent-300'] }}',
+                            400: '{{ $palette['accent-400'] }}', 500: '{{ $accent }}',
+                            600: '{{ $palette['accent-600'] }}', 700: '{{ $palette['accent-700'] }}',
+                            800: '{{ $palette['accent-800'] }}',
+                            // Text/icons on a filled accent surface — flips to
+                            // ink when the accent is too light to carry white.
+                            fg:  '{{ $palette['accent-fg'] }}',
                         },
-                        ink: '{{ $ink }}',
+                        ink: {
+                            DEFAULT: '{{ $ink }}',
+                            500: '{{ $palette['ink-500'] }}',
+                            700: '{{ $palette['ink-700'] }}',
+                        },
                     },
                     fontFamily: { sans: ['var(--app-font)', 'system-ui', 'sans-serif'] },
                 }
@@ -74,13 +61,9 @@
 
     <style>
         :root {
-            --accent: {{ $accent }};
-            --accent-50: {{ $accent50 }};
-            --accent-100: {{ $accent100 }};
-            --accent-200: {{ $accent200 }};
-            --accent-600: {{ $accent600 }};
-            --accent-700: {{ $accent700 }};
-            --ink: {{ $ink }};
+            @foreach($palette as $token => $value)
+            --{{ $token }}: {{ $value }};
+            @endforeach
             --font-ar: 'Tajawal', sans-serif;
             --font-en: 'Inter', sans-serif;
         }

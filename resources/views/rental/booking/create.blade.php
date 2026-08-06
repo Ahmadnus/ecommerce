@@ -287,7 +287,7 @@
                 </label>
 
                 <button type="submit"
-                        class="mt-5 w-full bg-accent hover:bg-accent-600 text-white font-bold py-4 rounded-lg transition-colors">
+                        class="mt-5 w-full bg-accent hover:bg-accent-600 text-accent-fg font-bold py-4 rounded-lg transition-colors">
                     {{ __('rental.confirm_booking') }}
                 </button>
 

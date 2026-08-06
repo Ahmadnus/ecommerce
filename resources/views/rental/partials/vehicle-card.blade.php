@@ -91,7 +91,7 @@
             </div>
 
             <a href="{{ $bookUrl }}"
-               class="shrink-0 bg-accent hover:bg-accent-600 text-white text-sm font-bold
+               class="shrink-0 bg-accent hover:bg-accent-600 text-accent-fg text-sm font-bold
                       px-5 py-2.5 rounded-md transition-colors">
                 {{ __('rental.book_now') }}
             </a>
