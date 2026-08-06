@@ -376,7 +376,14 @@ Route::get('/select-currency/{code}', function ($code) {
 // LANGUAGE SWITCHING
 // ═══════════════════════════════════════════════════════════════════════════
 
-Route::post('/language/switch', function (\Illuminate\Http\Request $request) {
+/*
+ * GET is accepted alongside POST on purpose. The switcher posts a form, but a
+ * bookmark, a shared link, a back-button restore or a browser prefetch can all
+ * re-issue the URL as a plain GET — which used to 405. Switching the display
+ * language changes nothing but a session value, so there is no state worth
+ * protecting with a CSRF token here.
+ */
+Route::match(['get', 'post'], '/language/switch', function (\Illuminate\Http\Request $request) {
     $globalMode = DB::table('settings')->where('key', 'langsetting')->value('value') ?? 'both';
 
     if ($globalMode === 'both') {
@@ -387,5 +394,7 @@ Route::post('/language/switch', function (\Illuminate\Http\Request $request) {
         }
     }
 
-    return back();
+    // A direct hit has no referer, so back() would bounce to the same URL and
+    // loop. Fall back to the homepage in that case.
+    return $request->headers->has('referer') ? back() : redirect()->route('rental.home');
 })->name('language.switch')->middleware('web');
