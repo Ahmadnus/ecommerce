@@ -20,6 +20,12 @@ class SettingService
         'splash_color_main', 'splash_color_sub',
         'splash_font_size', 'splash_font_family',
         'font_ar', 'font_en',
+
+        // Car rental storefront branding — consumed by layouts/rental.blade.php
+        // and rental/partials/*. Editing these here re-themes the whole
+        // rental storefront on the next request.
+        'rental_accent_color', 'rental_ink_color',
+        'rental_support_phone', 'rental_support_email', 'rental_support_address',
     ];
 
     /** Keys the splash settings page manages. */

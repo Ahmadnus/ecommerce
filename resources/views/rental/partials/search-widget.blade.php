@@ -5,12 +5,15 @@
      * @var \Illuminate\Support\Collection $locations
      * @var array $search   Normalised search state from FleetController::resolveSearch()
      * @var bool  $floating Overlap the hero (homepage) vs. sit inline (fleet page)
+     *
+     * The floating overlap is deliberately shallow on mobile (-mt-8): the hero
+     * is short there and a deep overlap swallowed the headline.
      */
     $floating = $floating ?? false;
     $locale   = app()->getLocale();
 @endphp
 
-<div class="{{ $floating ? 'relative z-30 -mt-16 sm:-mt-20' : '' }} max-w-[1300px] mx-auto px-4">
+<div class="{{ $floating ? 'relative z-30 -mt-8 sm:-mt-20' : '' }} max-w-[1300px] mx-auto px-4">
     <form method="GET" action="{{ route('rental.fleet') }}"
           x-data="{
               plan: '{{ $search['plan'] ?? 'daily' }}',
@@ -27,7 +30,7 @@
                 ['monthly', __('rental.monthly'), 'fa-regular fa-calendar-check'],
             ] as [$key, $label, $icon])
                 <button type="button" @click="plan = '{{ $key }}'"
-                        :class="plan === '{{ $key }}' ? 'bg-accent text-white' : 'bg-white text-ink hover:bg-gray-50'"
+                        :class="plan === '{{ $key }}' ? 'bg-accent text-accent-fg' : 'bg-white text-ink hover:bg-gray-50'"
                         class="flex items-center justify-center gap-2 sm:gap-3 py-4 px-2 font-bold text-xs sm:text-base transition-colors">
                     <i class="{{ $icon }} text-sm sm:text-lg"></i>
                     <span class="truncate">{{ $label }}</span>
@@ -43,9 +46,9 @@
                 @foreach([['pickup', __('rental.pickup')], ['delivery', __('rental.delivery')]] as [$key, $label])
                     <button type="button" @click="mode = '{{ $key }}'"
                             :class="mode === '{{ $key }}'
-                                ? 'bg-accent text-white border-accent'
+                                ? 'bg-accent text-accent-fg border-accent'
                                 : 'bg-white text-ink border-gray-300 hover:border-accent'"
-                            class="px-8 sm:px-12 py-2.5 rounded-md border font-semibold text-sm transition-colors">
+                            class="flex-1 sm:flex-none px-4 sm:px-12 py-2.5 rounded-md border font-semibold text-sm transition-colors">
                         {{ $label }}
                     </button>
                 @endforeach
@@ -120,7 +123,7 @@
                 {{-- Submit --}}
                 <div class="xl:col-span-1">
                     <button type="submit"
-                            class="w-full bg-accent hover:bg-accent-600 text-white font-bold text-sm uppercase
+                            class="w-full bg-accent hover:bg-accent-600 text-accent-fg font-bold text-sm uppercase
                                    tracking-wide py-3.5 px-6 rounded-md transition-colors">
                         {{ __('rental.search') }}
                     </button>

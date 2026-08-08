@@ -4,45 +4,109 @@
 
 @section('content')
 
+@php
+    /*
+     * Hero slides. An admin banner supplies its own artwork via the
+     * 'banner_image' media collection; when no banners exist we build the
+     * slider straight from the featured fleet, reusing $vehicle->main_image_url
+     * — the exact accessor the fleet cards use. Same source means that if the
+     * cards show photos on the server, so does the hero.
+     */
+    $slides = $banners->map(fn($b) => [
+        'image'       => $b->getFirstMediaUrl('banner_image'),
+        'badge'       => $b->badge,
+        'title'       => $b->title,
+        'subtitle'    => $b->subtitle,
+        'description' => $b->description,
+        'cta_text'    => $b->button_text,
+        'cta_url'     => $b->button_url,
+        'bg'          => $b->background_color ?: '#1a1a1a',
+        'color'       => $b->text_color ?: '#ffffff',
+    ]);
+
+    if ($slides->isEmpty()) {
+        $slides = $featured
+            ->filter(fn($v) => $v->main_image_url)
+            ->take(5)
+            ->map(fn($v) => [
+                'image'       => $v->main_image_url,
+                'badge'       => $v->category?->name,
+                'title'       => $v->full_title,
+                'subtitle'    => number_format($v->effective_daily_rate, 0)
+                                 . ' ' . __('rental.currency') . ' ' . __('rental.per_day'),
+                'description' => null,
+                'cta_text'    => __('rental.book_now'),
+                'cta_url'     => route('rental.vehicles.show', $v->slug),
+                'bg'          => '#1a1a1a',
+                'color'       => '#ffffff',
+            ])
+            ->values();
+    }
+@endphp
+
 {{-- ══ HERO CAROUSEL ═══════════════════════════════════════════════════════ --}}
 <section x-data="{
              active: 0,
-             count: {{ max($banners->count(), 1) }},
+             count: {{ max($slides->count(), 1) }},
              next() { this.active = (this.active + 1) % this.count },
              prev() { this.active = (this.active - 1 + this.count) % this.count }
          }"
          x-init="if (count > 1) setInterval(() => next(), 6000)"
          class="relative bg-ink overflow-hidden">
 
-    <div class="relative h-[380px] sm:h-[460px] lg:h-[560px]">
-        @forelse($banners as $i => $banner)
+    {{-- Shorter on phones: the booking widget overlaps the bottom, so a tall
+         hero pushed everything worth reading off the first screen. --}}
+    <div class="relative h-[300px] sm:h-[460px] lg:h-[560px]">
+        @forelse($slides as $i => $slide)
             <div x-show="active === {{ $i }}"
                  x-transition:enter="transition ease-out duration-700"
                  x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                 class="absolute inset-0 flex items-center"
-                 style="background: linear-gradient(115deg, {{ $banner->background_color ?: '#1a1a1a' }} 0%, #111 100%);">
+                 class="absolute inset-0 flex items-start pt-10 sm:items-center sm:pt-0"
+                 style="background: linear-gradient(115deg, {{ $slide['bg'] }} 0%, #111 100%);">
 
-                <div class="max-w-[1300px] mx-auto px-6 sm:px-10 w-full">
-                    <div class="max-w-2xl" style="color: {{ $banner->text_color ?: '#ffffff' }};">
-                        @if($banner->badge)
-                            <span class="inline-block bg-accent text-white text-xs font-bold px-3 py-1.5 rounded-full mb-4">
-                                {{ $banner->badge }}
+                @if($slide['image'])
+                    {{-- Photo fills the frame; the scrim keeps the headline
+                         readable over a bright car body. --}}
+                    <img src="{{ $slide['image'] }}" alt="{{ $slide['title'] }}"
+                         @if($i === 0) fetchpriority="high" @else loading="lazy" @endif
+                         class="absolute inset-0 w-full h-full object-cover">
+                    {{-- Phones read the copy at the top of the frame, so the
+                         scrim runs top-to-bottom there; wider screens keep the
+                         side scrim behind the left/right-aligned column. --}}
+                    <div class="absolute inset-0 sm:hidden"
+                         style="background: linear-gradient(180deg,
+                             rgba(0,0,0,.80) 0%, rgba(0,0,0,.45) 55%, rgba(0,0,0,.25) 100%);"></div>
+                    <div class="absolute inset-0 hidden sm:block"
+                         style="background: linear-gradient(
+                             {{ app()->getLocale() === 'ar' ? '270deg' : '90deg' }},
+                             rgba(0,0,0,.78) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.15) 100%);"></div>
+                @endif
+
+                <div class="relative max-w-[1300px] mx-auto px-4 sm:px-10 w-full">
+                    {{-- Mobile keeps only what identifies the slide: title,
+                         price line, and one action. The badge and the long
+                         promo paragraph are desktop-only. --}}
+                    <div class="max-w-2xl" style="color: {{ $slide['color'] }};">
+                        @if($slide['badge'])
+                            <span class="hidden md:inline-block bg-accent text-accent-fg text-xs font-bold px-3 py-1.5 rounded-full mb-4">
+                                {{ $slide['badge'] }}
                             </span>
                         @endif
-                        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black leading-tight">
-                            {{ $banner->title }}
+                        <h1 class="text-2xl sm:text-5xl lg:text-6xl font-black leading-tight drop-shadow
+                                   line-clamp-2 sm:line-clamp-none">
+                            {{ $slide['title'] }}
                         </h1>
-                        @if($banner->subtitle)
-                            <p class="mt-3 text-lg sm:text-2xl font-bold opacity-90">{{ $banner->subtitle }}</p>
+                        @if($slide['subtitle'])
+                            <p class="mt-2 sm:mt-3 text-base sm:text-2xl font-bold opacity-90">{{ $slide['subtitle'] }}</p>
                         @endif
-                        @if($banner->description)
-                            <p class="mt-3 text-sm sm:text-base opacity-75 leading-relaxed">{{ $banner->description }}</p>
+                        @if($slide['description'])
+                            <p class="hidden md:block mt-3 text-sm sm:text-base opacity-75 leading-relaxed">{{ $slide['description'] }}</p>
                         @endif
-                        @if($banner->button_text && $banner->button_url)
-                            <a href="{{ $banner->button_url }}"
-                               class="inline-block mt-6 bg-accent hover:bg-accent-600 text-white font-bold
-                                      px-8 py-3.5 rounded-md transition-colors">
-                                {{ $banner->button_text }}
+                        @if($slide['cta_text'] && $slide['cta_url'])
+                            <a href="{{ $slide['cta_url'] }}"
+                               class="inline-block mt-4 sm:mt-6 bg-accent hover:bg-accent-600 text-accent-fg font-bold
+                                      text-sm sm:text-base px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-md transition-colors">
+                                {{ $slide['cta_text'] }}
                             </a>
                         @endif
                     </div>
@@ -50,19 +114,20 @@
             </div>
         @empty
             {{-- Fallback hero when the admin hasn't added any banners yet --}}
-            <div class="absolute inset-0 flex items-center"
-                 style="background: linear-gradient(115deg, #F47B20 0%, #1a1a1a 65%);">
-                <div class="max-w-[1300px] mx-auto px-6 sm:px-10 w-full">
+            <div class="absolute inset-0 flex items-start pt-10 sm:items-center sm:pt-0"
+                 style="background: linear-gradient(115deg, var(--accent) 0%, var(--ink) 65%);">
+                <div class="max-w-[1300px] mx-auto px-4 sm:px-10 w-full">
                     <div class="max-w-2xl text-white">
-                        <span class="inline-block bg-white/20 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full mb-4">
+                        <span class="hidden md:inline-block bg-white/20 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full mb-4">
                             {{ __('rental.brand') }}
                         </span>
-                        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black leading-tight">
+                        <h1 class="text-2xl sm:text-5xl lg:text-6xl font-black leading-tight">
                             {{ __('rental.search_cars') }}
                         </h1>
-                        <p class="mt-4 text-base sm:text-xl opacity-90 leading-relaxed">{{ __('rental.why_sub') }}</p>
+                        <p class="hidden md:block mt-4 text-base sm:text-xl opacity-90 leading-relaxed">{{ __('rental.why_sub') }}</p>
                         <a href="{{ route('rental.fleet') }}"
-                           class="inline-block mt-6 bg-white text-ink hover:bg-gray-100 font-bold px-8 py-3.5 rounded-md transition-colors">
+                           class="inline-block mt-4 sm:mt-6 bg-white text-ink hover:bg-gray-100 font-bold
+                                  text-sm sm:text-base px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-md transition-colors">
                             {{ __('rental.view_all') }}
                         </a>
                     </div>
@@ -71,20 +136,25 @@
         @endforelse
 
         {{-- Arrows --}}
-        @if($banners->count() > 1)
+        @if($slides->count() > 1)
+            {{-- Arrows are desktop-only; on a phone the dots plus the swipe of
+                 the auto-advance are enough, and the buttons collided with the
+                 headline in the narrow frame. --}}
             <button @click="prev()" aria-label="Previous"
-                    class="absolute {{ app()->getLocale() === 'ar' ? 'right-4' : 'left-4' }} top-1/2 -translate-y-1/2
+                    class="hidden sm:block absolute {{ app()->getLocale() === 'ar' ? 'right-4' : 'left-4' }} top-1/2 -translate-y-1/2
                            w-11 h-11 rounded-full bg-white/25 hover:bg-white/40 backdrop-blur text-white transition-colors">
                 <i class="fa-solid fa-chevron-{{ app()->getLocale() === 'ar' ? 'right' : 'left' }}"></i>
             </button>
             <button @click="next()" aria-label="Next"
-                    class="absolute {{ app()->getLocale() === 'ar' ? 'left-4' : 'right-4' }} top-1/2 -translate-y-1/2
+                    class="hidden sm:block absolute {{ app()->getLocale() === 'ar' ? 'left-4' : 'right-4' }} top-1/2 -translate-y-1/2
                            w-11 h-11 rounded-full bg-white/25 hover:bg-white/40 backdrop-blur text-white transition-colors">
                 <i class="fa-solid fa-chevron-{{ app()->getLocale() === 'ar' ? 'left' : 'right' }}"></i>
             </button>
 
-            <div class="absolute bottom-24 left-1/2 -translate-x-1/2 flex gap-2">
-                @foreach($banners as $i => $b)
+            {{-- Clear of the widget's shallow mobile overlap; desktop keeps the
+                 dots above the deeper one. --}}
+            <div class="absolute bottom-12 sm:bottom-24 left-1/2 -translate-x-1/2 flex gap-2">
+                @foreach($slides as $i => $b)
                     <button @click="active = {{ $i }}" aria-label="Slide {{ $i + 1 }}"
                             :class="active === {{ $i }} ? 'bg-accent w-7' : 'bg-white/50 w-2.5'"
                             class="h-2.5 rounded-full transition-all"></button>
@@ -118,7 +188,7 @@
                         @if($category->image_url)
                             <img src="{{ $category->image_url }}" alt="{{ $category->name }}" class="w-10 h-10 object-contain">
                         @else
-                            <i class="{{ $category->icon ?: 'fa-solid fa-car' }} text-2xl text-accent group-hover:text-white transition-colors"></i>
+                            <i class="{{ $category->icon ?: 'fa-solid fa-car' }} text-2xl text-accent group-hover:text-accent-fg transition-colors"></i>
                         @endif
                     </div>
                     <h3 class="mt-3 font-bold text-sm text-ink">{{ $category->name }}</h3>

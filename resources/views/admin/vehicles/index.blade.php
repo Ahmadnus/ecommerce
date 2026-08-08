@@ -113,7 +113,7 @@
                                     <span class="text-xs text-gray-400 line-through block">{{ number_format((float) $vehicle->daily_rate, 0) }}</span>
                                 @endif
                                 <span class="font-bold text-brand">{{ number_format($vehicle->effective_daily_rate, 0) }}</span>
-                                <span class="text-xs text-gray-500">ر.س</span>
+                                <span class="text-xs text-gray-500">د.أ</span>
                             </td>
                             <td class="p-4 font-semibold">{{ $vehicle->units_available }}</td>
                             <td class="p-4">

@@ -19,8 +19,11 @@ class SettingController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'logo'    => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
-            'favicon' => 'nullable|file|mimes:ico,png,svg|max:512',
+            'logo'                   => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
+            'favicon'                => 'nullable|file|mimes:ico,png,svg|max:512',
+            'rental_support_email'   => 'nullable|email',
+            'rental_support_phone'   => 'nullable|string|max:40',
+            'rental_support_address' => 'nullable|string|max:255',
         ]);
 
         $this->settings->saveSettings(

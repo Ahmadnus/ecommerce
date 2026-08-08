@@ -134,6 +134,69 @@
             </div>
         </div>
 
+        {{-- قسم تأجير السيارات: هوية الواجهة وبيانات التواصل --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-50 bg-gray-50/50">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <span class="w-8 h-8 bg-brand/10 text-brand rounded-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-car"></i>
+                    </span>
+                    هوية واجهة تأجير السيارات
+                </h2>
+                <p class="mt-1 text-xs text-gray-400">
+                    تنعكس هذه القيم مباشرة على كل صفحات موقع تأجير السيارات (الرئيسية، الأسطول، الفروع، صفحة السيارة، الحجز).
+                </p>
+            </div>
+            <div class="p-8 space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {{-- اللون المميز (Accent) --}}
+                    <div class="p-4 rounded-2xl border border-gray-100 bg-gray-50/30 space-y-3">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            اللون المميز (الأزرار والشارات)
+                        </label>
+                        <input type="color" name="rental_accent_color"
+                               value="{{ \App\Support\Brand::accent() }}"
+                               class="h-12 w-full rounded-lg cursor-pointer border-0 shadow-sm">
+                    </div>
+
+                    {{-- اللون الداكن (Ink) --}}
+                    <div class="p-4 rounded-2xl border border-gray-100 bg-gray-50/30 space-y-3">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            اللون الثانوي الداكن (النصوص والتذييل)
+                        </label>
+                        <input type="color" name="rental_ink_color"
+                               value="{{ \App\Support\Brand::ink() }}"
+                               class="h-12 w-full rounded-lg cursor-pointer border-0 shadow-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-600">رقم الدعم</label>
+                        <input type="text" name="rental_support_phone" dir="ltr"
+                               value="{{ \App\Models\Setting::get('rental_support_phone', '920000000') }}"
+                               class="w-full rounded-xl border-gray-200 text-sm focus:border-brand focus:ring-brand">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-600">البريد الإلكتروني</label>
+                        <input type="email" name="rental_support_email" dir="ltr"
+                               value="{{ \App\Models\Setting::get('rental_support_email') }}"
+                               class="w-full rounded-xl border-gray-200 text-sm focus:border-brand focus:ring-brand">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-600">العنوان</label>
+                        <input type="text" name="rental_support_address"
+                               value="{{ \App\Models\Setting::get('rental_support_address') }}"
+                               class="w-full rounded-xl border-gray-200 text-sm focus:border-brand focus:ring-brand">
+                    </div>
+                </div>
+
+                <p class="text-xs text-gray-400">
+                    الشعار المرفوع في القسم الأول يُستخدم أيضاً في هيدر موقع تأجير السيارات.
+                </p>
+            </div>
+        </div>
+
         {{-- القسم الثالث: إعدادات التذييل (Footer) --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="p-6 border-b border-gray-50 bg-gray-50/50">

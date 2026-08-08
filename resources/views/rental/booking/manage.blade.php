@@ -18,19 +18,21 @@
             <label for="booking_reference" class="block text-xs font-bold text-ink mb-2">{{ __('rental.lookup_ref') }}</label>
             <input type="text" id="booking_reference" name="booking_reference" required
                    value="{{ old('booking_reference') }}" placeholder="KEY-000000-XXXX" dir="ltr"
-                   class="w-full text-sm rounded-lg border-gray-300 focus:border-accent focus:ring-accent">
+                   class="w-full text-sm rounded-lg border border-gray-300 bg-white px-3 py-2.5 shadow-sm
+                          focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent">
         </div>
 
         <div class="sm:col-span-1">
             <label for="driver_phone" class="block text-xs font-bold text-ink mb-2">{{ __('rental.lookup_phone') }}</label>
             <input type="tel" id="driver_phone" name="driver_phone" required
-                   value="{{ old('driver_phone') }}" dir="ltr"
-                   class="w-full text-sm rounded-lg border-gray-300 focus:border-accent focus:ring-accent">
+                   value="{{ old('driver_phone') }}" dir="ltr" inputmode="tel" placeholder="079 000 0000"
+                   class="w-full text-sm rounded-lg border border-gray-300 bg-white px-3 py-2.5 shadow-sm
+                          focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent">
         </div>
 
         <div class="sm:col-span-1">
             <button type="submit"
-                    class="w-full bg-accent hover:bg-accent-600 text-white font-bold text-sm py-3 rounded-lg transition-colors">
+                    class="w-full bg-accent hover:bg-accent-600 text-accent-fg font-bold text-sm py-3 rounded-lg transition-colors">
                 {{ __('rental.lookup_btn') }}
             </button>
         </div>

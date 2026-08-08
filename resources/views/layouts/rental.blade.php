@@ -11,10 +11,17 @@
     <title>@yield('title', __('rental.brand'))</title>
 
     @php
-        $accent    = \App\Models\Setting::get('rental_accent_color', '#F47B20');
-        $ink       = \App\Models\Setting::get('rental_ink_color', '#2B2B2B');
-        $logoUrl   = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo');
-        $supportNo = \App\Models\Setting::get('rental_support_phone', '920000000');
+        /*
+         * The whole palette — tints, shades, and the on-accent text colour — is
+         * derived from the two admin-chosen colours by App\Support\Brand, so a
+         * new logo colour cascades everywhere from one setting.
+         */
+        $palette = \App\Support\Brand::palette();
+        $accent  = $palette['accent'];
+        $ink     = $palette['ink'];
+
+        $logoUrl   = \App\Support\Brand::logoUrl();
+        $supportNo = \App\Models\Setting::get('rental_support_phone', '+962 6 500 0000');
     @endphp
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,10 +38,20 @@
                     colors: {
                         accent: {
                             DEFAULT: '{{ $accent }}',
-                            50:  '#fff7ed', 100: '#ffedd5', 200: '#fed7aa',
-                            500: '{{ $accent }}', 600: '#e06a10', 700: '#b45309',
+                            50:  '{{ $palette['accent-50'] }}',  100: '{{ $palette['accent-100'] }}',
+                            200: '{{ $palette['accent-200'] }}', 300: '{{ $palette['accent-300'] }}',
+                            400: '{{ $palette['accent-400'] }}', 500: '{{ $accent }}',
+                            600: '{{ $palette['accent-600'] }}', 700: '{{ $palette['accent-700'] }}',
+                            800: '{{ $palette['accent-800'] }}',
+                            // Text/icons on a filled accent surface — flips to
+                            // ink when the accent is too light to carry white.
+                            fg:  '{{ $palette['accent-fg'] }}',
                         },
-                        ink: '{{ $ink }}',
+                        ink: {
+                            DEFAULT: '{{ $ink }}',
+                            500: '{{ $palette['ink-500'] }}',
+                            700: '{{ $palette['ink-700'] }}',
+                        },
                     },
                     fontFamily: { sans: ['var(--app-font)', 'system-ui', 'sans-serif'] },
                 }
@@ -44,8 +61,9 @@
 
     <style>
         :root {
-            --accent: {{ $accent }};
-            --ink: {{ $ink }};
+            @foreach($palette as $token => $value)
+            --{{ $token }}: {{ $value }};
+            @endforeach
             --font-ar: 'Tajawal', sans-serif;
             --font-en: 'Inter', sans-serif;
         }

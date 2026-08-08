@@ -16,8 +16,8 @@ use Spatie\Permission\Models\Role;
 function makeLocation(array $attributes = []): RentalLocation
 {
     return RentalLocation::create(array_merge([
-        'name'        => ['en' => 'Riyadh Airport', 'ar' => 'مطار الرياض'],
-        'city'        => ['en' => 'Riyadh', 'ar' => 'الرياض'],
+        'name'        => ['en' => 'Queen Alia Airport', 'ar' => 'مطار الملكة علياء'],
+        'city'        => ['en' => 'Amman', 'ar' => 'عمان'],
         'type'        => RentalLocation::TYPE_AIRPORT,
         'pickup_fee'  => 50,
         'one_way_fee' => 120,
@@ -77,7 +77,10 @@ it('renders the rental homepage', function () {
     makeVehicle();
     makeLocation();
 
-    $this->get('/')->assertOk()->assertSee('KEY', false);
+    // The header shows the brand mark — the uploaded logo when there is one,
+    // otherwise the bundled WIND image. The old 'KEY' wordmark is only the
+    // last-resort fallback when neither exists.
+    $this->get('/')->assertOk()->assertSee(\App\Support\Brand::logoUrl() ?? 'KEY', false);
 });
 
 it('renders the fleet listing and the vehicle detail page', function () {
@@ -130,7 +133,7 @@ it('excludes a vehicle whose only unit is already booked for the window', functi
 it('builds a price breakdown with fees, extras and VAT', function () {
     $vehicle = makeVehicle();
     $pickup  = makeLocation();
-    $return  = makeLocation(['name' => ['en' => 'Olaya', 'ar' => 'العليا'], 'pickup_fee' => 0, 'one_way_fee' => 120]);
+    $return  = makeLocation(['name' => ['en' => 'Abdali', 'ar' => 'العبدلي'], 'pickup_fee' => 0, 'one_way_fee' => 120]);
 
     $quote = app(RentalPricingService::class)->quote(
         $vehicle,
@@ -144,9 +147,9 @@ it('builds a price breakdown with fees, extras and VAT', function () {
     expect($quote['days'])->toBe(3)
         ->and($quote['subtotal'])->toBe(600.0)          // 200 × 3
         ->and($quote['location_fee'])->toBe(170.0)      // 50 pickup + 120 one-way
-        ->and($quote['extras_total'])->toBe(105.0)      // 35 × 3
-        ->and($quote['tax_amount'])->toBe(131.25)       // 15% of 875
-        ->and($quote['total'])->toBe(1006.25);
+        ->and($quote['extras_total'])->toBe(24.0)       // CDW 8 × 3
+        ->and($quote['tax_amount'])->toBe(127.04)      // Jordan GST 16% of 794
+        ->and($quote['total'])->toBe(921.04);
 });
 
 it('steps down to the weekly and monthly rate plans', function () {
@@ -171,7 +174,7 @@ it('creates a booking and shows the confirmation', function () {
         'return_date'           => '2030-05-04',
         'return_time'           => '10:00',
         'driver_name'           => 'Ahmad Test',
-        'driver_phone'          => '0501234567',
+        'driver_phone'          => '0791234567',
         'driver_license_number' => 'LIC-1',
         'terms'                 => 1,
     ]);
@@ -213,7 +216,7 @@ it('refuses to double-book the last available unit', function () {
     expect(Booking::count())->toBe(1);
 });
 
-it('finds a booking by reference and phone, in any Saudi phone format', function () {
+it('finds a booking by reference and phone, in any Jordanian phone format', function () {
     $vehicle  = makeVehicle();
     $location = makeLocation();
 
@@ -225,14 +228,14 @@ it('finds a booking by reference and phone, in any Saudi phone format', function
         'return_date'           => '2030-07-03',
         'return_time'           => '10:00',
         'driver_name'           => 'Lookup Customer',
-        'driver_phone'          => '0501234567',
+        'driver_phone'          => '0791234567',
         'driver_license_number' => 'LIC-9',
         'terms'                 => 1,
     ]);
 
     $reference = Booking::first()->booking_reference;
 
-    foreach (['0501234567', '+966501234567', '966501234567'] as $phone) {
+    foreach (['0791234567', '+962791234567', '962791234567'] as $phone) {
         $this->post('/manage-booking', [
             'booking_reference' => $reference,
             'driver_phone'      => $phone,
@@ -242,7 +245,7 @@ it('finds a booking by reference and phone, in any Saudi phone format', function
     // A wrong phone must not expose the booking.
     $this->post('/manage-booking', [
         'booking_reference' => $reference,
-        'driver_phone'      => '0509999999',
+        'driver_phone'      => '0799999999',
     ])->assertRedirect();
 });
 

@@ -186,7 +186,7 @@
                 @endif
 
                 <a href="{{ route('rental.booking.create', array_merge(['slug' => $vehicle->slug], $query)) }}"
-                   class="mt-5 block w-full text-center bg-accent hover:bg-accent-600 text-white font-bold
+                   class="mt-5 block w-full text-center bg-accent hover:bg-accent-600 text-accent-fg font-bold
                           py-4 rounded-lg transition-colors">
                     {{ __('rental.book_now') }}
                 </a>

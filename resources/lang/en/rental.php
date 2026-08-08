@@ -127,21 +127,23 @@ return [
 
     // ── Why choose us ────────────────────────────────────────────────────────
     'why_title'        => 'Why Choose Us',
-    'why_sub'          => 'A leading car rental company with a nationwide network of branches and a fully digital booking experience.',
+    'why_sub'          => 'A leading car rental company with a branch network across Jordan and a fully digital booking experience.',
     'why_fleet'        => 'Versatile Fleet',
     'why_fleet_text'   => 'A wide selection of well-maintained vehicles, from fuel-efficient sedans to spacious SUVs and luxury cars.',
-    'why_branches'     => 'Branches Across the Kingdom',
-    'why_branches_text'=> 'Pick up and drop off easily in Riyadh, Jeddah, Makkah, Madinah, Dammam and every major airport.',
+    'why_branches'     => 'Branches Across Jordan',
+    'why_branches_text'=> 'Pick up and drop off easily in Amman, Irbid, Zarqa, Aqaba and at Queen Alia and King Hussein international airports.',
     'why_pricing'      => 'Transparent Pricing',
     'why_pricing_text' => 'Competitive, clearly stated rates. What you see is what you pay — no surprises, no hidden charges.',
     'why_support'      => '24/7 Customer Support',
-    'why_support_text' => 'Our bilingual support team is available around the clock, wherever you are in the Kingdom.',
+    'why_support_text' => 'Our bilingual support team is available around the clock, wherever you are in Jordan.',
 
     // ── Misc ─────────────────────────────────────────────────────────────────
     'featured_fleet'   => 'Featured Vehicles',
     'featured_sub'     => 'Our most popular cars, ready to drive',
     'view_all'         => 'View all cars',
-    'currency'         => 'SAR',
+    'currency'         => 'JOD',
+    'country_jordan'   => 'Jordan',
+    'rights_reserved'  => 'All rights reserved — Hashemite Kingdom of Jordan.',
     'back'             => 'Back',
     'required'         => 'Required',
 ];

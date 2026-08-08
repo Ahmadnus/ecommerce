@@ -58,14 +58,14 @@
     {{-- Fees --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-5 border-t border-gray-100">
         <div>
-            <label for="pickup_fee" class="block text-sm font-semibold mb-2">رسوم الاستلام (ر.س)</label>
+            <label for="pickup_fee" class="block text-sm font-semibold mb-2">رسوم الاستلام (د.أ)</label>
             <input type="number" step="0.01" min="0" id="pickup_fee" name="pickup_fee"
                    value="{{ old('pickup_fee', $location?->pickup_fee ?? 0) }}"
                    class="w-full rounded-lg border-gray-300 text-sm">
             <p class="mt-1 text-xs text-gray-500">تُضاف مرة واحدة عند اختيار هذا الفرع للاستلام.</p>
         </div>
         <div>
-            <label for="one_way_fee" class="block text-sm font-semibold mb-2">رسوم التسليم في موقع مختلف (ر.س)</label>
+            <label for="one_way_fee" class="block text-sm font-semibold mb-2">رسوم التسليم في موقع مختلف (د.أ)</label>
             <input type="number" step="0.01" min="0" id="one_way_fee" name="one_way_fee"
                    value="{{ old('one_way_fee', $location?->one_way_fee ?? 0) }}"
                    class="w-full rounded-lg border-gray-300 text-sm">

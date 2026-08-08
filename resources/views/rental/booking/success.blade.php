@@ -21,7 +21,7 @@
             {{ __('rental.home') }}
         </a>
         <button onclick="window.print()"
-                class="px-6 py-3 rounded-lg bg-accent hover:bg-accent-600 text-white font-bold text-sm transition-colors">
+                class="px-6 py-3 rounded-lg bg-accent hover:bg-accent-600 text-accent-fg font-bold text-sm transition-colors">
             <i class="fa-solid fa-print"></i> {{ __('rental.print') }}
         </button>
     </div>

@@ -16,7 +16,7 @@
             ['مؤكدة',          number_format($stats['confirmed']), 'fa-solid fa-circle-check',  'blue'],
             ['جارية',          number_format($stats['active']),    'fa-solid fa-key',           'indigo'],
             ['مكتملة',         number_format($stats['completed']), 'fa-solid fa-flag-checkered','green'],
-            ['الإيرادات',      number_format($stats['revenue'], 0) . ' ر.س', 'fa-solid fa-sack-dollar', 'emerald'],
+            ['الإيرادات',      number_format($stats['revenue'], 0) . ' د.أ', 'fa-solid fa-sack-dollar', 'emerald'],
         ] as [$label, $value, $icon, $color])
             <div class="bg-white border border-gray-200 rounded-xl p-4">
                 <div class="flex items-center justify-between gap-2">

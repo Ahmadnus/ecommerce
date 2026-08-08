@@ -42,7 +42,7 @@
                    placeholder="fa-solid fa-car" class="w-full rounded-lg border-gray-300 text-sm">
         </div>
         <div>
-            <label for="price_from" class="block text-sm font-semibold mb-2">السعر يبدأ من (ر.س)</label>
+            <label for="price_from" class="block text-sm font-semibold mb-2">السعر يبدأ من (د.أ)</label>
             <input type="number" step="0.01" min="0" id="price_from" name="price_from"
                    value="{{ old('price_from', $category?->price_from) }}" class="w-full rounded-lg border-gray-300 text-sm">
             <p class="mt-1 text-xs text-gray-500">يُستخدم فقط إذا لم توجد سيارات في الفئة.</p>

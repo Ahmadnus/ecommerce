@@ -241,15 +241,16 @@ class BookingController extends Controller
             ->with('success', __('rental.cancelled_ok'));
     }
 
-    /** Compare on digits only, so +966 50… and 05… match the same customer. */
+    /** Compare on digits only, so +962 79… and 079… match the same customer. */
     private function phonesMatch(?string $stored, string $input): bool
     {
         $normalise = static function (?string $phone): string {
             $digits = preg_replace('/\D+/', '', (string) $phone);
 
-            // Drop the Saudi country code and any trunk zero so the
-            // remaining national number is what gets compared.
-            $digits = preg_replace('/^966/', '', $digits);
+            // Drop the Jordanian country code and any trunk zero so the
+            // remaining national number is what gets compared — +962 79…,
+            // 00962 79… and 079… all reduce to the same digits.
+            $digits = preg_replace('/^(00)?962/', '', $digits);
 
             return ltrim($digits, '0');
         };
