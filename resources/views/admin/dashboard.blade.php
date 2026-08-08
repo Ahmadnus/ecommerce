@@ -79,7 +79,7 @@
 
         <div class="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col justify-center">
             <p class="text-xs text-gray-500">إجمالي الإيرادات</p>
-            <p class="text-3xl font-black text-brand mt-2">{{ number_format($revenue, 2) }} <span class="text-base">ر.س</span></p>
+            <p class="text-3xl font-black text-brand mt-2">{{ number_format($revenue, 2) }} <span class="text-base">د.أ</span></p>
             <a href="{{ route('admin.bookings.index') }}" class="mt-4 text-sm font-semibold text-brand hover:underline">
                 عرض كل الحجوزات →
             </a>

@@ -30,7 +30,7 @@
                     <img src="{{ $logoUrl }}" alt="{{ __('rental.brand') }}"
                          class="h-11 sm:h-14 w-auto object-contain rounded-lg">
                 @else
-                    <span class="text-xl sm:text-2xl font-black tracking-[0.2em] text-ink">KEY</span>
+                    <span class="text-xl sm:text-2xl font-black tracking-[0.2em] text-ink">WIND</span>
                     <span class="inline-flex items-center justify-center w-9 h-9 rounded-md bg-accent text-accent-fg">
                         <i class="fa-solid fa-key text-sm"></i>
                     </span>

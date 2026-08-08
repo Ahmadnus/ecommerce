@@ -18,4 +18,14 @@ class SocialLink extends Model implements HasMedia
     'is_floating',
     'icon_svg',
 ];
+
+    /**
+     * Without these the flags come back as 0/1 ints, which made the toggle
+     * logic and the storefront visibility checks depend on loose comparison.
+     */
+    protected $casts = [
+        'is_active'   => 'boolean',
+        'is_floating' => 'boolean',
+        'sort_order'  => 'integer',
+    ];
 }

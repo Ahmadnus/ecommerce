@@ -89,17 +89,19 @@
                         $me = auth()->user();
 
                         /*
-                         * Demo defaults are Jordanian so the form can be
-                         * submitted as-is during a walkthrough. A signed-in
-                         * user's own details still win.
+                         * Only a signed-in user's own details are prefilled —
+                         * everything else starts empty and is validated server
+                         * side. The demo build seeded fake name/phone/licence
+                         * values here, which would have been submitted verbatim
+                         * by anyone who did not overwrite them.
                          * [name, label, type, required, default, placeholder]
                          */
                         $fields = [
-                            ['driver_name',            __('rental.full_name'),       'text',  true,  $me?->name ?? 'عمر المجالي', 'عمر المجالي'],
-                            ['driver_phone',           __('rental.phone'),           'tel',   true,  $me?->getAttribute('phone') ?? '0790000000', '079 000 0000'],
+                            ['driver_name',            __('rental.full_name'),       'text',  true,  $me?->name ?? '', 'عمر المجالي'],
+                            ['driver_phone',           __('rental.phone'),           'tel',   true,  $me?->getAttribute('phone') ?? '', '079 000 0000'],
                             ['driver_email',           __('rental.email'),           'email', false, $me?->email ?? '', 'name@example.jo'],
                             ['driver_date_of_birth',   __('rental.date_of_birth'),   'date',  false, '', ''],
-                            ['driver_license_number',  __('rental.license_number'),  'text',  true,  'JO-962000', 'JO-962000'],
+                            ['driver_license_number',  __('rental.license_number'),  'text',  true,  '', 'JO-962000'],
                             ['driver_license_country', __('rental.license_country'), 'text',  false, __('rental.country_jordan'), __('rental.country_jordan')],
                             ['driver_license_expiry',  __('rental.license_expiry'),  'date',  false, '', ''],
                             ['driver_national_id',     __('rental.national_id'),     'text',  false, '', '9901012345'],
@@ -281,7 +283,9 @@
                 @endif
 
                 <label class="flex items-start gap-2.5 mt-5 cursor-pointer">
-                    <input type="checkbox" name="terms" value="1" @checked(old('terms', true))
+                    {{-- Unchecked by default: the customer has to accept the
+                         terms themselves. The demo build pre-ticked this. --}}
+                    <input type="checkbox" name="terms" value="1" @checked(old('terms', false))
                            class="mt-0.5 rounded border-gray-300 text-accent focus:ring-accent">
                     <span class="text-xs text-gray-600">{{ __('rental.terms_agree') }}</span>
                 </label>

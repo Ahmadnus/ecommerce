@@ -22,6 +22,21 @@
 
         $logoUrl   = \App\Support\Brand::logoUrl();
         $supportNo = \App\Models\Setting::get('rental_support_phone', '+962 6 500 0000');
+
+        /*
+         * Floating contact button. The admin enables it by ticking "floating"
+         * on a social link that carries a WhatsApp number; nothing is emitted
+         * unless such an active row exists, so switching it off removes the
+         * markup rather than just hiding it.
+         */
+        $floatingLink = \App\Models\SocialLink::query()
+            ->where('is_floating', true)
+            ->when(\Illuminate\Support\Facades\Schema::hasColumn('social_links', 'is_active'),
+                fn($q) => $q->where('is_active', true))
+            ->whereNotNull('whatsapp_number')
+            ->where('whatsapp_number', '!=', '')
+            ->orderBy('sort_order')
+            ->first();
     @endphp
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -117,6 +132,10 @@
 </main>
 
 @include('rental.partials.footer')
+
+@if($floatingLink)
+    <x-floating-button :number="$floatingLink->whatsapp_number" />
+@endif
 
 @stack('scripts')
 </body>

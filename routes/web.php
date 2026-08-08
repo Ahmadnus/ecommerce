@@ -148,7 +148,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('settings',  [SettingController::class, 'index'])->name('settings');
     Route::post('settings', [SettingController::class, 'update'])->name('settings.update');
 
-    Route::resource('social-links', SocialLinkController::class);
+    // The parameter is named explicitly: the default would be {social_link},
+    // which does not match the $socialLink argument the controller type-hints,
+    // so implicit route-model binding would never resolve.
+    Route::resource('social-links', SocialLinkController::class)
+        ->parameters(['social-links' => 'socialLink']);
+    // Enable/disable a link, or promote it to the floating contact button.
+    Route::patch('social-links/{socialLink}/toggle', [SocialLinkController::class, 'toggle'])
+        ->name('social-links.toggle');
     Route::resource('site-features', SiteFeatureController::class);
     Route::resource('pages', AdminPageController::class);
     Route::resource('countries', CountryController::class);

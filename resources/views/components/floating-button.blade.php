@@ -1,50 +1,58 @@
 {{--
     resources/views/components/floating-button.blade.php
     ────────────────────────────────────────────────────────
-    Mobile-only floating WhatsApp button.
-    Visible: only on screens smaller than md (< 768px).
-    Position: fixed, bottom-right.
+    Floating WhatsApp contact button.
+
+    Visibility is a data decision, not a styling one: the admin turns it on by
+    ticking "floating" on a social link in the dashboard, and the layout only
+    renders this component when such a link exists and is active. The component
+    re-checks the number itself so it can never emit a dead wa.me link.
+
+    It was previously `md:hidden`, i.e. merely hidden by CSS on desktop while
+    still present in the markup. It now shows on every viewport.
 
     Props:
-        $number   string|null   WhatsApp number (raw, from DB)
-
-    Usage:
-        <x-floating-button :number="$floatingLink->whatsapp_number" />
+        $number  string|null  WhatsApp number (raw, from the DB)
+        $label   string|null  Tooltip text; falls back to the contact string
 --}}
 
 @props([
     'number' => null,
+    'label'  => null,
 ])
 
 @php
-    // Sanitize — keep digits only so wa.me link always works
-    $cleanNumber  = preg_replace('/[^0-9]/', '', $number ?? '');
-    $whatsappUrl  = 'https://wa.me/' . $cleanNumber;
-    $hasNumber    = strlen($cleanNumber) >= 7;   // basic sanity check
+    // Digits only, so a number stored as "+962 79 000 0000" still links.
+    $cleanNumber = preg_replace('/\D+/', '', (string) $number);
+
+    /*
+     * Jordanian mobiles are 9 digits national (7XXXXXXXX) or 10 with the trunk
+     * zero. Normalise both to the +962 international form wa.me expects.
+     */
+    if (str_starts_with($cleanNumber, '00962')) {
+        $cleanNumber = substr($cleanNumber, 2);
+    } elseif (str_starts_with($cleanNumber, '0')) {
+        $cleanNumber = '962' . ltrim($cleanNumber, '0');
+    } elseif (strlen($cleanNumber) === 9 && str_starts_with($cleanNumber, '7')) {
+        $cleanNumber = '962' . $cleanNumber;
+    }
+
+    $hasNumber = strlen($cleanNumber) >= 10;
+    $tooltip   = $label ?: __('rental.whatsapp_cta');
+    $rtl       = app()->getLocale() === 'ar';
 @endphp
 
 @if($hasNumber)
-{{--
-    flex md:hidden  ← this is the key constraint: mobile ONLY.
-    The outer wrapper is position:fixed so it doesn't affect document flow.
---}}
-<div class="md:hidden" dir="rtl">
-    <a href="{{ $whatsappUrl }}"
+    <a href="https://wa.me/{{ $cleanNumber }}"
        target="_blank"
        rel="noopener noreferrer"
-       aria-label="تحدث معنا على واتساب"
-       class="fixed bottom-[84px] left-4 z-50
-              flex items-center justify-center
-              w-14 h-14
-              bg-[#25D366] hover:bg-[#1fbb58]
-              text-white rounded-full
-              shadow-2xl shadow-green-500/40
-              hover:scale-110 active:scale-95
-              transition-all duration-300
-              group
-              ring-2 ring-white/30">
+       aria-label="{{ $tooltip }}"
+       class="group fixed bottom-6 {{ $rtl ? 'left-4' : 'right-4' }} z-50
+              flex items-center justify-center w-14 h-14
+              bg-[#25D366] hover:bg-[#1fbb58] text-white rounded-full
+              shadow-2xl shadow-green-500/40 ring-2 ring-white/30
+              hover:scale-110 active:scale-95 transition-all duration-300">
 
-        {{-- WhatsApp SVG icon --}}
         <svg class="w-7 h-7 relative z-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15
                      -.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075
@@ -62,32 +70,15 @@
                      10.004-10.004 0-5.524-4.479-10.003-10.004-10.003z"/>
         </svg>
 
-        {{--
-            Tooltip — appears on hover, floats to the RIGHT of the button
-            (RTL: button is on the left side of screen, tooltip goes further right)
-        --}}
-        <span class="absolute left-16 top-1/2 -translate-y-1/2
-                     bg-gray-900/90 text-white
-                     text-[11px] font-bold
-                     px-3 py-1.5 rounded-lg
-                     whitespace-nowrap pointer-events-none
-                     shadow-lg
-                     opacity-0 -translate-x-2
-                     group-hover:opacity-100 group-hover:translate-x-0
-                     transition-all duration-200">
-            تحدث معنا
-            {{-- Small arrow pointing left toward the button --}}
-            <span class="absolute top-1/2 -translate-y-1/2 -left-1.5
-                         border-4 border-transparent border-r-gray-900/90"></span>
+        {{-- Tooltip opens toward the middle of the screen in both directions. --}}
+        <span class="absolute {{ $rtl ? 'left-16' : 'right-16' }} top-1/2 -translate-y-1/2
+                     bg-gray-900/90 text-white text-[11px] font-bold
+                     px-3 py-1.5 rounded-lg whitespace-nowrap pointer-events-none shadow-lg
+                     opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            {{ $tooltip }}
         </span>
 
-        {{-- Pulse ring — draws attention without being annoying --}}
-        <span class="absolute inset-0 rounded-full
-                     bg-green-400/30
-                     animate-ping
-                     pointer-events-none"
+        <span class="absolute inset-0 rounded-full bg-green-400/30 animate-ping pointer-events-none"
               aria-hidden="true"></span>
-
     </a>
-</div>
 @endif

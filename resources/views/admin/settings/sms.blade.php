@@ -135,7 +135,7 @@
                     <p class="text-indigo-200 text-xs mb-6 relative">سيتم إرسال رسالة تجريبية باستخدام البيانات المحفوظة حالياً.</p>
                     
                     <div class="flex flex-col gap-3 relative">
-                        <input type="text" x-model="phone" placeholder="9665xxxxxxxx" 
+                        <input type="text" x-model="phone" placeholder="9627xxxxxxxx"
                                class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 outline-none focus:bg-white/20 transition-all text-sm font-bold" dir="ltr">
                         
                         <button type="button" @click="runTest()" :disabled="loading || !phone"

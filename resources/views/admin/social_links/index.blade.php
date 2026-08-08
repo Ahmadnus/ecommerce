@@ -45,7 +45,7 @@
                 <label class="text-sm font-bold text-gray-600 mr-2">رقم الواتساب (للعائم)</label>
                 <input type="text"
                        name="whatsapp_number"
-                       placeholder="966500000000"
+                       placeholder="962790000000"
                        class="p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
 
@@ -94,10 +94,35 @@
                         @endif
                     </td>
 
+                    {{-- Both switches post to the toggle route, so enabling or
+                         disabling is stored in the database and the storefront
+                         stops rendering the element entirely. --}}
                     <td class="p-4 text-center">
-                        <span class="{{ $link->is_floating ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500' }} text-[10px] px-2 py-1 rounded-full font-bold">
-                            {{ $link->is_floating ? 'عائم 🚀' : 'عادي' }}
-                        </span>
+                        <div class="flex flex-col items-center gap-2">
+                            <form action="{{ route('admin.social-links.toggle', $link->id) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="column" value="is_floating">
+                                <button type="submit"
+                                        title="إظهار كزر عائم على كل الصفحات"
+                                        class="{{ $link->is_floating ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500' }}
+                                               text-[10px] px-2 py-1 rounded-full font-bold hover:opacity-80 transition">
+                                    {{ $link->is_floating ? 'عائم 🚀' : 'عادي' }}
+                                </button>
+                            </form>
+
+                            <form action="{{ route('admin.social-links.toggle', $link->id) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="column" value="is_active">
+                                <button type="submit"
+                                        title="تفعيل / تعطيل الرابط"
+                                        class="{{ $link->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600' }}
+                                               text-[10px] px-2 py-1 rounded-full font-bold hover:opacity-80 transition">
+                                    {{ $link->is_active ? 'مفعّل ✓' : 'معطّل ✕' }}
+                                </button>
+                            </form>
+                        </div>
                     </td>
 
                     <td class="p-4 text-center">

@@ -1,7 +1,12 @@
 @php
+    // A WhatsApp-only row exists purely to drive the floating button and has no
+    // url, so it must not render as a dead icon in the footer strip.
     $socialLinks = \App\Models\SocialLink::query()
         ->when(\Illuminate\Support\Facades\Schema::hasColumn('social_links', 'is_active'),
             fn($q) => $q->where('is_active', true))
+        ->whereNotNull('url')
+        ->where('url', '!=', '')
+        ->orderBy('sort_order')
         ->get();
 
     $logoUrl      = \App\Support\Brand::logoUrl();
@@ -27,7 +32,7 @@
                         <img src="{{ $logoUrl }}" alt="{{ __('rental.brand') }}"
                              class="h-14 w-auto object-contain bg-white rounded-lg p-1.5">
                     @else
-                        <span class="text-xl font-black tracking-[0.2em]">KEY</span>
+                        <span class="text-xl font-black tracking-[0.2em]">WIND</span>
                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-accent text-accent-fg">
                             <i class="fa-solid fa-key text-xs"></i>
                         </span>
@@ -36,12 +41,16 @@
                 <p class="mt-4 text-sm text-white/60 leading-relaxed">{{ __('rental.why_sub') }}</p>
 
                 @if($socialLinks->isNotEmpty())
+                    {{-- Columns are platform_name / icon_svg (icon_svg holds a
+                         Font Awesome class, not markup). Reading ->name and
+                         ->icon silently yielded null, so every icon rendered as
+                         the generic fallback link. --}}
                     <div class="flex gap-2 mt-5">
                         @foreach($socialLinks as $social)
                             <a href="{{ $social->url }}" target="_blank" rel="noopener noreferrer"
-                               aria-label="{{ $social->name ?? 'social' }}"
+                               aria-label="{{ $social->platform_name ?: __('rental.contact') }}"
                                class="w-9 h-9 rounded-full bg-white/10 hover:bg-accent hover:text-accent-fg flex items-center justify-center transition-colors">
-                                <i class="{{ $social->icon ?: 'fa-solid fa-link' }} text-sm"></i>
+                                <i class="{{ $social->icon_svg ?: 'fa-solid fa-link' }} text-sm"></i>
                             </a>
                         @endforeach
                     </div>

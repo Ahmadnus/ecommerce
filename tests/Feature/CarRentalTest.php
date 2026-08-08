@@ -2,6 +2,7 @@
 
 use App\Models\Booking;
 use App\Models\RentalLocation;
+use App\Models\SocialLink;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleCategory;
@@ -352,4 +353,90 @@ it('creates a vehicle from the admin fleet form', function () {
         ->and($vehicle->slug)->toBe('hyundai-sonata-2025')
         // Empty rows from the dynamic feature list are dropped.
         ->and($vehicle->features)->toBe(['Bluetooth', 'Cruise Control']);
+});
+
+/*
+ * The floating contact button is a data decision. Enabling it must add the
+ * wa.me link to every page; disabling it must remove the markup entirely,
+ * rather than leaving it in the DOM behind a CSS rule.
+ */
+it('hides the floating contact button until an admin enables one', function () {
+    makeVehicle();
+    makeLocation();
+
+    $this->get('/')->assertOk()->assertDontSee('wa.me', false);
+});
+
+it('shows the floating contact button on every page once enabled', function () {
+    makeVehicle();
+    makeLocation();
+
+    $link = SocialLink::create([
+        'platform_name'   => 'WhatsApp',
+        'whatsapp_number' => '0790000000',
+        'is_floating'     => true,
+        'is_active'       => true,
+    ]);
+
+    // The national number is normalised to the +962 form wa.me expects.
+    foreach (['/', '/cars', '/branches'] as $page) {
+        $this->get($page)->assertOk()->assertSee('wa.me/962790000000', false);
+    }
+
+    // Deactivating the row must take the markup away, not just hide it.
+    $link->update(['is_active' => false]);
+    $this->get('/')->assertOk()->assertDontSee('wa.me', false);
+});
+
+it('lets an admin toggle a social link and promote it to the floating button', function () {
+    $this->actingAs(adminUser());
+
+    $facebook = SocialLink::create([
+        'platform_name' => 'Facebook',
+        'url'           => 'https://facebook.com/wind',
+        'is_active'     => true,
+    ]);
+
+    $this->patch(route('admin.social-links.toggle', $facebook), ['column' => 'is_active'])
+        ->assertRedirect();
+    expect($facebook->fresh()->is_active)->toBeFalse();
+
+    // Only one link may drive the floating button at a time.
+    $whatsapp = SocialLink::create([
+        'platform_name'   => 'WhatsApp',
+        'whatsapp_number' => '0791111111',
+        'is_floating'     => true,
+        'is_active'       => true,
+    ]);
+
+    $this->patch(route('admin.social-links.toggle', $facebook), ['column' => 'is_floating'])
+        ->assertRedirect();
+
+    expect($facebook->fresh()->is_floating)->toBeTrue()
+        ->and($whatsapp->fresh()->is_floating)->toBeFalse();
+});
+
+it('updates a social link from the dashboard', function () {
+    $this->actingAs(adminUser());
+
+    $link = SocialLink::create([
+        'platform_name' => 'Insta',
+        'url'           => 'https://instagram.com/old',
+        'is_active'     => true,
+    ]);
+
+    $this->put(route('admin.social-links.update', $link), [
+        'platform_name' => 'Instagram',
+        'url'           => 'https://instagram.com/wind',
+        'icon_svg'      => 'fa-brands fa-instagram',
+        'is_active'     => '1',
+    ])->assertRedirect();
+
+    $link->refresh();
+
+    expect($link->platform_name)->toBe('Instagram')
+        ->and($link->url)->toBe('https://instagram.com/wind')
+        ->and($link->is_active)->toBeTrue()
+        // Absent checkbox means off, not unchanged.
+        ->and($link->is_floating)->toBeFalse();
 });

@@ -74,6 +74,13 @@ class CarRentalSeeder extends Seeder
             ['aqaba-airport',    'airport', ['en' => 'King Hussein International Airport','ar' => 'مطار الملك حسين الدولي'],    10, 35, true],
             ['aqaba-center',     'branch',  ['en' => 'City Center / Beachfront',         'ar' => 'وسط المدينة / الواجهة البحرية'], 0, 35, false],
             ['zarqa-center',     'branch',  ['en' => 'City Center',                      'ar' => 'وسط المدينة'],                0, 20, false],
+            // Tourist corridor — the Dead Sea / Petra / Jerash run is most of
+            // the leisure demand in Jordan, so those need their own pickups.
+            ['dead-sea',         'branch',  ['en' => 'Dead Sea Resorts',                 'ar' => 'منتجعات البحر الميت'],        5, 30, false],
+            ['wadi-musa-petra',  'branch',  ['en' => 'Wadi Musa / Petra',                'ar' => 'وادي موسى / البتراء'],        5, 40, false],
+            ['madaba-center',    'branch',  ['en' => 'City Center',                      'ar' => 'وسط المدينة'],                0, 25, false],
+            ['jerash-center',    'branch',  ['en' => 'City Center',                      'ar' => 'وسط المدينة'],                0, 25, false],
+            ['salt-center',      'branch',  ['en' => 'City Center',                      'ar' => 'وسط المدينة'],                0, 25, false],
         ];
 
         $cities = [
@@ -84,6 +91,11 @@ class CarRentalSeeder extends Seeder
             'aqaba-airport'    => ['en' => 'Aqaba', 'ar' => 'العقبة'],
             'aqaba-center'     => ['en' => 'Aqaba', 'ar' => 'العقبة'],
             'zarqa-center'     => ['en' => 'Zarqa', 'ar' => 'الزرقاء'],
+            'dead-sea'         => ['en' => 'Dead Sea', 'ar' => 'البحر الميت'],
+            'wadi-musa-petra'  => ['en' => 'Petra', 'ar' => 'البتراء'],
+            'madaba-center'    => ['en' => 'Madaba', 'ar' => 'مادبا'],
+            'jerash-center'    => ['en' => 'Jerash', 'ar' => 'جرش'],
+            'salt-center'      => ['en' => 'As-Salt', 'ar' => 'السلط'],
         ];
 
         /*

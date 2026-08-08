@@ -47,18 +47,32 @@ class SocialLinkController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Update an existing link. The two booleans are read with has() rather than
+     * from the validated array because an unchecked box is simply absent.
      */
-    public function edit(string $id)
+    public function update(Request $request, SocialLink $socialLink)
     {
-        //
+        $data = $request->validate([
+            'platform_name'   => 'required|string|max:60',
+            'url'             => 'nullable|url|max:255',
+            'whatsapp_number' => 'nullable|string|max:40',
+            'icon_svg'        => 'nullable|string|max:120',
+            'sort_order'      => 'nullable|integer|min:0',
+        ]);
+
+        $data['is_floating'] = $request->boolean('is_floating');
+        $data['is_active']   = $request->boolean('is_active');
+
+        $this->socialLinks->update($socialLink, $data);
+
+        return back()->with('success', 'تم تحديث الرابط بنجاح');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    /** Enable/disable a link, or make it the floating button, from the list. */
+    public function toggle(Request $request, SocialLink $socialLink)
     {
-        //
+        $this->socialLinks->toggle($socialLink, (string) $request->input('column', 'is_active'));
+
+        return back()->with('success', 'تم تحديث الحالة');
     }
 }

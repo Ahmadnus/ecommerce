@@ -2,7 +2,7 @@
 
 return [
     // ── Header / nav ─────────────────────────────────────────────────────────
-    'brand'            => 'Key Car Rental',
+    'brand'            => 'WIND Car Rental',
     'menu'             => 'Menu',
     'home'             => 'Home',
     'fleet'            => 'Our Fleet',
@@ -143,6 +143,7 @@ return [
     'view_all'         => 'View all cars',
     'currency'         => 'JOD',
     'country_jordan'   => 'Jordan',
+    'whatsapp_cta'     => 'Chat with us on WhatsApp',
     'rights_reserved'  => 'All rights reserved — Hashemite Kingdom of Jordan.',
     'back'             => 'Back',
     'required'         => 'Required',
