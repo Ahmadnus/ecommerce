@@ -16,6 +16,10 @@ class DatabaseSeeder extends Seeder
             TypographySettingsSeeder::class,
             CarRentalSeeder::class,
             VehiclePhotoSeeder::class,
+            // Branding, logo, contact links, hero slides, pages and SEO.
+            // Runs last so it can overwrite the e-commerce defaults that some
+            // of the older migrations insert inline.
+            SiteContentSeeder::class,
         ]);
     }
 }

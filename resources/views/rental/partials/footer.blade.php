@@ -75,7 +75,10 @@
                     @forelse($footerPages as $page)
                         <li>
                             <a href="{{ route('pages.show', $page->slug) }}" class="hover:text-accent transition-colors">
-                                {{ $page->title }}
+                                {{-- The column is `name` (translatable), not
+                                     `title` — reading ->title rendered every
+                                     footer page link as blank text. --}}
+                                {{ $page->name }}
                             </a>
                         </li>
                     @empty
