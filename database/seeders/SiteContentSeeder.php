@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\HeroBanner;
 use App\Models\Page;
+use App\Models\RentalExtra;
 use App\Models\SeoSetting;
 use App\Models\Setting;
 use App\Models\SocialLink;
@@ -31,6 +32,7 @@ class SiteContentSeeder extends Seeder
         $this->seedLogo();
         $this->seedSocialLinks();
         $this->seedHeroBanners();
+        $this->seedExtras();
         $this->seedPages();
         $this->seedSeo();
     }
@@ -194,6 +196,43 @@ class SiteContentSeeder extends Seeder
      * migration inserts, and a Font Awesome class does not fit. SQLite ignores
      * varchar limits, so local testing never caught it.
      */
+
+    /**
+     * The four add-ons that used to be hardcoded in RentalPricingService, now
+     * rows the admin can rename, reprice, reorder and retire.
+     *
+     * Prices seed from the legacy `rental_extra_*` settings keys where those
+     * exist, so an install that had already tuned them keeps its own numbers
+     * instead of being reset to the defaults.
+     */
+    private function seedExtras(): void
+    {
+        $rows = [
+            ['cdw',               'rental_extra_cdw',        8, 'fa-solid fa-shield-halved',  ['en' => 'Collision Damage Waiver', 'ar' => 'تأمين ضد الحوادث']],
+            ['additional_driver', 'rental_extra_driver',     6, 'fa-solid fa-user-plus',      ['en' => 'Additional Driver',       'ar' => 'سائق إضافي']],
+            ['gps',               'rental_extra_gps',        4, 'fa-solid fa-location-arrow', ['en' => 'GPS Navigation',          'ar' => 'جهاز ملاحة']],
+            ['child_seat',        'rental_extra_child_seat', 5, 'fa-solid fa-baby',           ['en' => 'Child Seat',              'ar' => 'مقعد أطفال']],
+        ];
+
+        foreach ($rows as $i => [$code, $settingKey, $default, $icon, $name]) {
+            /*
+             * updateOrCreate on the code, but the price is only written when
+             * the row is new — re-running the seeder must not undo a price the
+             * admin has since changed in the dashboard.
+             */
+            RentalExtra::firstOrCreate(
+                ['code' => $code],
+                [
+                    'name'       => $name,
+                    'icon'       => $icon,
+                    'price'      => (float) Setting::get($settingKey, $default),
+                    'per_day'    => true,
+                    'is_active'  => true,
+                    'sort_order' => $i,
+                ]
+            );
+        }
+    }
 
     /**
      * Legal/info pages. Content is deliberately short placeholder prose — the

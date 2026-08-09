@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\RentalExtra;
 use App\Models\RentalLocation;
 use App\Models\Setting;
 use App\Models\Vehicle;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Single source of truth for what a rental costs.
@@ -15,8 +17,41 @@ use Carbon\Carbon;
  */
 class RentalPricingService
 {
-    /** Optional add-ons offered during checkout. Price is per rental day. */
+    /**
+     * Optional add-ons offered during checkout, keyed by code.
+     *
+     * Read from the rental_extras table so the admin can rename, reprice, add
+     * and retire them. The hardcoded set below is only a fallback for the
+     * window between deploying this code and running the migration — without
+     * it, pulling the new code before migrating would silently drop every
+     * add-on from the booking form.
+     *
+     * @return array<string, array{label: string, label_ar: string, price: float, per_day: bool, icon: string}>
+     */
     public function availableExtras(): array
+    {
+        if (! Schema::hasTable('rental_extras')) {
+            return $this->fallbackExtras();
+        }
+
+        $extras = RentalExtra::active()->ordered()->get();
+
+        if ($extras->isEmpty()) {
+            return $this->fallbackExtras();
+        }
+
+        return $extras->mapWithKeys(
+            fn (RentalExtra $extra) => [$extra->code => $extra->toCatalogueEntry()]
+        )->all();
+    }
+
+    /**
+     * The original four add-ons, priced from the legacy `rental_extra_*`
+     * settings keys. Used only when rental_extras is missing or empty.
+     *
+     * @return array<string, array{label: string, label_ar: string, price: float, per_day: bool, icon: string}>
+     */
+    private function fallbackExtras(): array
     {
         return [
             'cdw' => [

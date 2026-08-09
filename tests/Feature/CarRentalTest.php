@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Booking;
+use App\Models\RentalExtra;
 use App\Models\RentalLocation;
 use App\Models\SocialLink;
 use App\Models\User;
@@ -258,6 +259,13 @@ it('renders every car-rental admin page', function () {
     $location = makeLocation();
     $category = VehicleCategory::first();
 
+    $extra = RentalExtra::create([
+        'code'  => 'wifi',
+        'name'  => ['en' => 'Portable WiFi', 'ar' => 'واي فاي محمول'],
+        'icon'  => 'fa-solid fa-wifi',
+        'price' => 3,
+    ]);
+
     $booking = Booking::create([
         'vehicle_id'            => $vehicle->id,
         'pickup_location_id'    => $location->id,
@@ -285,6 +293,9 @@ it('renders every car-rental admin page', function () {
         '/admin/vehicle-categories'                    => 'فئات السيارات',
         '/admin/vehicle-categories/create'             => 'إضافة فئة جديدة',
         "/admin/vehicle-categories/{$category->id}/edit" => 'ترتيب العرض',
+        '/admin/extras'                                => 'الإضافات الاختيارية',
+        '/admin/extras/create'                         => 'إضافة خدمة جديدة',
+        "/admin/extras/{$extra->id}/edit"              => 'المعرّف',
     ];
 
     foreach ($pages as $url => $expected) {
@@ -439,4 +450,111 @@ it('updates a social link from the dashboard', function () {
         ->and($link->is_active)->toBeTrue()
         // Absent checkbox means off, not unchanged.
         ->and($link->is_floating)->toBeFalse();
+});
+
+/*
+ * Optional extras moved from a hardcoded array in RentalPricingService to the
+ * rental_extras table. What matters is that the admin can change what the
+ * customer is offered, and that pricing follows the table.
+ */
+it('offers the extras from the table, not the hardcoded defaults', function () {
+    RentalExtra::create([
+        'code'    => 'sunroof_kit',
+        'name'    => ['en' => 'Roof Box', 'ar' => 'صندوق سقف'],
+        'price'   => 12,
+        'per_day' => true,
+    ]);
+
+    $catalogue = app(RentalPricingService::class)->availableExtras();
+
+    // Once the table has rows it is the only source — the old four are gone.
+    expect($catalogue)->toHaveKey('sunroof_kit')
+        ->and($catalogue)->not->toHaveKey('cdw')
+        ->and($catalogue['sunroof_kit']['label'])->toBe('Roof Box')
+        ->and($catalogue['sunroof_kit']['label_ar'])->toBe('صندوق سقف')
+        ->and($catalogue['sunroof_kit']['price'])->toBe(12.0);
+});
+
+it('falls back to the built-in extras while the table is still empty', function () {
+    expect(RentalExtra::count())->toBe(0);
+
+    $catalogue = app(RentalPricingService::class)->availableExtras();
+
+    expect($catalogue)->toHaveKeys(['cdw', 'additional_driver', 'gps', 'child_seat']);
+});
+
+it('hides a deactivated extra from the booking form', function () {
+    $vehicle = makeVehicle();
+    makeLocation();
+
+    $extra = RentalExtra::create([
+        'code'  => 'baby_mirror',
+        'name'  => ['en' => 'Baby Mirror', 'ar' => 'مرآة أطفال'],
+        'price' => 2,
+    ]);
+
+    $this->get("/book/{$vehicle->slug}")->assertOk()->assertSee('Baby Mirror', false);
+
+    $extra->update(['is_active' => false]);
+
+    $this->get("/book/{$vehicle->slug}")->assertOk()->assertDontSee('Baby Mirror', false);
+});
+
+it('prices a per-booking extra once and a per-day extra per day', function () {
+    $vehicle  = makeVehicle();          // 200 / day
+    $location = makeLocation();
+
+    RentalExtra::create(['code' => 'daily', 'name' => ['en' => 'Daily'], 'price' => 10, 'per_day' => true]);
+    RentalExtra::create(['code' => 'once',  'name' => ['en' => 'Once'],  'price' => 10, 'per_day' => false]);
+
+    $quote = app(RentalPricingService::class)->quote(
+        $vehicle,
+        \Carbon\Carbon::parse('2030-03-01 10:00'),
+        \Carbon\Carbon::parse('2030-03-04 10:00'),   // 3 days
+        $location,
+        $location,
+        ['daily', 'once']
+    );
+
+    // 10 × 3 for the per-day one, 10 flat for the other.
+    expect($quote['extras_total'])->toBe(40.0);
+});
+
+it('lets an admin create, rename, toggle and delete an extra', function () {
+    $this->actingAs(adminUser());
+
+    $this->post(route('admin.extras.store'), [
+        'name'    => ['en' => 'Snow Chains', 'ar' => 'جنازير ثلج'],
+        'price'   => 7.5,
+        'per_day' => '1',
+        'is_active' => '1',
+    ])->assertRedirect(route('admin.extras.index'));
+
+    $extra = RentalExtra::where('code', 'snow_chains')->first();
+
+    // The code is derived from the English name when left blank.
+    expect($extra)->not->toBeNull()
+        ->and((float) $extra->price)->toBe(7.5)
+        ->and($extra->per_day)->toBeTrue();
+
+    // Renaming must not move the code — bookings reference it.
+    $this->put(route('admin.extras.update', $extra), [
+        'name'    => ['en' => 'Tyre Chains', 'ar' => 'جنازير إطارات'],
+        'code'    => 'something_else',
+        'price'   => 9,
+        'is_active' => '1',
+    ])->assertRedirect();
+
+    $extra->refresh();
+
+    expect($extra->code)->toBe('snow_chains')
+        ->and($extra->getTranslation('name', 'en', false))->toBe('Tyre Chains')
+        // An unchecked box means off, not unchanged.
+        ->and($extra->per_day)->toBeFalse();
+
+    $this->patch(route('admin.extras.toggle', $extra))->assertRedirect();
+    expect($extra->fresh()->is_active)->toBeFalse();
+
+    $this->delete(route('admin.extras.destroy', $extra))->assertRedirect();
+    expect(RentalExtra::count())->toBe(0);
 });

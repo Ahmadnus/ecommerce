@@ -88,6 +88,11 @@
                         الفروع ومواقع الاستلام
                     </x-admin-nav-link>
 
+                    <x-admin-nav-link href="{{ route('admin.extras.index') }}" icon="plus"
+                        :active="request()->routeIs('admin.extras.*')">
+                        الإضافات الاختيارية
+                    </x-admin-nav-link>
+
                     <hr class="my-2 mx-2" style="border-color:rgba(255,255,255,0.1);">
 
                     {{-- ── محتوى المتجر ──────────────────────────────────────── --}}

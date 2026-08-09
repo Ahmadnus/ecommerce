@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\{
     HeroBannerController,
     HomepageSectionController,
     PageController as AdminPageController,
+    RentalExtraController,
     RentalLocationController,
     SeoSettingController,
     SettingController,
@@ -129,6 +130,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('locations', RentalLocationController::class)
         ->except(['show'])
         ->parameters(['locations' => 'location']);
+
+    // Optional booking add-ons (collision waiver, extra driver, GPS, …).
+    Route::resource('extras', RentalExtraController::class)
+        ->except(['show'])
+        ->parameters(['extras' => 'extra']);
+    Route::patch('extras/{extra}/toggle', [RentalExtraController::class, 'toggle'])
+        ->name('extras.toggle');
 
     Route::get('bookings',           [AdminBookingController::class, 'index'])->name('bookings.index');
     Route::get('bookings/{booking}', [AdminBookingController::class, 'show'])->name('bookings.show');
