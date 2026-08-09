@@ -6,7 +6,6 @@ use App\Models\HeroBanner;
 use App\Models\Page;
 use App\Models\SeoSetting;
 use App\Models\Setting;
-use App\Models\SiteFeature;
 use App\Models\SocialLink;
 use App\Support\Brand;
 use Illuminate\Database\Seeder;
@@ -32,7 +31,6 @@ class SiteContentSeeder extends Seeder
         $this->seedLogo();
         $this->seedSocialLinks();
         $this->seedHeroBanners();
-        $this->seedFeatures();
         $this->seedPages();
         $this->seedSeo();
     }
@@ -183,36 +181,19 @@ class SiteContentSeeder extends Seeder
         }
     }
 
-    /**
-     * The feature strip shipped with the e-commerce defaults baked into its
-     * migration ("Free Shipping", "Free Returns"), which make no sense for a
-     * rental. Replaced here with the rental equivalents.
+    /*
+     * There is deliberately no site_features seeding here.
+     *
+     * The rental storefront never reads that table — the "why choose us" strip
+     * on the homepage comes from the rental.why_* translation strings with the
+     * icons written straight into the Blade. site_features is reachable only
+     * from the admin CRUD, so seeding it changes nothing a customer sees.
+     *
+     * An earlier version of this seeder did populate it, and broke on MySQL:
+     * the column is string('icon', 10), sized for the single emoji the
+     * migration inserts, and a Font Awesome class does not fit. SQLite ignores
+     * varchar limits, so local testing never caught it.
      */
-    private function seedFeatures(): void
-    {
-        SiteFeature::query()->delete();
-
-        $rows = [
-            ['fa-solid fa-shield-halved', ['en' => 'Full insurance',    'ar' => 'تأمين شامل'],
-                                          ['en' => 'Collision cover available on every booking.', 'ar' => 'تغطية ضد الحوادث متاحة على كل حجز.']],
-            ['fa-solid fa-plane-arrival', ['en' => 'Airport delivery',  'ar' => 'تسليم في المطار'],
-                                          ['en' => 'Queen Alia and Aqaba, around the clock.', 'ar' => 'الملكة علياء والعقبة، على مدار الساعة.']],
-            ['fa-solid fa-tags',          ['en' => 'No hidden fees',    'ar' => 'بدون رسوم مخفية'],
-                                          ['en' => 'The price you see includes VAT.', 'ar' => 'السعر الظاهر شامل الضريبة.']],
-            ['fa-solid fa-headset',       ['en' => '24/7 support',      'ar' => 'دعم على مدار الساعة'],
-                                          ['en' => 'Roadside assistance anywhere in Jordan.', 'ar' => 'مساعدة على الطريق في كل الأردن.']],
-        ];
-
-        foreach ($rows as $i => [$icon, $title, $description]) {
-            SiteFeature::create([
-                'icon'        => $icon,
-                'title'       => $title,
-                'description' => $description,
-                'sort_order'  => $i,
-                'is_active'   => true,
-            ]);
-        }
-    }
 
     /**
      * Legal/info pages. Content is deliberately short placeholder prose — the
