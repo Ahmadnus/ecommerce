@@ -14,16 +14,49 @@ class OrderController extends Controller
      * Order success / confirmation page.
      * Accessible by the order owner only.
      */
- public function success(string $orderNumber): View
+ public function success(string $orderNumber): View|RedirectResponse
 {
     // نبحث عن الطلب برقم الطلب فقط (للسماح للزوار برؤية صفحة النجاح فوراً)
-    // أو يمكنك التأكد أن المستخدم هو صاحب الطلب "فقط إذا كان مسجلاً"
+    // بدل firstOrFail حتى لا تظهر صفحة 404 بعد إتمام الحجز
     $order = Order::where('order_number', $orderNumber)
                   ->with('items')
-                  ->firstOrFail(); // إذا لم يجد الرقم سيظهر 404، تأكد أن الرقم يمر صح
+                  ->first();
+
+    if (! $order) {
+        return redirect()->route('cart.index')
+            ->with('error', __('app.order_not_found'));
+    }
 
     return view('orders.success', compact('order'));
 }
+
+    /**
+     * Single order details for the storefront.
+     */
+    public function show(Order $order): View|RedirectResponse
+    {
+        if ($order->user_id && $order->user_id !== Auth::id()) {
+            return redirect()->route('orders.index')
+                ->with('error', __('app.order_not_found'));
+        }
+
+        $order->load('items');
+
+        return view('orders.success', compact('order'));
+    }
+
+    /**
+     * City/zone selection after an order is placed.
+     */
+    public function selectCity(string $orderNumber): RedirectResponse
+    {
+        return redirect()->route('checkout.select-zone');
+    }
+
+    public function updateCity(Request $request, string $orderNumber): RedirectResponse
+    {
+        return redirect()->route('checkout.confirm-zone');
+    }
     /**
      * User's order history.
      */

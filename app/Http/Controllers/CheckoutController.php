@@ -183,10 +183,22 @@ class CheckoutController extends Controller
 
         $this->cart->clear();
 
+        if (! $order || ! $order->order_number) {
+            return redirect()->route('cart.index')
+                ->with('error', __('app.order_not_found'));
+        }
+
         return redirect()
             ->route('orders.success', $order->order_number)
             ->with('success', __('app.order_placed_successfully'));
-    } catch (\Exception $e) {
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        throw $e;
+    } catch (\Throwable $e) {
+        \Log::error('Booking failed', [
+            'message' => $e->getMessage(),
+            'file'    => $e->getFile() . ':' . $e->getLine(),
+        ]);
+
         return redirect()->back()
             ->withInput()
             ->with('error', $e->getMessage());
@@ -241,7 +253,13 @@ class CheckoutController extends Controller
         $zone = Zone::where('id', $request->zone_id)
             ->where('country_id', $request->country_id)
             ->where('is_active', true)
-            ->firstOrFail();
+            ->first();
+
+        if (! $zone) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', __('app.option_unavailable'));
+        }
 
         $order = Order::find($orderId);
 

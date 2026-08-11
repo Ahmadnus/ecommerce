@@ -396,3 +396,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 Route::post('/booking/initiate', [CartController::class, 'initiateBooking'])
      ->name('booking.initiate');
+
+// Live search used by the navbar dropdown (products/index.blade.php).
+// SearchController is invokable (__invoke).
+Route::get('/api/search', \App\Http\Controllers\SearchController::class)
+     ->name('api.search');

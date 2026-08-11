@@ -7,4 +7,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-Route::get('/api/shipping/zones/{country}', [CheckoutController::class, 'zonesForCountry']);
+// routes/api.php is already prefixed with /api — the leading '/api' here
+// produced /api/api/shipping/zones/{country}
+Route::get('/shipping/zones/{country}', [CheckoutController::class, 'zonesForCountry']);
