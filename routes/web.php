@@ -417,7 +417,20 @@ Route::get('/__diag/fc5a9d49c79c3458', function (\Illuminate\Http\Request $reque
     $seen = $request->session()->get('__diag_seen', 0);
     $request->session()->put('__diag_seen', $seen + 1);
 
+    // Pinpoint premature output: this is why headers/cookies are discarded.
+    $sentFile = null; $sentLine = null;
+    $alreadySent = headers_sent($sentFile, $sentLine);
+
     return response()->json([
+        'HEADERS_ALREADY_SENT' => $alreadySent ? 'YES — this is the bug' : 'no',
+        'OUTPUT_STARTED_IN'    => $alreadySent ? ($sentFile . ':' . $sentLine) : '-',
+        'auto_prepend_file'    => ini_get('auto_prepend_file') ?: '(none)',
+        'auto_append_file'     => ini_get('auto_append_file') ?: '(none)',
+        'ob_level'             => ob_get_level(),
+        'ob_bytes_pending'     => ob_get_length() === false ? 0 : ob_get_length(),
+        'user_ini_in_public'   => file_exists(public_path('.user.ini')) ? 'YES' : 'no',
+        'user_ini_in_root'     => file_exists(base_path('.user.ini')) ? 'YES' : 'no',
+        'index_php_size'       => @filesize(public_path('index.php')),
         'php_version'         => PHP_VERSION,
         'app_env'             => config('app.env'),
         'app_url'             => config('app.url'),
