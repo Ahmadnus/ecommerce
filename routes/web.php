@@ -85,7 +85,7 @@ Route::post('/reset-password',        [ResetPasswordController::class, 'reset'])
 // ── Admin-only login portal ────────────────────────────────────────────────────
 Route::middleware('admin.route.only')->group(function () {
     Route::get('/adlogin',  [AuthController::class, 'showAdminLogin'])->name('admin.login');
-    Route::post('/adlogin', [AuthController::class, 'login']);
+    Route::post('/adlogin', [AuthController::class, 'login'])->name('admin.login.submit');
 });
 
 // ── OTP ────────────────────────────────────────────────────────────────────────
@@ -156,7 +156,9 @@ Route::prefix('api/shipping')->name('api.shipping.')->group(function () {
 });
 
 // ─── Admin Routes ─────────────────────────────────────────────────────────────
-Route::get('/adlogin', [AuthController::class, 'showAdminLogin'])->name('admin.login');
+// NOTE: GET /adlogin is declared above inside the 'admin.route.only' group.
+// A second declaration here re-bound the 'admin.login' name to an unguarded
+// route, so already-logged-in users were never redirected away.
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
    Route::resource('attributes', AttributeController::class);

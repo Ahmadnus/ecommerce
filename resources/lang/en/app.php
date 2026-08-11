@@ -603,6 +603,7 @@ return [
     'session_expired_reorder' => 'Session expired. Please try again.',
 
     'session_expired' => 'Session expired.',
+    'session_expired_please_retry' => 'Your session expired. Please try again.',
 
     'validation_full_name_required' => 'Full name is required.',
 

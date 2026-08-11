@@ -263,6 +263,7 @@ return [
     // ── Session ───────────────────────────────────────────────────────────────
     'session_expired_reorder'       => 'انتهت الجلسة. يرجى إعادة الحجز.',
     'session_expired'               => 'انتهت الجلسة.',
+    'session_expired_please_retry'  => 'انتهت الجلسة. يرجى المحاولة مرة أخرى.',
 
     // ── Validation Messages ───────────────────────────────────────────────────
     'validation_full_name_required' => 'الاسم الكامل مطلوب.',

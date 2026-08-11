@@ -36,5 +36,32 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Never show the raw "419 | Page Expired" screen.
+        // A CSRF token mismatch almost always means the session cookie was lost
+        // (expired tab, cached HTML, or a session store that cannot persist).
+        // Bounce the user back to the same form with a fresh token instead.
+        // NOTE: Laravel converts TokenMismatchException into an HttpException(419)
+        // in prepareException() before render callbacks run, so match on the
+        // status code rather than on TokenMismatchException itself.
+        $exceptions->render(function (
+            \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e,
+            \Illuminate\Http\Request $request
+        ) {
+            if ($e->getStatusCode() !== 419) {
+                return null;
+            }
+
+            $message = __('app.session_expired_please_retry');
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 419);
+            }
+
+            return redirect()
+                ->back()
+                ->withInput($request->except([
+                    'password', 'password_confirmation', '_token',
+                ]))
+                ->with('error', $message);
+        });
     })->create();
