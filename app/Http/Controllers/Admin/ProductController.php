@@ -101,7 +101,8 @@ public function store(Request $request)
         'product_images'      => 'nullable|array|max:10',
         'product_images.*'    => 'image|mimes:jpeg,png,jpg,webp,avif|max:5120',
         'variants'                     => 'required|array|min:1',
-        'variants.*.stock_quantity'    => 'required|integer|min:0',
+        // Stock tracking disabled: never required, defaulted in createVariant().
+        'variants.*.stock_quantity'    => 'nullable|integer|min:0',
         'variants.*.price_override'    => 'nullable|numeric|min:0',
         'variants.*.sku'               => 'nullable|string|max:100',
         'variants.*.attribute_values'  => 'nullable|array',
@@ -174,7 +175,8 @@ public function update(Request $request, Product $product)
         'delete_media_ids'    => 'nullable|array',
         'delete_media_ids.*'  => 'integer',
         'variants'                      => 'required|array|min:1',
-        'variants.*.stock_quantity'     => 'required|integer|min:0',
+        // Stock tracking disabled: never required, defaulted in createVariant().
+        'variants.*.stock_quantity'     => 'nullable|integer|min:0',
         'variants.*.price_override'     => 'nullable|numeric|min:0',
         'variants.*.sku'                => 'nullable|string|max:100',
         'variants.*.attribute_values'   => 'nullable|array',
@@ -290,7 +292,7 @@ public function update(Request $request, Product $product)
         $request->validate([
             'variants'                   => 'required|array',
             'variants.*.id'              => 'required|exists:product_variants,id',
-            'variants.*.stock_quantity'  => 'required|integer|min:0',
+            'variants.*.stock_quantity'  => 'nullable|integer|min:0',
             'variants.*.price_override'  => 'nullable|numeric|min:0',
             'variants.*.is_active'       => 'nullable|boolean',
         ]);
@@ -299,8 +301,9 @@ public function update(Request $request, Product $product)
             ProductVariant::where('id', $data['id'])
                 ->where('product_id', $product->id)
                 ->update([
-                    'stock_quantity' => $data['stock_quantity'],
-                    'price_override' => $data['price_override'] ?: null,
+                    'stock_quantity' => (int) ($data['stock_quantity'] ?? Product::MAX_ORDER_QTY),
+                    // nullable rule: absent from the payload when left blank.
+                    'price_override' => ($data['price_override'] ?? null) ?: null,
                     'is_active'      => (bool) ($data['is_active'] ?? true),
                 ]);
         }
@@ -326,7 +329,16 @@ public function update(Request $request, Product $product)
 
     private function uniqueSlug(string $name, ?int $excludeId = null): string
     {
-        $slug  = Str::slug($name);
+        $slug = Str::slug($name);
+
+        // Str::slug() returns '' when the name has nothing it can transliterate
+        // (punctuation, emoji, or text that arrived mis-encoded). An empty slug
+        // saves happily but then breaks every route('products.show', $product)
+        // with "Missing required parameter [slug]", so never allow one.
+        if ($slug === '') {
+            $slug = 'product-' . ($excludeId ?: Str::lower(Str::random(8)));
+        }
+
         $query = Product::where('slug', $slug);
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
@@ -340,10 +352,17 @@ public function update(Request $request, Product $product)
 
     private function createVariant(Product $product, array $data): ProductVariant
     {
+        // 'sku' and 'price_override' are nullable in the validation rules, so a
+        // blank field is absent from the payload entirely. Reading them without
+        // a default raised "Undefined array key" — which Laravel promotes to an
+        // ErrorException, aborting the whole update with a 500.
         $variant = $product->variants()->create([
-            'sku'            => $data['sku'] ?: strtoupper(Str::random(8)),
-            'price_override' => $data['price_override'] ?: null,
-            'stock_quantity' => (int) ($data['stock_quantity'] ?? 0),
+            'sku'            => ($data['sku'] ?? null) ?: strtoupper(Str::random(8)),
+            'price_override' => ($data['price_override'] ?? null) ?: null,
+            // Stock tracking is disabled, but `stock_quantity` is a NOT NULL
+            // column and the forms no longer submit it. Default it high so any
+            // legacy code still reading the column never sees "out of stock".
+            'stock_quantity' => (int) ($data['stock_quantity'] ?? Product::MAX_ORDER_QTY),
             'is_active'      => true,
         ]);
 
