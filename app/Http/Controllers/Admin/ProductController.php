@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -104,7 +105,8 @@ public function store(Request $request)
         // Stock tracking disabled: never required, defaulted in createVariant().
         'variants.*.stock_quantity'    => 'nullable|integer|min:0',
         'variants.*.price_override'    => 'nullable|numeric|min:0',
-        'variants.*.sku'               => 'nullable|string|max:100',
+        'variants.*.sku'               => ['nullable', 'string', 'max:100', 'distinct',
+                                          Rule::unique('product_variants', 'sku')->withoutTrashed()],
         'variants.*.attribute_values'  => 'nullable|array',
         'variants.*.attribute_values.*'=> 'exists:attribute_values,id',
     ]);
@@ -178,7 +180,10 @@ public function update(Request $request, Product $product)
         // Stock tracking disabled: never required, defaulted in createVariant().
         'variants.*.stock_quantity'     => 'nullable|integer|min:0',
         'variants.*.price_override'     => 'nullable|numeric|min:0',
-        'variants.*.sku'                => 'nullable|string|max:100',
+        'variants.*.sku'                => ['nullable', 'string', 'max:100', 'distinct',
+                                           Rule::unique('product_variants', 'sku')
+                                               ->withoutTrashed()
+                                               ->whereNot('product_id', $product->id)],
         'variants.*.attribute_values'   => 'nullable|array',
         'variants.*.attribute_values.*' => 'exists:attribute_values,id',
     ]);
@@ -357,7 +362,7 @@ public function update(Request $request, Product $product)
         // a default raised "Undefined array key" — which Laravel promotes to an
         // ErrorException, aborting the whole update with a 500.
         $variant = $product->variants()->create([
-            'sku'            => ($data['sku'] ?? null) ?: strtoupper(Str::random(8)),
+            'sku'            => trim((string) ($data['sku'] ?? '')) ?: $this->generateSku(),
             'price_override' => ($data['price_override'] ?? null) ?: null,
             // Stock tracking is disabled, but `stock_quantity` is a NOT NULL
             // column and the forms no longer submit it. Default it high so any
@@ -377,5 +382,18 @@ public function update(Request $request, Product $product)
         }
 
         return $variant;
+    }
+
+    /**
+     * A random SKU can collide with an existing row — including a soft-deleted
+     * one, which still occupies the unique index. Retry until the value is free.
+     */
+    private function generateSku(): string
+    {
+        do {
+            $sku = strtoupper(Str::random(8));
+        } while (ProductVariant::withTrashed()->where('sku', $sku)->exists());
+
+        return $sku;
     }
 }
