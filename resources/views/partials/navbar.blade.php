@@ -1,445 +1,215 @@
+{{--
+    partials/navbar.blade.php — storefront header.
+
+    Layout mirrors the reference store exactly:
+
+        [ ☰ menu ]        [ logo, centred ]        [ ( cart ) ]
+
+    The bar is a solid block of the brand colour (--nav-bg-color), the logo
+    is absolutely centred so it stays put whatever the side controls weigh,
+    and there is no search field. Categories are NOT shown on the page — they
+    live behind the ☰ button and expand as a list inside the header, which is
+    how the reference behaves.
+
+    Everything the previous header did is preserved, just relocated into the
+    menu panel: category links, currency switcher, language switcher,
+    wishlist, orders, account and logout.
+
+    JS contracts other files depend on, kept intact:
+      .cart-count / .wishlist-count   — Cart.updateBadge() / updateWishlistBadge()
+      #mobile-menu-btn / #mobile-menu — toggled by the script at the bottom
+      .navbar-logo                    — sized by --logo-size
+--}}
+
 @php
     $isRtl  = app()->getLocale() === 'ar';
     $locale = app()->getLocale();
+
+    $cartCount     = app(\App\Services\CartService::class)->getItemCount();
+    $wishlistCount = auth()->check() ? auth()->user()->wishlistedProducts()->count() : 0;
+
+    // Every active top-level category — the menu is the only place they
+    // appear, so it is not truncated the way a strip would have to be.
+    $navCategories = \App\Models\Category::query()
+        ->whereNull('parent_id')
+        ->where('is_active', true)
+        ->orderBy('sort_order')
+        ->get();
+
+    $activeCategory = request('category');
+    $storeName      = \App\Models\Setting::get('site_name', config('app.name'));
+
+    // layouts/app always hands us a $logoUrl, falling back to a default asset
+    // that may not exist on a fresh install, so only an actual upload counts.
+    $uploadedLogo = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('logo');
+
+    // header_brand_mode (admin setting) decides what the header shows:
+    //   auto — logo when one is uploaded, otherwise the store name
+    //   logo — always the logo
+    //   text — always the store name, even if a logo exists
+    //   both — logo and store name side by side
+    // "logo"/"both" still fall back to text when nothing has been uploaded,
+    // so the header can never render a broken image.
+    $brandMode = $themeTokens['header_brand_mode'] ?? 'auto';
+
+    $showLogo = $uploadedLogo && in_array($brandMode, ['auto', 'logo', 'both'], true);
+    $showText = $brandMode === 'text'
+             || $brandMode === 'both'
+             || ! $uploadedLogo;
 @endphp
 
-<header class="sticky top-0 z-40 backdrop-blur-md border-b border-gray-100 shadow-sm"
-        style="background-color: var(--nav-bg-color);"
-        dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<header class="sf-header sf-header--solid" id="sf-header" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <div class="sf-container">
+        <div class="sf-header__bar">
 
-    <nav class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
-        <div class="navbar-inner relative flex items-center justify-between">
+            {{-- Menu toggle — leading edge --}}
+            <button type="button"
+                    id="mobile-menu-btn"
+                    class="sf-menu-btn"
+                    aria-controls="mobile-menu"
+                    aria-expanded="false"
+                    aria-label="{{ __('app.menu') }}">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/>
+                </svg>
+            </button>
 
-            {{-- Logo: absolutely centered on all breakpoints --}}
-            <a href="/" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-                                flex-shrink-0 hover:opacity-80 transition-opacity z-10">
-                <img src="{{ $logoUrl }}" alt="Logo" class="navbar-logo w-auto object-contain">
+            {{-- Logo — absolutely centred --}}
+            <a href="{{ route('products.index') }}"
+               class="sf-header__logo"
+               aria-label="{{ $storeName }}">
+                @if($showLogo)
+                    <img src="{{ $uploadedLogo }}" alt="{{ $storeName }}" class="navbar-logo">
+                @endif
+
+                @if($showText)
+                    <span class="sf-header__wordmark">{{ $storeName }}</span>
+                @endif
             </a>
 
-            <div class="flex items-center gap-6 lg:gap-10">
-                {{-- Currency switcher --}}
-                <div class="relative" x-data="{ open: false }">
-                    <button @click.stop="open = !open" type="button"
-                            class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-100
-                                   rounded-xl shadow-sm hover:border-gray-200 transition-all">
-                        <span class="text-xs font-bold" style="color: var(--text-navbar);">
-                            {{ $activeCurrency->symbol }}
-                        </span>
-                        <span class="text-xs font-black" style="color: var(--brand-color);">
-                            {{ $activeCurrency->code }}
-                        </span>
-                        <svg class="w-3 h-3 text-gray-400 transition-transform"
-                             :class="open ? 'rotate-180' : ''"
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
+            {{-- Cart — trailing edge --}}
+            <a href="{{ route('cart.index') }}" class="sf-cart-circle" aria-label="{{ __('app.cart.heading') }}">
+                <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 17a2 2 0 100 4 2 2 0 000-4zM9 19a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span class="sf-icon-btn__count cart-count"
+                      @if($cartCount < 1) style="display:none" @endif>{{ $cartCount }}</span>
+            </a>
+        </div>
+    </div>
 
-                    <div x-show="open" x-cloak @click.outside="open = false"
-                         @keydown.escape.window="open = false"
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 scale-95"
-                         x-transition:enter-end="opacity-100 scale-100"
-                         class="absolute {{ $isRtl ? 'right-0' : 'left-0' }} mt-2 w-40 bg-white
-                                border border-gray-100 rounded-2xl shadow-xl z-[100] overflow-hidden"
-                         style="display:none;">
-                        <div class="py-1">
-                            @foreach(\App\Models\Currency::active()->get() as $cur)
-                            <a href="{{ route('currency.user.switch', $cur->code) }}"
-                               @click="open = false"
-                               class="flex items-center justify-between px-4 py-2.5 text-xs
-                                      hover:bg-gray-50 transition-colors
-                                      {{ $activeCurrency->code === $cur->code ? 'font-bold' : '' }}"
-                               style="color: {{ $activeCurrency->code === $cur->code
-                                                ? 'var(--brand-color)'
-                                                : 'var(--text-navbar)' }};">
-                                <span>{{ $cur->name }}</span>
-                                <span class="opacity-50 uppercase text-[10px]">{{ $cur->code }}</span>
-                            </a>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
+    {{-- ── Menu panel ───────────────────────────────────────────────────
+         Sits inside the header's colour block and expands on ☰. This is the
+         only place categories are listed. ───────────────────────────────── --}}
+    <div id="mobile-menu" class="sf-menu" hidden>
+        <div class="sf-container">
+            <nav class="sf-menu__list" aria-label="{{ __('app.categories') }}">
 
-                {{-- Desktop nav links: hidden — collided with the centered logo on wide screens --}}
-                <div class="hidden">
-                    <a href="{{ route('products.index') }}"
-                       class="px-3 py-2 rounded-xl font-bold transition-all
-                              {{ request()->routeIs('products.index') && !request('category') ? 'bg-gray-100' : 'hover:bg-gray-50' }}"
-                       style="color: var(--text-navbar); font-size: var(--navbar-font-size);">
-                        {{ __('app.shop') }}
-                    </a>
-{{-- Customize link hidden from navbar per product request; route/page kept intact --}}
-{{--
-<a href="{{ route('customize.index') }}"
-   class="px-3 py-2 rounded-xl font-bold transition-all
-          {{ request()->routeIs('customize.index') ? 'bg-gray-100' : 'hover:bg-gray-50' }}"
-   style="color: var(--text-navbar); font-size: var(--navbar-font-size);">
-    تصميمي الخاص
-</a>
---}}
-                    @foreach(\App\Models\Category::whereNull('parent_id')->where('is_active', true)->take(6)->get() as $parent)
-                    <div class="relative group">
-                        <a href="{{ route('products.index', ['category' => $parent->slug]) }}"
-                           class="flex items-center gap-1 px-3 py-2 rounded-xl font-bold
-                                  transition-all hover:bg-gray-50"
-                           style="color: var(--text-navbar); font-size: var(--navbar-font-size);">
-                            {{ $parent->name }}
-                            @if($parent->children->isNotEmpty())
-                            <svg class="w-3.5 h-3.5 text-gray-400 group-hover:rotate-180 transition-transform duration-200"
-                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                            @endif
-                        </a>
-
-                        @if($parent->children->isNotEmpty())
-                        <div class="absolute top-full {{ $isRtl ? 'right-0' : 'left-0' }} mt-1 w-52
-                                    bg-white border border-gray-100 rounded-2xl shadow-xl py-2 px-1
-                                    opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                                    transition-all duration-200 z-50">
-                            <div class="absolute -top-1.5 {{ $isRtl ? 'right-5' : 'left-5' }} w-3 h-3
-                                        bg-white border-t border-r border-gray-100 rotate-[-45deg]"></div>
-                            @foreach($parent->children as $child)
-                            <a href="{{ route('products.index', ['category' => $child->slug]) }}"
-                               class="flex items-center justify-between px-3 py-2 rounded-xl text-sm
-                                      hover:bg-gray-50 transition-all group/item font-medium"
-                               style="color: var(--text-navbar);">
-                                {{ $child->name }}
-                                <svg class="w-3 h-3 text-gray-300 opacity-0 group-hover/item:opacity-100
-                                            transition-all {{ $isRtl ? 'rotate-180' : '' }}"
-                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </a>
-                            @endforeach
-                            <div class="mt-1 pt-1 border-t border-gray-50 px-3">
-                                <a href="{{ route('products.index', ['category' => $parent->slug]) }}"
-                                   class="text-[11px] font-black uppercase tracking-wider block py-1 text-center"
-                                   style="color: var(--brand-color);">
-                                    {{ __('app.view_all') }}
-                                </a>
-                            </div>
-                        </div>
-                        @endif
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Right: search + icons --}}
-            <div class="flex items-center gap-1.5 md:gap-2">
-
-                {{-- Desktop search --}}
-                <form method="GET" action="{{ route('products.index') }}" class="hidden lg:flex relative">
-                    <input type="text" name="search"
-                           value="{{ request('search') }}"
-                           placeholder="{{ __('app.search_placeholder') }}"
-                           class="w-48 xl:w-60 py-2 pe-9 ps-4 text-sm bg-gray-50 border border-gray-200
-                                  rounded-xl focus:bg-white focus:ring-2 focus:border-transparent outline-none transition-all"
-                           style="color: var(--text-input); --tw-ring-color: var(--brand-color);">
-                    <button type="submit"
-                            class="absolute inset-y-0 {{ $isRtl ? 'left-0 pl-3' : 'right-0 pr-3' }}
-                                   flex items-center text-gray-400 hover:text-gray-700">
-                        <svg class="w-4 h-4 {{ $isRtl ? 'scale-x-[-1]' : '' }}"
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </button>
-                </form>
-
-                {{-- Search icon hidden on mobile/tablet — search now lives inside the mobile menu drawer --}}
-
-                {{-- Mobile cart icon (moved here from bottombar) --}}
-                <a href="{{ route('cart.index') }}"
-                   class="md:hidden relative p-2 rounded-xl hover:bg-gray-50 transition-colors">
-                    <svg class="w-5 h-5" style="color: var(--text-navbar);"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                    </svg>
-                    @php $mobileCartCount = app(\App\Services\CartService::class)->getItemCount(); @endphp
-                    @if($mobileCartCount > 0)
-                    <span class="absolute -top-0.5 {{ $isRtl ? '-left-0.5' : '-right-0.5' }}
-                                 w-4 h-4 text-white text-[9px] font-black rounded-full
-                                 flex items-center justify-center border border-white"
-                          style="background: var(--brand-color);">
-                        {{ $mobileCartCount }}
-                    </span>
-                    @endif
+                <a href="{{ route('products.index') }}"
+                   class="sf-menu__item {{ $activeCategory ? '' : 'is-active' }}">
+                    {{ __('app.all_products') }}
                 </a>
 
-                <div class="hidden md:flex items-center gap-1">
+                @foreach($navCategories as $cat)
+                    <a href="{{ route('products.index', ['category' => $cat->slug]) }}"
+                       class="sf-menu__item {{ $activeCategory === $cat->slug ? 'is-active' : '' }}"
+                       @if($activeCategory === $cat->slug) aria-current="page" @endif>
+                        {{ $cat->name }}
+                    </a>
+                @endforeach
 
-                    {{-- Language switcher --}}
+                @if(\Illuminate\Support\Facades\Route::has('customize.index'))
+                    <a href="{{ route('customize.index') }}" class="sf-menu__item">
+                        {{ __('app.customize') }}
+                    </a>
+                @endif
+
+                <hr class="sf-menu__sep">
+
+                @auth
+                    <a href="{{ route('myprofile.show') }}" class="sf-menu__item">{{ __('app.account') }}</a>
+                    <a href="{{ route('orders.index') }}" class="sf-menu__item">{{ __('app.orders.heading') }}</a>
+                    <a href="{{ route('wishlist.index') }}" class="sf-menu__item">
+                        {{ __('app.wishlist') }}
+                        <span class="sf-icon-btn__count wishlist-count"
+                              style="position:static; {{ $wishlistCount < 1 ? 'display:none' : '' }}">{{ $wishlistCount }}</span>
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="sf-menu__item">{{ __('app.login') }}</a>
+                    <a href="{{ route('register') }}" class="sf-menu__item">{{ __('app.create_account') }}</a>
+                @endauth
+
+                <a href="{{ route('contact.create') }}" class="sf-menu__item">{{ __('app.contact_us') }}</a>
+
+                {{-- Currency + language, kept compact on one row --}}
+                <div class="sf-menu__row">
+                    @foreach(\App\Models\Currency::active()->get() as $cur)
+                        <a href="{{ route('currency.user.switch', $cur->code) }}" class="sf-menu__pill">
+                            {{ $cur->code }}
+                        </a>
+                    @endforeach
+
                     @if(($locale_mode ?? 'both') === 'both')
-                    <form method="POST" action="{{ route('language.switch') }}">
+                        <form method="POST" action="{{ route('language.switch') }}">
+                            @csrf
+                            <input type="hidden" name="locale" value="{{ $locale === 'ar' ? 'en' : 'ar' }}">
+                            <button type="submit" class="sf-menu__pill">
+                                {{ $locale === 'ar' ? 'English' : 'العربية' }}
+                            </button>
+                        </form>
+                    @endif
+                </div>
+
+                @auth
+                    <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <input type="hidden" name="locale" value="{{ $locale === 'ar' ? 'en' : 'ar' }}">
-                        <button type="submit"
-                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black
-                                       border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
-                                style="color: var(--text-navbar);">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
-                            </svg>
-                            {{ $locale === 'ar' ? 'EN' : 'ع' }}
+                        <button type="submit" class="sf-menu__item" style="width:100%; text-align:inherit">
+                            {{ __('app.logout') }}
                         </button>
                     </form>
-                    @endif
-
-                    @auth
-                    <a href="{{ route('wishlist.index') }}"
-                       class="relative p-2 rounded-xl hover:bg-gray-50 group transition-colors">
-                        <svg class="w-5 h-5 group-hover:text-red-500 transition-colors"
-                             style="color: var(--text-navbar);"
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                        @php $wishlistCount = auth()->user()->wishlistedProducts()->count(); @endphp
-                        @if($wishlistCount > 0)
-                        <span class="wishlist-count absolute -top-0.5 {{ $isRtl ? '-left-0.5' : '-right-0.5' }}
-                                     w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full
-                                     flex items-center justify-center border border-white">
-                            {{ $wishlistCount }}
-                        </span>
-                        @endif
-                    </a>
-                    @endauth
-
-                    <a href="{{ route('cart.index') }}"
-                       class="relative p-2 rounded-xl hover:bg-gray-50 group transition-colors">
-                        <svg class="w-5 h-5 group-hover:text-brand-600 transition-colors"
-                             style="color: var(--text-navbar);"
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                        </svg>
-                        @php $cartCount = app(\App\Services\CartService::class)->getItemCount(); @endphp
-                        @if($cartCount > 0)
-                        <span class="cart-count absolute -top-0.5 {{ $isRtl ? '-left-0.5' : '-right-0.5' }}
-                                     w-4 h-4 text-white text-[9px] font-black rounded-full
-                                     flex items-center justify-center border border-white"
-                              style="background: var(--brand-color);">
-                            {{ $cartCount }}
-                        </span>
-                        @endif
-                    </a>
-
-                    <div class="w-px h-5 bg-gray-200 mx-1"></div>
-
-                    @guest
-                    <div class="flex items-center gap-2">
-                        <a href="{{ route('login') }}"
-                           class="text-sm font-bold px-2 hover:opacity-70 transition-opacity"
-                           style="color: var(--text-navbar);">
-                            {{ __('app.login') }}
-                        </a>
-                        <a href="{{ route('register') }}"
-                           class="text-sm font-black px-4 py-2 rounded-xl hover:opacity-90
-                                  active:scale-95 transition-all shadow-sm"
-                           style="background: var(--brand-color);
-                                  color: var(--text-button);
-                                  font-size: var(--button-font-size);">
-                            {{ __('app.register') }}
-                        </a>
-                    </div>
-                    @endguest
-
-                    @auth
-                    <div class="relative" x-data="{ open: false }" @mouseleave="open = false">
-                        <div class="flex items-center">
-                            <a href="{{ route('myprofile.show') }}"
-                               class="flex items-center gap-2 ps-1 pe-2 py-1 rounded-xl transition-all
-                                      border border-transparent
-                                      {{ request()->routeIs('myprofile.*') ? 'bg-gray-100 border-gray-200' : 'hover:bg-gray-50 hover:border-gray-100' }}">
-                                <div class="w-7 h-7 rounded-lg flex items-center justify-center
-                                            font-black text-xs text-white flex-shrink-0"
-                                     style="background: var(--brand-color);">
-                                    {{ mb_substr(auth()->user()->name, 0, 1) }}
-                                </div>
-                                <span class="text-sm font-medium" style="color: var(--text-navbar);">
-                                    {{ auth()->user()->name }}
-                                </span>
-                            </a>
-                            <button @click="open = !open"
-                                    class="p-1 hover:bg-gray-100 rounded-full transition-colors">
-                                <svg class="w-3.5 h-3.5 text-gray-400 transition-transform"
-                                     :class="open ? 'rotate-180' : ''"
-                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div x-show="open" @click.outside="open = false"
-                             x-transition:enter="transition ease-out duration-150"
-                             x-transition:enter-start="opacity-0 -translate-y-1"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             class="absolute {{ $isRtl ? 'left-0' : 'right-0' }} top-full mt-2 w-56
-                                    bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50"
-                             style="display:none;">
-                            <div class="px-4 py-3 border-b border-gray-50 mb-1">
-                                <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">
-                                    {{ __('app.account_info') }}
-                                </p>
-                                <p class="text-xs font-bold truncate" style="color: var(--text-heading);">
-                                    {{ auth()->user()->name }}
-                                </p>
-                                <p class="text-[11px] text-gray-400 truncate">
-                                    {{ auth()->user()->phone ?? __('app.no_phone') }}
-                                </p>
-                            </div>
-
-                            <a href="{{ route('wishlist.index') }}"
-                               class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-gray-50
-                                      transition-colors font-medium"
-                               style="color: var(--text-body);">
-                                <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                </svg>
-                                {{ __('app.wishlist') }}
-                            </a>
-
-                            <a href="{{ route('orders.index') }}"
-                               class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-gray-50
-                                      transition-colors font-medium"
-                               style="color: var(--text-body);">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                                </svg>
-                                {{ __('app.orders.heading') }}
-                            </a>
-
-                            <form action="{{ route('logout') }}" method="POST"
-                                  class="mt-1 border-t border-gray-50">
-                                @csrf
-                                <button type="submit"
-                                        class="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm
-                                               text-red-600 hover:bg-red-50 transition-colors font-medium
-                                               {{ $isRtl ? 'text-right' : 'text-left' }}">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                    </svg>
-                                    {{ __('app.logout') }}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    @endauth
-                </div>
-
-                {{-- Mobile menu button: covers mobile + tablet, since the inline desktop search/nav only shows at lg+ --}}
-                <button id="mobile-menu-btn"
-                        class="lg:hidden p-2 rounded-xl hover:bg-gray-50 transition-colors"
-                        style="color: var(--text-navbar);">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                </button>
-            </div>
+                @endauth
+            </nav>
         </div>
-
-        {{-- Mobile menu --}}
-        <div id="mobile-menu" class="hidden lg:hidden border-t border-gray-100 py-3 space-y-1">
-
-            {{-- Search — moved here from the top navbar icon on mobile/tablet --}}
-            <form method="GET" action="{{ route('products.index') }}" class="px-3 pb-3">
-                @if(request('category'))
-                    <input type="hidden" name="category" value="{{ request('category') }}">
-                @endif
-                <div class="relative">
-                    <input type="text" name="search"
-                           value="{{ request('search') }}"
-                           placeholder="{{ __('app.search_mobile_placeholder') }}"
-                           class="w-full py-2.5 pe-10 ps-4 text-sm bg-gray-50 border border-gray-200
-                                  rounded-xl focus:bg-white focus:ring-2 outline-none
-                                  {{ $isRtl ? 'text-right' : 'text-left' }}"
-                           style="color: var(--text-input); --tw-ring-color: var(--brand-color);">
-                    <button type="submit"
-                            class="absolute inset-y-0 {{ $isRtl ? 'left-0 pl-3' : 'right-0 pr-3' }}
-                                   flex items-center text-gray-400">
-                        <svg class="w-4 h-4 {{ $isRtl ? 'scale-x-[-1]' : '' }}"
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </button>
-                </div>
-            </form>
-
-            <a href="{{ route('products.index') }}"
-               class="block px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50"
-               style="color: var(--text-navbar);">
-                {{ __('app.all_products') }}
-            </a>
-{{-- Customize link hidden from navbar per product request; route/page kept intact --}}
-{{--
-<a href="{{ route('customize.index') }}"
-   class="block px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50
-          {{ request()->routeIs('customize.index') ? 'bg-gray-100' : '' }}"
-   style="color: var(--text-navbar);">
-    تصميمي الخاص
-</a>
---}}
-            @foreach(\App\Models\Category::where('is_active', true)->take(6)->get() as $cat)
-            <a href="{{ route('products.index', ['category' => $cat->id]) }}"
-               class="block px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50"
-               style="color: var(--text-navbar);">
-                {{ $cat->name }}
-            </a>
-            @endforeach
-
-            @if(($locale_mode ?? 'both') === 'both')
-            <div class="pt-2 border-t border-gray-100">
-                <form method="POST" action="{{ route('language.switch') }}">
-                    @csrf
-                    <input type="hidden" name="locale" value="{{ $locale === 'ar' ? 'en' : 'ar' }}">
-                    <button type="submit"
-                            class="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl
-                                   text-sm font-medium hover:bg-gray-50"
-                            style="color: var(--text-navbar);">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/>
-                        </svg>
-                        {{ $locale === 'ar' ? 'English' : 'العربية' }}
-                    </button>
-                </form>
-            </div>
-            @endif
-
-            @guest
-            <div class="pt-2 flex gap-2 border-t border-gray-100">
-                <a href="{{ route('login') }}"
-                   class="flex-1 text-center text-sm font-bold py-2.5 border border-gray-200 rounded-xl"
-                   style="color: var(--text-navbar);">
-                    {{ __('app.login') }}
-                </a>
-                <a href="{{ route('register') }}"
-                   class="flex-1 text-center text-sm font-black py-2.5 rounded-xl"
-                   style="background: var(--brand-color);
-                          color: var(--text-button);
-                          font-size: var(--button-font-size);">
-                    {{ __('app.create_account') }}
-                </a>
-            </div>
-            @endguest
-        </div>
-    </nav>
+    </div>
 </header>
 
 <script>
-document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
-    document.getElementById('mobile-menu')?.classList.toggle('hidden');
-});
+    (function () {
+        const btn    = document.getElementById('mobile-menu-btn');
+        const menu   = document.getElementById('mobile-menu');
+        const header = document.getElementById('sf-header');
+        if (!btn || !menu) return;
+
+        function setOpen(open) {
+            menu.hidden = !open;
+            btn.setAttribute('aria-expanded', String(open));
+            btn.classList.toggle('is-open', open);
+        }
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            setOpen(menu.hidden);
+        });
+
+        // Clicking anywhere outside the header, or pressing Escape, closes it.
+        document.addEventListener('click', function (e) {
+            if (!menu.hidden && !header.contains(e.target)) setOpen(false);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); }
+        });
+
+        // Elevation appears only once the page has scrolled.
+        let ticking = false;
+        const sync = function () {
+            header.classList.toggle('is-scrolled', window.scrollY > 4);
+            ticking = false;
+        };
+        window.addEventListener('scroll', function () {
+            if (!ticking) { ticking = true; requestAnimationFrame(sync); }
+        }, { passive: true });
+        sync();
+    })();
 </script>

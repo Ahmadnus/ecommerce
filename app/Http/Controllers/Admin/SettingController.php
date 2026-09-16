@@ -24,7 +24,7 @@ class SettingController extends Controller
         ]);
 
         $this->settings->saveSettings(
-            $request->only(SettingService::KEYS),
+            $request->only(SettingService::keys()),
             $request->hasFile('logo') ? $request->file('logo') : null,
             $request->hasFile('favicon') ? $request->file('favicon') : null,
         );

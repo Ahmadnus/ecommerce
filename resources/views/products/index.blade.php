@@ -18,15 +18,19 @@
     --brand-light: color-mix(in srgb, var(--brand) 12%, #fff);
     --surface:     var(--nav-bg-color, #ffffff);
     --surface-2:   var(--bg-color, #f8f8f8);
-    --sale-red:    #ff3366;
-    --border:      #efefef;
-    --radius-card: 16px;
+    /* Aliases only — these must resolve to the tenant's tokens, never to
+       literals, or this page would silently ignore the theme settings. */
+    --sale-red:    var(--accent-color);
+    --border:      var(--border-color);
 
     --ui-text:        var(--text-body);
     --ui-text-strong: var(--text-heading);
     --ui-text-soft:   var(--text-muted);
 
-    --card-bg:           var(--card-bg, #ffffff);
+    /* NOTE: --card-bg is deliberately NOT redefined here. It is already set
+       in the layout's :root, and re-declaring it as var(--card-bg, …) is a
+       self-reference, which makes the property invalid at computed-value
+       time and leaves every card background transparent. */
     --card-font-color:   var(--text-card);
     --card-font-strong:  var(--text-heading);
     --card-font-muted:   var(--text-muted);
@@ -89,7 +93,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 
 /* ── Announcement bar ───────────────────────────────────────────── */
 .announce-bar {
-    background: var(--brand); color: #fff;
+    background: var(--brand); color: var(--text-button);
     font-size: 12px; font-weight: 700; letter-spacing: .04em;
     padding: 9px 16px; display: flex; align-items: center; justify-content: center;
     gap: 10px; overflow: hidden; position: relative;
@@ -136,7 +140,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 }
 .cat-pill:hover { border-color:var(--brand); color:var(--brand); }
 .cat-pill.active {
-    background:var(--brand); border-color:var(--brand); color:#fff;
+    background:var(--brand); border-color:var(--brand); color:var(--text-button);
     box-shadow:0 3px 12px color-mix(in srgb, var(--brand) 35%, transparent);
 }
 .scrollbar-hide::-webkit-scrollbar{display:none}
@@ -161,7 +165,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 }
 .fc-ribbon{
     position:absolute;top:0;right:0;background:var(--sale-red);
-    color:#fff;font-size:9px;font-weight:800;padding:3px 9px 3px 7px;
+    color:var(--text-badge);font-size:9px;font-weight:800;padding:3px 9px 3px 7px;
     border-bottom-left-radius:9px;z-index:5;letter-spacing:.04em;
 }
 
@@ -171,14 +175,14 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 }
 .ribbon{
     position:absolute;top:0;left:0;background:var(--sale-red);
-    color:#fff;font-size:9px;font-weight:800;padding:2px 8px 2px 5px;
+    color:var(--text-badge);font-size:9px;font-weight:800;padding:2px 8px 2px 5px;
     border-bottom-right-radius:8px;letter-spacing:.04em;line-height:1.7;z-index:5;
 }
 
 /* ── Shimmer ────────────────────────────────────────────────────── */
 @keyframes shimmer{0%{background-position:-900px 0}100%{background-position:900px 0}}
 .shimmer{
-    background:linear-gradient(90deg,#f4f4f4 25%,#ececec 50%,#f4f4f4 75%);
+    background:linear-gradient(90deg,var(--subtle-bg) 25%,color-mix(in srgb,var(--subtle-bg) 55%,var(--card-bg)) 50%,var(--subtle-bg) 75%);
     background-size:1800px 100%;animation:shimmer 1.8s ease-in-out infinite;
 }
 
@@ -190,7 +194,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     box-shadow:0 1px 7px rgba(0,0,0,.13);border:none;cursor:pointer;flex-shrink:0;
     transition:transform .15s, background .15s;
 }
-.heart-btn:hover{transform:scale(1.18);background:#fff}
+.heart-btn:hover{transform:scale(1.18);background:var(--card-bg)}
 .heart-btn svg{width:15px;height:15px}
 
 /* ── Share button ───────────────────────────────────────────────── */
@@ -201,7 +205,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     box-shadow:0 1px 7px rgba(0,0,0,.13);border:none;cursor:pointer;flex-shrink:0;
     transition:transform .15s, background .15s;
 }
-.share-btn:hover{transform:scale(1.18);background:#fff}
+.share-btn:hover{transform:scale(1.18);background:var(--card-bg)}
 .share-btn svg{width:14px;height:14px}
 
 /* ── Scroll reveal ──────────────────────────────────────────────── */
@@ -229,7 +233,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 .sort-drawer.open{transform:translateY(0)}
 .sort-option{
     display:flex;align-items:center;justify-content:space-between;
-    padding:14px 0;border-bottom:1px solid #f5f5f5;
+    padding:14px 0;border-bottom:var(--card-border-width) solid var(--border-color);
     font-size:13.5px;font-weight:600;color:var(--text-body);
     cursor:pointer;transition:color .15s;text-decoration:none;
 }
@@ -239,7 +243,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 /* ── Live search dropdown ───────────────────────────────────────── */
 .search-dropdown {
     position:absolute;top:calc(100% + 6px);left:0;right:0;
-    background:#fff;border:1px solid #e5e7eb;border-radius:16px;
+    background:var(--card-bg);border:var(--card-border-width) solid var(--border-color);border-radius:var(--radius-card);
     box-shadow:0 16px 40px rgba(0,0,0,.12);z-index:100;
     overflow:hidden;max-height:420px;overflow-y:auto;
 }
@@ -248,13 +252,13 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     display:flex;align-items:center;gap:12px;
     padding:10px 14px;cursor:pointer;
     transition:background .12s;text-decoration:none;
-    border-bottom:1px solid #f7f6f3;
+    border-bottom:var(--card-border-width) solid var(--border-color);
 }
 .search-result-item:last-child{border-bottom:none}
-.search-result-item:hover{background:#f9fafb}
+.search-result-item:hover{background:var(--subtle-bg)}
 .search-result-img {
     width:44px;height:44px;border-radius:10px;object-fit:cover;
-    flex-shrink:0;background:#f3f4f6;
+    flex-shrink:0;background:var(--subtle-bg);
 }
 
 .scrollbar-hide, [x-category-grid] {
@@ -289,7 +293,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     margin-bottom: 26px;
 }
 .home-cta-btn {
-    background: var(--brand); color: #fff;
+    background: var(--brand); color: var(--text-button);
     border-radius: 0 !important; /* sharp corners, per client spec */
     box-shadow: 0 10px 28px color-mix(in srgb, var(--brand) 35%, transparent);
     transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
@@ -311,7 +315,7 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
 @media(min-width: 768px) { .cat-banner-img { width: 200px; height: 200px; } }
 .cat-banner-img-wrap {
     width: 100%; max-height: 320px; overflow: hidden;
-    border-radius: 20px; margin-bottom: 20px; background: #f3f4f6;
+    border-radius: var(--radius-card); margin-bottom: 20px; background: var(--subtle-bg);
 }
 .cat-banner-img-wrap img { width: 100%; height: 100%; max-height: 320px; object-fit: cover; display: block; }
 @media (max-width: 640px) {
@@ -396,13 +400,17 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     </div>
 </div>
 
-@include('partials.bottombar')
+{{-- The fixed mobile tab bar was removed with the storefront redesign: the
+     reference store has none, and every destination it carried (categories,
+     account, orders, wishlist) now lives in the header's menu, with the cart
+     always visible as the circular button. partials/bottombar.blade.php is
+     kept in the repo so it can be reinstated with a single @include. --}}
 
 {{-- ════════════════════════════════════════════════════════════════════
      PAGE BODY
 ════════════════════════════════════════════════════════════════════════ --}}
-<div class="bg-gray-50 pb-bar md:pb-12" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
-<div class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-8">
+<div class="pb-bar md:pb-12" style="background: var(--bg-color)" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<div class="sf-container" style="padding-block-start: var(--section-gap)">
 
     @if($currentCategory || request('search') || request('sort'))
     {{-- ══════════════════════════════════════════════════════════════
@@ -413,9 +421,9 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
     <div class="flex items-center justify-between mb-4 gap-3 mt-4">
         <div>
             @if($currentCategory && !$currentCategory->shouldShowBanner())
-                <h1 class="font-display text-lg md:text-2xl font-bold text-gray-900">{{ $currentCategory->name }}</h1>
+                <h1 class="sf-section__title">{{ $currentCategory->name }}</h1>
             @endif
-            <p class="text-xs text-gray-400 {{ $currentCategory ? 'mt-0.5' : '' }}">
+            <p class="sf-card__meta {{ $currentCategory ? 'mt-2' : '' }}">
                 {{ __('app.products_count', ['count' => $products->total()]) }}
                 @if(request('search')){{ __('app.search_for', ['term' => request('search')]) }}@endif
             </p>
@@ -590,15 +598,12 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
         <x-homepage-section-block :section="$dynSection" :is-rtl="$isRtl" />
     @endforeach
 
-    {{-- ── SECTION 3: Categories ───────────────────────────────────── --}}
-    @php
-        $topCategories = \App\Models\Category::active()->roots()
-            ->with(['allActiveChildren','media'])
-            ->orderBy('sort_order')->take(20)->get();
-    @endphp
-    <div class="relative overflow-hidden pt-2">
-        <x-category-grid :categories="$topCategories" :current="$currentCategory ?? null" :show-all="true" />
-    </div>
+    {{-- ── SECTION 3: Categories ─────────────────────────────────────
+         Deliberately NOT rendered on the page. The reference store keeps
+         categories out of the body entirely — they are reachable only from
+         the ☰ menu in the header (see partials/navbar), which lists every
+         active top-level category. Removing the tile grid here is what makes
+         the home page a single uninterrupted product grid. ──────────────── --}}
 
     {{-- ── LOCATION 2 (Middle of Page): position = below_categories ────── --}}
     @foreach($sections->get('below_categories', collect()) as $dynSection)
@@ -656,76 +661,23 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
         @endif
     @endforeach
 
-    {{-- ── SECTION 5: First products block ─────────────────────────── --}}
+    {{-- ── SECTION 5: Admin-defined product blocks ─────────────────
+         Each HomeSection resolves its own product set (newest, featured,
+         best sellers, or a specific category). Rendered as a plain grid —
+         the reference store shows every product on the home page in the
+         same grid, with no horizontally scrolling rows. ─────────────────── --}}
     @foreach($homeSections as $section)
-    @php $sectionProducts = $section->resolveProducts(); @endphp
-    @if($sectionProducts->isNotEmpty())
-    <section class="mb-8">
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-                <span class="w-1 h-5 rounded-full" style="background:var(--brand)"></span>
-                <h2 class="font-display text-base md:text-lg font-bold text-gray-900">{{ $section->title }}</h2>
-            </div>
-            <a href="{{ route('products.index', ['sort' => $section->type === 'category' ? 'featured' : $section->type]) }}"
-               class="text-xs font-bold hover:underline" style="color:var(--brand)">
-                {{ __('app.view_all_arrow') }}
-            </a>
-        </div>
+        @php $sectionProducts = $section->resolveProducts(); @endphp
 
-        <div class="featured-list">
-            @foreach($sectionProducts as $sp)
-            @php $spWishlisted = in_array($sp->id, $wishlistedIds ?? []); @endphp
-            <div class="featured-card flex flex-col w-full group" onclick="window.location='{{ route('products.show', $sp->slug) }}'">
-                <div class="relative overflow-hidden aspect-square rounded-[2px]">
-                    <div class="shimmer absolute inset-0 z-0" id="fsk-{{ $sp->id }}"></div>
-                    <img src="{{ $sp->getFirstMediaUrl('main') ?: ($sp->image_url ?? 'https://picsum.photos/seed/'.$sp->id.'/300/390') }}"
-                         alt="{{ $sp->name }}"
-                         class="fc-img absolute inset-0 w-full h-full object-cover z-10
-                                transition-opacity duration-300 group-hover:opacity-80"
-                         loading="lazy"
-                         onload="this.previousElementSibling.style.display='none'">
-
-                    <button type="button" class="favorite-btn absolute top-3 {{ $isRtl ? 'left-3' : 'right-3' }} z-20"
-                            data-product-id="{{ $sp->id }}"
-                            data-wishlisted="{{ $spWishlisted ? 'true' : 'false' }}"
-                            onclick="event.stopPropagation(); toggleWishlist(this)"
-                            aria-label="{{ $spWishlisted ? __('app.remove_from_wishlist') : __('app.add_to_wishlist') }}">
-                        <svg data-heart="outline"
-                             class="w-5 h-5 text-white drop-shadow-sm transition-all duration-200 {{ $spWishlisted ? 'hidden' : 'block' }}"
-                             fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                        <svg data-heart="filled"
-                             class="w-5 h-5 text-red-500 drop-shadow-sm transition-all duration-200 {{ $spWishlisted ? 'block' : 'hidden' }}"
-                             fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                    </button>
-                </div>
-                {{-- Featured card info --}}
-                <div class="pt-1.5 flex flex-col gap-0.5 text-start">
-                    <p class="text-xs font-medium line-clamp-2 leading-snug"
-                       style="color: var(--text-product-title);">
-                        {{ $sp->name }}
-                    </p>
-                    <div class="flex items-center gap-2">
-                        @if($sp->is_on_sale)
-                            <x-price :amount="$sp->discount_price"
-                                     class="price-val text-xs tracking-wide" />
-                            <x-price :amount="$sp->base_price"
-                                     class="price-original text-xs tracking-wide" />
-                        @else
-                            <x-price :amount="$sp->base_price"
-                                     class="price-val text-xs tracking-wide" />
-                        @endif
-                    </div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </section>
-    @endif
+        @if($sectionProducts->isNotEmpty())
+            <x-sf.section
+                :title="$section->title"
+                :link="route('products.index', ['sort' => $section->type === 'category' ? 'featured' : $section->type])"
+                :link-label="__('app.view_all')">
+                <x-sf.product-grid :products="$sectionProducts"
+                                   :wishlisted="$wishlistedIds ?? []" />
+            </x-sf.section>
+        @endif
     @endforeach
 
     {{-- After-featured banners --}}
@@ -817,76 +769,13 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
          pagination on category/search/sort pages — fixed here.
     ══════════════════════════════════════════════════════════════════ --}}
     @if($products->isEmpty())
-    <div class="flex flex-col items-center justify-center py-24 text-center">
-        <div class="w-16 h-16 bg-white rounded-2xl border border-gray-100 flex items-center justify-center mb-4 shadow-sm">
-            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-        </div>
-        <p class="text-gray-500 font-semibold text-sm">{{ __('app.no_products') }}</p>
-        <a href="{{ route('products.index') }}" class="mt-3 text-xs font-bold hover:underline" style="color:var(--brand)">
-            {{ __('app.show_all') }}
-        </a>
-    </div>
-
+        <x-sf.empty-state :title="__('app.no_products')"
+                          :text="__('app.no_products_text')"
+                          :action-url="route('products.index')"
+                          :action-label="__('app.show_all')" />
     @else
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-x-8 md:gap-x-6 lg:gap-x-5 xl:gap-x-6 gap-y-10 mt-[30px] px-[10px]">
-        @foreach($products as $i => $product)
-        @php $isWishlisted = in_array($product->id, $wishlistedIds ?? []); @endphp
-        <div class="pcard flex flex-col w-full reveal group"
-             style="--i: {{ min($i % 6, 5) }}"
-             onclick="window.location='{{ route('products.show', $product->slug) }}'">
-
-            <div class="relative overflow-hidden aspect-square rounded-[2px]">
-                <div class="shimmer absolute inset-0 z-0" id="sk-{{ $product->id }}"></div>
-                <img src="{{ $product->getFirstMediaUrl('products') ?: asset('images/placeholder.jpg') }}"
-                     alt="{{ $product->name }}"
-                     class="pcard-img absolute inset-0 w-full h-full object-cover z-10
-                            transition-opacity duration-300 group-hover:opacity-80"
-                     loading="lazy"
-                     onload="document.getElementById('sk-{{ $product->id }}').style.display='none'">
-
-                <button type="button" class="favorite-btn absolute top-3 {{ $isRtl ? 'left-3' : 'right-3' }} z-20"
-                        data-product-id="{{ $product->id }}"
-                        data-wishlisted="{{ $isWishlisted ? 'true' : 'false' }}"
-                        onclick="event.stopPropagation(); toggleWishlist(this)"
-                        aria-label="{{ $isWishlisted ? __('app.remove_from_wishlist') : __('app.add_to_wishlist') }}">
-                    <svg data-heart="outline"
-                         class="w-5 h-5 text-white drop-shadow-sm transition-all duration-200 {{ $isWishlisted ? 'hidden' : 'block' }}"
-                         fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                    </svg>
-                    <svg data-heart="filled"
-                         class="w-5 h-5 text-red-500 drop-shadow-sm transition-all duration-200 {{ $isWishlisted ? 'block' : 'hidden' }}"
-                         fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="pt-1.5 flex flex-col gap-0.5 text-start">
-                <p class="text-xs font-medium line-clamp-2 leading-snug"
-                   style="color: var(--text-product-title);">
-                    {{ $product->name }}
-                </p>
-
-                <div class="flex items-center gap-2">
-                    @if($product->discount_price && $product->discount_price < $product->base_price)
-                    <x-price :amount="$product->discount_price"
-                             class="price-val text-xs tracking-wide" />
-                    <x-price :amount="$product->base_price"
-                             class="price-original text-xs tracking-wide" />
-                    @else
-                    <x-price :amount="$product->base_price"
-                             class="price-val text-xs tracking-wide" />
-                    @endif
-                </div>
-            </div>
-        </div>
-        @endforeach
-    </div>
-
+        <x-sf.product-grid :products="$products"
+                           :wishlisted="$wishlistedIds ?? []" />
     @endif
 
 </div>
@@ -915,7 +804,8 @@ html[lang="en"], [dir="ltr"] { font-family: var(--font-en) !important; }
      ancestor, so it can never inherit float/position behavior from
      something else and jump out of place. ──────────────────────────── --}}
 @if($products->hasPages())
-<div class="w-full block clear-both mt-16 mb-10 py-6 border-t border-gray-100 flex justify-center items-center relative z-10">
+<div class="w-full block clear-both mt-16 mb-10 py-6 flex justify-center items-center relative z-10"
+     style="border-block-start: var(--card-border-width) solid var(--border-color)">
     {{ $products->links() }}
 </div>
 @endif
@@ -952,9 +842,10 @@ function closeSortDrawer() {
     targets.forEach(function(el) { io.observe(el); });
 })();
 
-document.querySelectorAll('.pcard button, .featured-card button').forEach(function(btn) {
-    btn.addEventListener('click', function(e) { e.stopPropagation(); });
-});
+/* The old cards navigated from an onclick on the card container, so every
+   button inside one had to stop propagation. Cards now use a stretched link
+   (.sf-card__title a::after) with the interactive controls stacked above it,
+   so a click on a button never reaches the link and no handler is needed. */
 
 /* ── Share product ────────────────────────────────────────────────── */
 function shareProduct(url, title) {
@@ -973,7 +864,7 @@ function showShareToast(message) {
     if (typeof Cart !== 'undefined' && Cart.toast) { Cart.toast(message, 'success'); return; }
     var toast = document.createElement('div');
     toast.textContent = message;
-    toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;background:#111827;color:#fff;font-size:13px;font-weight:600;padding:10px 18px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.2);transition:opacity .3s;pointer-events:none';
+    toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;background:var(--text-heading);color:var(--card-bg);font-size:13px;font-weight:600;padding:10px 18px;border-radius:var(--radius-button);box-shadow:0 8px 30px rgba(0,0,0,.2);transition:opacity .3s;pointer-events:none';
     document.body.appendChild(toast);
     setTimeout(function() { toast.style.opacity = '0'; }, 2000);
     setTimeout(function() { document.body.removeChild(toast); }, 2400);

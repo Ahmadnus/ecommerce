@@ -91,6 +91,17 @@
             $typoSettings = \App\Helpers\TypographySettingsHelper::all();
         }
         $ts = $typoSettings;
+
+        // ── Storefront design tokens (surfaces, borders, radii, shadows,
+        //    product-card geometry). Shared by ViewServiceProvider when
+        //    registered; the fallback keeps standalone renders working.
+        if (!isset($themeTokens)) {
+            $themeTokens = \App\Helpers\StorefrontThemeHelper::all();
+        }
+        $tk = $themeTokens;
+
+        $storeName = $siteSettings['site_name'] ?? config('app.name');
+        $faviconUrl = \App\Models\Setting::mediaHolder()->getFirstMediaUrl('favicon');
     @endphp
 
     <x-seo-head :seo="$mainSeo" />
@@ -176,6 +187,40 @@
             --text-input:         {{ $ts['input_text_color'] }};
             --text-product-title: {{ $ts['product_title_text_color'] }};
             --text-product-desc:  {{ $ts['product_description_text_color'] }};
+
+            /* ── Storefront design tokens (NEW — from settings table) ───
+                   Structural identity of the store: surfaces, hairlines,
+                   radii, shadows and product-card geometry. Every
+                   storefront component in public/css/storefront.css is
+                   built from these, so a tenant restyles the whole shop
+                   from /admin/settings without touching markup. ───────── */
+            --accent-color:        {{ $tk['accent_color'] }};
+            --accent-color-dark:   color-mix(in srgb, {{ $tk['accent_color'] }} 82%, #000);
+            --border-color:        {{ $tk['border_color'] }};
+            --subtle-bg:           {{ $tk['subtle_bg_color'] }};
+            --badge-bg:            {{ $tk['badge_bg_color'] }};
+            --footer-bottom-bg:    {{ $tk['footer_bottom_bg'] }};
+
+            --radius-card:         {{ $tk['radius_card'] }};
+            --radius-button:       {{ $tk['radius_button'] }};
+            --radius-input:        {{ $tk['radius_input'] }};
+            --radius-badge:        {{ $tk['radius_badge'] }};
+
+            --card-image-height:    {{ $tk['card_image_height'] }};
+            --card-image-height-sm: {{ $tk['card_image_height_sm'] }};
+            --card-image-fit:       {{ $tk['card_image_fit'] }};
+            --card-border-width:    {{ $tk['card_border_width'] }};
+
+            --container-max:       {{ $tk['container_max_width'] }};
+            --section-gap:         {{ $tk['section_gap'] }};
+            --header-height:       {{ $tk['header_height'] }};
+
+            --shadow-card:         {!! $tk['shadow_card'] !!};
+            --shadow-card-hover:   {!! $tk['shadow_card_hover'] !!};
+            --shadow-overlay:      {!! $tk['shadow_overlay'] !!};
+
+            /* Footer colours as vars so storefront.css never re-reads PHP. */
+            --footer-bg:           {{ $footerColor }};
 
             /* ── Legacy aliases (keeps old partials working) ───────────── */
             --text-primary:   {{ $ts['body_text_color'] }};
@@ -360,6 +405,23 @@
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 
+    {{-- Storefront design system. Loaded after the inline :root block above
+         so it can consume every token defined there. Versioned by mtime so
+         tenants never serve a stale stylesheet after a redeploy. --}}
+    <link rel="stylesheet"
+          href="{{ asset('css/storefront.css') }}?v={{ @filemtime(public_path('css/storefront.css')) ?: 1 }}">
+
+    @if($faviconUrl)
+        <link rel="icon" href="{{ $faviconUrl }}">
+    @endif
+
+    {{-- Alpine powers the header dropdowns, the quantity stepper and the
+         product gallery. Loaded here (it previously lived inside
+         partials/navbar) so every view that extends this layout has it,
+         and deferred so it runs after the DOM is parsed. --}}
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+    <style>[x-cloak] { display: none !important; }</style>
+
     @stack('head')
 </head>
 <body class="bg-gray-50 antialiased">
@@ -429,7 +491,13 @@
             },
 
             async add(productId, quantity = 1, btn = null) {
+                let originalHtml = null;
                 if (btn) {
+                    // Remember the button's own markup so it can be restored
+                    // verbatim. It used to be replaced with a hard-coded
+                    // English "Add to Cart", which lost the icon and broke
+                    // the Arabic label.
+                    originalHtml  = btn.innerHTML;
                     btn.disabled  = true;
                     btn.innerHTML = '<svg class="spinner w-5 h-5 mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>';
                 }
@@ -445,7 +513,10 @@
                 } catch (e) {
                     this.toast('Something went wrong. Please try again.', 'error');
                 } finally {
-                    if (btn) { btn.disabled = false; btn.innerHTML = 'Add to Cart'; }
+                    if (btn) {
+                        btn.disabled = false;
+                        if (originalHtml !== null) btn.innerHTML = originalHtml;
+                    }
                 }
             },
         };

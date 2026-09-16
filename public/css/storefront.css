@@ -1,0 +1,1063 @@
+/* ===========================================================================
+   storefront.css — the storefront design system.
+
+   Every value here resolves through a CSS custom property defined in
+   layouts/app.blade.php's :root block, which is in turn fed by the Setting
+   table (see StorefrontThemeHelper + TypographySettingsHelper). There are no
+   literal brand colours, radii or shadows in this file — a tenant restyles
+   the entire shop from /admin/settings.
+
+   Written with CSS logical properties (inline-start/end, margin-inline, …)
+   so the same rules lay out correctly in both the Arabic RTL and English
+   LTR directions the app ships with.
+   ========================================================================= */
+
+/* ── Layout primitives ──────────────────────────────────────────────────── */
+
+.sf-container {
+    width: 100%;
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding-inline: 16px;
+}
+
+.sf-section { margin-block-end: var(--section-gap); }
+
+.sf-section__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-block-end: 1rem;
+}
+
+.sf-section__title {
+    font-size: var(--subheading-font-size);
+    font-weight: 700;
+    color: var(--text-heading);
+    line-height: 1.3;
+    margin: 0;
+}
+
+/* A short brand-coloured rule under section titles — the reference's main
+   visual cue for "a new block starts here". */
+.sf-section__title::after {
+    content: "";
+    display: block;
+    width: 2.5rem;
+    height: 3px;
+    border-radius: var(--radius-badge);
+    background: var(--brand-color);
+    margin-block-start: 8px;
+}
+
+.sf-section__link {
+    font-size: var(--navbar-font-size);
+    font-weight: 600;
+    color: var(--brand-color);
+    white-space: nowrap;
+    transition: opacity .2s ease;
+}
+.sf-section__link:hover { opacity: .75; }
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.sf-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--nav-bg-color);
+    border-block-end: var(--card-border-width) solid var(--border-color);
+    transition: box-shadow .25s ease;
+}
+.sf-header.is-scrolled { box-shadow: var(--shadow-card-hover); }
+
+.sf-header__inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--header-height);
+}
+
+.sf-header__logo img,
+.sf-header__logo svg {
+    height: var(--logo-size);
+    max-height: var(--logo-size);
+    width: auto;
+    display: block;
+}
+
+/* The search field owns the middle of the bar on desktop and collapses to
+   its own row on mobile — matching the reference's two-row mobile header. */
+.sf-search {
+    position: relative;
+    flex: 1 1 auto;
+    max-width: 520px;
+}
+
+.sf-search__input {
+    width: 100%;
+    padding-block: 10px;
+    padding-inline: 42px 14px;
+    font-size: var(--navbar-font-size);
+    color: var(--text-input);
+    background: var(--subtle-bg);
+    border: var(--card-border-width) solid var(--border-color);
+    border-radius: var(--radius-input);
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+.sf-search__input::placeholder { color: var(--text-muted); }
+.sf-search__input:focus {
+    background: var(--card-bg);
+    border-color: var(--brand-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color) 18%, transparent);
+}
+
+.sf-search__icon {
+    position: absolute;
+    inset-inline-start: 14px;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* Header action buttons (cart, account, wishlist, menu). */
+.sf-icon-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    border-radius: var(--radius-badge);
+    color: var(--text-navbar);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease;
+}
+.sf-icon-btn:hover {
+    background: var(--subtle-bg);
+    color: var(--brand-color);
+}
+.sf-icon-btn svg { width: 22px; height: 22px; }
+
+.sf-icon-btn__count {
+    position: absolute;
+    inset-block-start: -2px;
+    inset-inline-end: -2px;
+    min-width: 18px;
+    height: 18px;
+    padding-inline: 4px;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-badge);
+    background: var(--accent-color);
+    border-radius: var(--radius-badge);
+}
+
+/* Desktop-only pill showing item count + total, as in the reference. */
+.sf-cart-pill {
+    display: none;
+    align-items: stretch;
+    overflow: hidden;
+    border-radius: var(--radius-button);
+    background: var(--brand-color);
+    color: var(--text-button);
+    min-width: 170px;
+}
+.sf-cart-pill__icon {
+    display: flex;
+    align-items: center;
+    padding-inline: 12px;
+    background: var(--brand-color-dark);
+}
+.sf-cart-pill__icon svg { width: 20px; height: 20px; }
+.sf-cart-pill__body {
+    padding: 8px 12px;
+    font-size: var(--navbar-font-size);
+    line-height: 1.35;
+}
+.sf-cart-pill__body strong { display: block; font-weight: 700; }
+
+@media (min-width: 768px) {
+    .sf-cart-pill { display: flex; }
+}
+
+/* ── Category strip (sub-navigation) ────────────────────────────────────── */
+
+.sf-subnav {
+    background: var(--nav-bg-color);
+    border-block-end: var(--card-border-width) solid var(--border-color);
+}
+
+.sf-subnav__scroller {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-block: 10px;
+}
+.sf-subnav__scroller::-webkit-scrollbar { display: none; }
+
+.sf-chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: var(--navbar-font-size);
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--text-navbar);
+    background: var(--subtle-bg);
+    border: var(--card-border-width) solid transparent;
+    border-radius: var(--radius-badge);
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+.sf-chip:hover {
+    color: var(--brand-color);
+    border-color: var(--brand-color);
+}
+.sf-chip.is-active {
+    color: var(--text-button);
+    background: var(--brand-color);
+    border-color: var(--brand-color);
+}
+
+/* ── Category tiles ─────────────────────────────────────────────────────── */
+
+.sf-cat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+@media (min-width: 640px)  { .sf-cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .sf-cat-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; } }
+
+.sf-cat-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.sf-cat-tile__media {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background: var(--subtle-bg);
+    border: var(--card-border-width) solid var(--border-color);
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+.sf-cat-tile__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .35s ease;
+}
+.sf-cat-tile:hover .sf-cat-tile__media {
+    border-color: var(--brand-color);
+    box-shadow: var(--shadow-card-hover);
+}
+.sf-cat-tile:hover .sf-cat-tile__media img { transform: scale(1.06); }
+
+.sf-cat-tile__name {
+    font-size: var(--card-font-size);
+    font-weight: 600;
+    color: var(--text-card);
+    line-height: 1.35;
+    transition: color .2s ease;
+}
+.sf-cat-tile:hover .sf-cat-tile__name { color: var(--brand-color); }
+
+/* ── Product grid ───────────────────────────────────────────────────────── */
+
+/* 2 columns on phones, 4 from tablet up — the reference's cols="6" sm="3". */
+.sf-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+@media (min-width: 640px)  { .sf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+@media (min-width: 1024px) { .sf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1536px) { .sf-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+/* A horizontally scrolling variant for "featured" rows on small screens. */
+.sf-rail {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(46%, 1fr);
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-block-end: 4px;
+}
+.sf-rail::-webkit-scrollbar { display: none; }
+.sf-rail > * { scroll-snap-align: start; }
+@media (min-width: 640px)  { .sf-rail { grid-auto-columns: minmax(31%, 1fr); gap: 16px; } }
+@media (min-width: 1024px) {
+    .sf-rail {
+        grid-auto-flow: row;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        overflow: visible;
+    }
+}
+
+/* ── Product card ───────────────────────────────────────────────────────── */
+
+.sf-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--card-bg);
+    border: var(--card-border-width) solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+}
+.sf-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: color-mix(in srgb, var(--brand-color) 35%, var(--border-color));
+    transform: translateY(-3px);
+}
+@media (prefers-reduced-motion: reduce) {
+    .sf-card:hover { transform: none; }
+}
+
+.sf-card__media {
+    position: relative;
+    display: block;
+    height: var(--card-image-height-sm);
+    background: var(--card-bg);
+    overflow: hidden;
+}
+@media (min-width: 640px) {
+    .sf-card__media { height: var(--card-image-height); }
+}
+
+.sf-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: var(--card-image-fit);
+    display: block;
+    transition: transform .4s ease;
+}
+.sf-card:hover .sf-card__media img { transform: scale(1.04); }
+
+/* Discount / status pills, stacked in the leading top corner. */
+.sf-card__badges {
+    position: absolute;
+    inset-block-start: 8px;
+    inset-inline-start: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    z-index: 2;
+}
+
+.sf-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    font-size: calc(var(--button-font-size) * .8);
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text-badge);
+    background: var(--badge-bg);
+    border-radius: var(--radius-badge);
+}
+.sf-badge--brand { background: var(--brand-color); }
+.sf-badge--muted { background: var(--text-muted); }
+.sf-badge--soft {
+    color: var(--brand-color);
+    background: color-mix(in srgb, var(--brand-color) 12%, transparent);
+}
+
+/* Wishlist button floats in the trailing top corner. */
+.sf-card__wish {
+    position: absolute;
+    inset-block-start: 8px;
+    inset-inline-end: 8px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-badge);
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--card-bg) 88%, transparent);
+    backdrop-filter: blur(4px);
+    box-shadow: var(--shadow-card);
+    transition: color .2s ease, transform .2s ease;
+}
+.sf-card__wish:hover { transform: scale(1.1); color: var(--accent-color); }
+.sf-card__wish.is-active { color: var(--accent-color); }
+.sf-card__wish svg { width: 18px; height: 18px; }
+
+.sf-card__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    gap: 8px;
+    padding: 12px;
+}
+
+.sf-card__title {
+    font-size: var(--product-title-font-size);
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--text-product-title);
+    /* Two-line clamp keeps every card in a row the same height regardless of
+       how long a tenant's product names are. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: calc(var(--product-title-font-size) * 1.45 * 2);
+    transition: color .2s ease;
+}
+.sf-card:hover .sf-card__title { color: var(--brand-color); }
+
+/* The title link is stretched over the whole card, so a click anywhere in
+   the card opens the product while the DOM keeps exactly one tab stop for
+   it. Controls that must stay clickable (wishlist, add-to-cart) sit above
+   the overlay on their own stacking level. */
+.sf-card__title a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+.sf-card__title a { color: inherit; }
+/* The wishlist button must KEEP its absolute placement over the image — only
+   its stacking level matters here. Giving it position:relative (as an earlier
+   version of this rule did) dropped it out of the image corner and into the
+   card body. */
+.sf-card__action { position: relative; z-index: 2; }
+.sf-card__wish { z-index: 3; }
+.sf-card__prices { position: relative; z-index: 2; pointer-events: none; }
+
+.sf-card__meta {
+    font-size: calc(var(--card-font-size) * .95);
+    color: var(--text-muted);
+}
+
+/* Price row sits flush to the bottom so buttons line up across the grid. */
+.sf-card__prices {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-block-start: auto;
+}
+
+.sf-price {
+    font-size: var(--product-price-font-size);
+    font-weight: 700;
+    color: var(--text-price);
+}
+.sf-price--old {
+    font-size: calc(var(--product-price-font-size) * .82);
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+
+.sf-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: var(--button-font-size);
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    border: var(--card-border-width) solid transparent;
+    border-radius: var(--radius-button);
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color .2s ease, color .2s ease,
+                border-color .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+.sf-btn:disabled,
+.sf-btn.is-disabled { opacity: .55; cursor: not-allowed; }
+.sf-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+
+.sf-btn--primary {
+    color: var(--text-button);
+    background: var(--brand-color);
+}
+.sf-btn--primary:hover:not(:disabled) { background: var(--brand-color-dark); }
+
+.sf-btn--accent {
+    color: var(--text-button);
+    background: var(--accent-color);
+}
+.sf-btn--accent:hover:not(:disabled) { background: var(--accent-color-dark); }
+
+.sf-btn--outline {
+    color: var(--brand-color);
+    background: transparent;
+    border-color: var(--brand-color);
+}
+.sf-btn--outline:hover:not(:disabled) {
+    color: var(--text-button);
+    background: var(--brand-color);
+}
+
+.sf-btn--ghost {
+    color: var(--text-body);
+    background: var(--subtle-bg);
+    border-color: var(--border-color);
+}
+.sf-btn--ghost:hover:not(:disabled) {
+    color: var(--brand-color);
+    border-color: var(--brand-color);
+}
+
+.sf-btn--block { width: 100%; }
+.sf-btn--lg { padding: 14px 22px; font-size: calc(var(--button-font-size) * 1.1); }
+.sf-btn--sm { padding: 7px 12px; font-size: calc(var(--button-font-size) * .9); }
+
+/* The card's add-to-cart: quiet at rest, brand-filled on hover, with the
+   cart glyph sliding in from the trailing edge (the reference's signature
+   micro-interaction). */
+.sf-card__action {
+    width: 100%;
+    margin-block-start: 4px;
+    color: var(--text-body);
+    background: var(--subtle-bg);
+    border-color: var(--border-color);
+}
+.sf-card__action:hover:not(:disabled) {
+    color: var(--text-button);
+    background: var(--brand-color);
+    border-color: var(--brand-color);
+}
+.sf-card__action .sf-card__action-icon {
+    width: 0;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: width .25s ease, opacity .25s ease, transform .25s ease;
+}
+.sf-card__action:hover .sf-card__action-icon {
+    width: 18px;
+    opacity: 1;
+    transform: translateX(0);
+}
+@media (prefers-reduced-motion: reduce) {
+    .sf-card__action .sf-card__action-icon { width: 18px; opacity: 1; transform: none; }
+}
+
+/* ── Quantity stepper ───────────────────────────────────────────────────── */
+
+.sf-qty {
+    display: inline-flex;
+    align-items: stretch;
+    border: var(--card-border-width) solid var(--border-color);
+    border-radius: var(--radius-button);
+    overflow: hidden;
+    background: var(--card-bg);
+}
+.sf-qty__btn {
+    width: 40px;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text-body);
+    background: var(--subtle-bg);
+    border: none;
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease;
+}
+.sf-qty__btn:hover:not(:disabled) { background: var(--brand-color); color: var(--text-button); }
+.sf-qty__btn:disabled { opacity: .45; cursor: not-allowed; }
+.sf-qty__input {
+    width: 56px;
+    padding-block: 10px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-input);
+    background: var(--card-bg);
+    border: none;
+    outline: none;
+    -moz-appearance: textfield;
+}
+.sf-qty__input::-webkit-outer-spin-button,
+.sf-qty__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ── Panels, cart rows, empty & error states ────────────────────────────── */
+
+.sf-panel {
+    background: var(--card-bg);
+    border: var(--card-border-width) solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+}
+.sf-panel--pad { padding: 16px; }
+@media (min-width: 768px) { .sf-panel--pad { padding: 20px; } }
+
+.sf-cart-row {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 14px;
+    background: var(--card-bg);
+    border: var(--card-border-width) solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+}
+@media (min-width: 640px) {
+    .sf-cart-row { grid-template-columns: 110px 1fr; gap: 16px; padding: 16px; }
+}
+.sf-cart-row__media {
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-button);
+    overflow: hidden;
+    background: var(--subtle-bg);
+    border: var(--card-border-width) solid var(--border-color);
+}
+.sf-cart-row__media img { width: 100%; height: 100%; object-fit: var(--card-image-fit); }
+
+.sf-remove-btn {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-badge);
+    color: var(--accent-color);
+    background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+    transition: background-color .2s ease, color .2s ease;
+}
+.sf-remove-btn:hover { color: var(--text-button); background: var(--accent-color); }
+.sf-remove-btn svg { width: 16px; height: 16px; }
+
+.sf-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    padding: 48px 20px;
+    border-radius: var(--radius-card);
+    background: var(--card-bg);
+    border: var(--card-border-width) dashed var(--border-color);
+}
+.sf-state__icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-badge);
+    color: var(--text-muted);
+    background: var(--subtle-bg);
+}
+.sf-state__icon svg { width: 30px; height: 30px; }
+.sf-state__title {
+    font-size: var(--subheading-font-size);
+    font-weight: 700;
+    color: var(--text-heading);
+}
+.sf-state__text {
+    font-size: var(--card-font-size);
+    color: var(--text-muted);
+    max-width: 38ch;
+}
+
+/* ── Loading skeletons ──────────────────────────────────────────────────── */
+
+.sf-skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--subtle-bg) 25%,
+        color-mix(in srgb, var(--subtle-bg) 60%, var(--card-bg)) 37%,
+        var(--subtle-bg) 63%
+    );
+    background-size: 400% 100%;
+    animation: sf-shimmer 1.4s ease infinite;
+    border-radius: var(--radius-button);
+}
+@keyframes sf-shimmer {
+    0%   { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .sf-skeleton { animation: none; }
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+
+.sf-footer {
+    background: var(--footer-bg);
+    color: var(--text-footer);
+    font-size: var(--footer-font-size);
+    padding-block-start: 2.5rem;
+}
+.sf-footer__title {
+    font-size: calc(var(--footer-font-size) * 1.25);
+    font-weight: 700;
+    /* Full-strength footer text; the weight and the rule below carry the
+       hierarchy. Brightening toward white here would break any tenant who
+       configures a light footer. */
+    color: var(--text-footer);
+    padding-block-end: 12px;
+    margin-block-end: 16px;
+    border-block-end: 1px solid color-mix(in srgb, var(--text-footer) 25%, transparent);
+}
+.sf-footer a { color: var(--text-footer); transition: color .2s ease, opacity .2s ease; }
+.sf-footer a:hover { color: var(--brand-color); }
+.sf-footer__bottom {
+    margin-block-start: 2rem;
+    padding-block: 14px;
+    background: var(--footer-bottom-bg);
+    color: var(--text-muted);
+    text-align: center;
+    font-size: calc(var(--footer-font-size) * .92);
+}
+
+/* ── Mobile bottom bar ──────────────────────────────────────────────────── */
+
+.sf-bottombar {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 45;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    background: var(--nav-bg-color);
+    border-block-start: var(--card-border-width) solid var(--border-color);
+    padding-block-end: env(safe-area-inset-bottom, 0);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, .06);
+}
+@media (min-width: 768px) { .sf-bottombar { display: none; } }
+
+.sf-bottombar__item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding-block: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: color .2s ease;
+}
+.sf-bottombar__item svg { width: 21px; height: 21px; }
+.sf-bottombar__item.is-active,
+.sf-bottombar__item:hover { color: var(--brand-color); }
+
+/* Keeps the last section clear of the fixed bar on phones. */
+@media (max-width: 767px) {
+    .sf-has-bottombar { padding-block-end: 72px; }
+}
+
+/* ── Utilities ──────────────────────────────────────────────────────────── */
+
+.sf-divider {
+    height: var(--card-border-width);
+    background: var(--border-color);
+    border: 0;
+}
+
+.sf-visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Visible keyboard focus everywhere, since many controls are custom. */
+.sf-btn:focus-visible,
+.sf-chip:focus-visible,
+.sf-icon-btn:focus-visible,
+.sf-card__wish:focus-visible,
+.sf-qty__btn:focus-visible,
+.sf-remove-btn:focus-visible,
+.sf-bottombar__item:focus-visible,
+.sf-card a:focus-visible {
+    outline: 2px solid var(--brand-color);
+    outline-offset: 2px;
+}
+
+/* ===========================================================================
+   Legacy reconciliation.
+
+   layouts/app.blade.php carries a set of blanket !important rules that
+   predate this file (they retrofit CSS variables onto older partials that
+   still use raw Tailwind gray utilities). Two of them reach into storefront
+   components by accident:
+
+     nav a, nav button, .nav-link  { color: var(--text-navbar) !important }
+     footer, [class*="footer"]     { background-color: <footer> !important }
+
+   The second matches .sf-footer__bottom purely because of the substring
+   "footer" in the class name. Rather than delete the blanket rules — older
+   partials still depend on them — the affected storefront components
+   restate their own intent at equal weight here.
+   ========================================================================= */
+
+.sf-footer__bottom {
+    background: var(--footer-bottom-bg) !important;
+    color: var(--text-muted) !important;
+}
+
+.sf-header .sf-icon-btn:hover,
+.sf-header .sf-chip:hover,
+.sf-subnav .sf-chip:hover,
+.sf-header .sf-section__link:hover { color: var(--brand-color) !important; }
+
+.sf-header .sf-chip.is-active,
+.sf-subnav .sf-chip.is-active,
+.sf-header .sf-btn--primary,
+.sf-header .sf-cart-pill,
+.sf-header .sf-cart-pill a { color: var(--text-button) !important; }
+
+.sf-header .sf-icon-btn__count { color: var(--text-badge) !important; }
+.sf-header .sf-search__input { color: var(--text-input) !important; }
+
+/* The fixed mobile tab bar overlaps the end of the page, so any layout that
+   renders one reserves room for it. Scoped with :has() so pages without a
+   bottom bar keep their natural spacing, and marked !important to beat the
+   layout's blanket "main { padding-bottom: 0 !important }" rule. */
+@media (max-width: 767px) {
+    body:has(.sf-bottombar) main { padding-block-end: 76px !important; }
+}
+
+/* ===========================================================================
+   Solid brand header + menu panel.
+
+   The reference store's header is one block of the brand colour carrying
+   three things: a menu button on the leading edge, the logo centred, and a
+   circular cart button on the trailing edge. No search field, and no
+   category strip — categories live inside the menu panel.
+   ========================================================================= */
+
+.sf-header--solid {
+    background: var(--nav-bg-color);
+    border-block-end: none;
+}
+
+.sf-header__bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: var(--header-height);
+}
+
+/* Absolutely centred so the logo never shifts as the side controls change
+   width (a cart count appearing, a longer label, RTL vs LTR). */
+.sf-header--solid .sf-header__logo {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    margin-inline: auto;
+    width: max-content;
+    max-width: 50%;
+    pointer-events: auto;
+}
+.sf-header--solid .sf-header__logo img {
+    height: var(--logo-size);
+    max-height: var(--logo-size);
+    width: auto;
+    object-fit: contain;
+}
+
+/* ── Menu button ────────────────────────────────────────────────────────── */
+
+.sf-menu-btn {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 38px;
+    flex: 0 0 auto;
+    cursor: pointer;
+    color: var(--text-navbar);
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--text-navbar) 55%, transparent);
+    border-radius: 6px;
+    transition: background-color .2s ease, border-color .2s ease;
+}
+.sf-menu-btn:hover,
+.sf-menu-btn.is-open {
+    background: color-mix(in srgb, var(--text-navbar) 16%, transparent);
+    border-color: var(--text-navbar);
+}
+.sf-menu-btn svg { width: 22px; height: 22px; }
+
+/* ── Circular cart button ───────────────────────────────────────────────── */
+
+.sf-cart-circle {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    /* Inverted against the header: the surface colour fills the circle and
+       the brand colour draws the glyph. */
+    color: var(--nav-bg-color);
+    background: var(--card-bg);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.sf-cart-circle:hover {
+    transform: scale(1.06);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .18);
+}
+.sf-cart-circle svg { width: 24px; height: 24px; }
+.sf-cart-circle .sf-icon-btn__count {
+    inset-block-start: -2px;
+    inset-inline-end: -2px;
+    border: 2px solid var(--nav-bg-color);
+}
+
+/* ── Menu panel ─────────────────────────────────────────────────────────── */
+
+.sf-menu {
+    background: var(--nav-bg-color);
+    max-height: min(70vh, 560px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: sf-menu-in .22s ease both;
+}
+@keyframes sf-menu-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .sf-menu { animation: none; }
+}
+
+.sf-menu__list {
+    display: flex;
+    flex-direction: column;
+    padding-block: 8px 20px;
+}
+
+.sf-menu__item {
+    display: flex;
+    align-items: center;
+    /* flex-start is the LEADING edge, which is the right-hand side in RTL and
+       the left in LTR — exactly where the reference puts its menu labels.
+       (flex-end would push them to the far side in both directions.) */
+    justify-content: flex-start;
+    gap: 8px;
+    padding-block: 13px;
+    font-size: calc(var(--navbar-font-size) * 1.08);
+    font-weight: 500;
+    color: var(--text-navbar);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: opacity .2s ease, padding-inline .2s ease;
+}
+
+.sf-menu__item:hover { opacity: .72; }
+.sf-menu__item.is-active { font-weight: 700; }
+
+.sf-menu__sep {
+    height: 1px;
+    border: 0;
+    margin-block: 10px;
+    background: color-mix(in srgb, var(--text-navbar) 25%, transparent);
+}
+
+.sf-menu__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-block: 12px;
+    justify-content: flex-start;
+}
+
+.sf-menu__pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    font-size: var(--navbar-font-size);
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-navbar);
+    background: color-mix(in srgb, var(--text-navbar) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--text-navbar) 35%, transparent);
+    border-radius: var(--radius-badge);
+    transition: background-color .2s ease;
+}
+.sf-menu__pill:hover { background: color-mix(in srgb, var(--text-navbar) 28%, transparent); }
+
+/* The layout's blanket "nav a, nav button { color: var(--text-navbar) }" rule
+   already matches these; restating background/opacity intent keeps the panel
+   legible if that rule ever changes. */
+.sf-menu .sf-menu__item,
+.sf-menu .sf-menu__pill { color: var(--text-navbar) !important; }
+
+/* ── Card action button ─────────────────────────────────────────────────── */
+
+/* The reference's add-to-cart is a flat grey bar with no outline, lettered
+   in the same muted tone as the product title. */
+.sf-card__action {
+    border-color: transparent;
+    color: var(--text-card);
+}
+
+/* Wordmark shown when the tenant has not uploaded a logo yet. */
+.sf-header__wordmark {
+    display: block;
+    font-size: calc(var(--logo-size) * 0.72);
+    font-weight: 800;
+    line-height: var(--logo-size);
+    white-space: nowrap;
+    color: var(--text-navbar);
+}
+
+/* "both" mode lines the logo up next to the wordmark. */
+.sf-header--solid .sf-header__logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

@@ -1,14 +1,17 @@
 {{--
     resources/views/components/category-circle.blade.php
     ─────────────────────────────────────────────────────
-    A single square category tile (luxury minimalist grid style).
+    A single category tile in the storefront design system.
 
-    Usage:
-        <x-category-circle :category="$cat" />
+    The component name is kept for backwards compatibility — several views
+    already render <x-category-circle :category="$cat" /> — but the markup now
+    uses the .sf-cat-tile primitives from public/css/storefront.css, so its
+    radius, border, surface and hover treatment all come from the theme
+    tokens rather than being baked in here.
 
     Props:
-        $category  Category   — The category model
-        $active    bool       — highlight as currently selected
+        $category  Category  — the category model
+        $active    bool      — highlight as currently selected
 --}}
 
 @props([
@@ -20,42 +23,23 @@
 @php
     $href     = route('products.index', ['category' => $category->slug]);
     $imageUrl = $category->getCategoryImageUrl('thumb');
-    $hasImg   = $category->hasImage();
 @endphp
 
 <a href="{{ $href }}"
-   class="flex flex-col w-full group"
+   class="sf-cat-tile group"
+   @if($active) aria-current="page" @endif
    title="{{ $category->name }}">
 
-    {{-- Perfect 1:1 square image ─────────────────────────────────────── --}}
-    <div class="relative w-full aspect-square rounded-[2px] overflow-hidden">
-
-        {{-- Shimmer skeleton (hidden once image loads) --}}
-        <div class="shimmer absolute inset-0 z-0 rounded-[2px]"
-             id="cat-sk-{{ $category->id }}"></div>
-
-        @if($hasImg)
-        <img
-            src="{{ $imageUrl }}"
-            alt="{{ $category->name }}"
-            loading="lazy"
-            class="w-full h-full object-cover relative z-10 transition-opacity duration-300 group-hover:opacity-80"
-            onload="const el=document.getElementById('cat-sk-{{ $category->id }}');if(el)el.remove();">
-        @else
-        {{-- SVG data-URI placeholder — no extra request ────────── --}}
-        <img
-            src="{{ $imageUrl }}"
-            alt="{{ $category->name }}"
-            class="w-full h-full object-cover relative z-10">
-        @endif
+    <div class="sf-cat-tile__media"
+         @if($active) style="border-color: var(--brand-color)" @endif>
+        {{-- getCategoryImageUrl() always returns something: a real upload or
+             an inline SVG data-URI placeholder, so there is no broken-image
+             state and no second request to guard against. --}}
+        <img src="{{ $imageUrl }}"
+             alt=""
+             loading="lazy"
+             decoding="async">
     </div>
 
-    {{-- Label ─────────────────────────────────────────────────────── --}}
-    <div class="pt-1.5 flex flex-col gap-0.5 text-start">
-        <p class="font-sans-modern text-xs font-medium line-clamp-2 leading-snug"
-           style="color: var(--text-product-title);">
-            {{ $category->name }}
-        </p>
-    </div>
-
+    <span class="sf-cat-tile__name">{{ $category->name }}</span>
 </a>

@@ -87,7 +87,11 @@
             {{ $orders->links() }}
         </div>
     @endif
-@include('partials.bottombar')
+{{-- The fixed mobile tab bar was removed with the storefront redesign: the
+     reference store has none, and every destination it carried (categories,
+     account, orders, wishlist) now lives in the header's menu, with the cart
+     always visible as the circular button. partials/bottombar.blade.php is
+     kept in the repo so it can be reinstated with a single @include. --}}
     
 </div>
 @endsection

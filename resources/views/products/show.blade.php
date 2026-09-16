@@ -13,14 +13,14 @@
 .variant-btn {
     padding: 7px 16px;
     font-size: 12px; font-weight: 700;
-    border: 1.5px solid #e5e7eb;
-    border-radius: 10px;
-    background: #fff; color: #374151;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-button);
+    background: var(--card-bg); color: var(--text-body);
     cursor: pointer; transition: all .15s;
     line-height: 1;
 }
 .variant-btn:hover     { border-color: var(--brand-color); color: var(--brand-color); }
-.variant-btn.selected  { border-color: var(--brand-color); background: var(--brand-color); color: #fff; }
+.variant-btn.selected  { border-color: var(--brand-color); background: var(--brand-color); color: var(--text-button); }
 .variant-btn.unavailable { opacity: .38; cursor: not-allowed; text-decoration: line-through; }
 
 /* ─── Color swatches ──────────────────────────────────────────────── */
@@ -31,14 +31,14 @@
 }
 .color-swatch:hover    { transform: scale(1.12); }
 .color-swatch.selected {
-    box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--brand-color);
+    box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 4px var(--brand-color);
 }
 
 /* ─── Per-attribute error state ───────────────────────────────────── */
 .attr-block { transition: all .2s; }
-.attr-block.has-error .attr-label { color: #ef4444; }
+.attr-block.has-error .attr-label { color: var(--accent-color); }
 .attr-block.has-error .attr-options {
-    outline: 1.5px solid #fca5a5;
+    outline: 1.5px solid color-mix(in srgb, var(--accent-color) 45%, transparent);
     border-radius: 10px; padding: 6px;
 }
 @keyframes shake {
@@ -48,7 +48,7 @@
 }
 .attr-block.has-error { animation: shake .35s ease; }
 .attr-error-hint {
-    font-size: 11px; font-weight: 600; color: #ef4444;
+    font-size: 11px; font-weight: 600; color: var(--accent-color);
     display: none; align-items: center; gap: 4px; margin-top: 5px;
 }
 .attr-block.has-error .attr-error-hint { display: flex; }
@@ -57,9 +57,9 @@
 #cart-error-banner {
     display: none;
     align-items: center; gap: 10px;
-    background: #fff1f2; border: 1px solid #fecdd3;
+    background: color-mix(in srgb, var(--accent-color) 8%, var(--card-bg)); border: var(--card-border-width) solid color-mix(in srgb, var(--accent-color) 30%, transparent);
     border-radius: 12px; padding: 12px 16px;
-    font-size: 13px; font-weight: 600; color: #be123c;
+    font-size: 13px; font-weight: 600; color: var(--accent-color);
 }
 #cart-error-banner.visible { display: flex; }
 
@@ -80,7 +80,7 @@
     100% { background-position:  900px 0; }
 }
 .shimmer {
-    background: linear-gradient(90deg, #f4f4f4 25%, #ebebeb 50%, #f4f4f4 75%);
+    background: linear-gradient(90deg, var(--subtle-bg) 25%, color-mix(in srgb, var(--subtle-bg) 55%, var(--card-bg)) 50%, var(--subtle-bg) 75%);
     background-size: 1800px 100%;
     animation: shimmer 1.8s ease-in-out infinite;
 }
@@ -90,7 +90,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0;
-    border: 1px solid #f3f4f6;
+    border: var(--card-border-width) solid var(--border-color);
     border-radius: 16px;
     overflow: hidden;
     background: #fff;
@@ -100,10 +100,10 @@
     justify-content: flex-start;
     padding: 16px 10px;
     text-align: center;
-    border-right: 1px solid #f3f4f6;
+    border-right: var(--card-border-width) solid var(--border-color);
 }
 .feature-cell:last-child { border-right: none; }
-[dir="rtl"] .feature-cell             { border-right: none; border-left: 1px solid #f3f4f6; }
+[dir="rtl"] .feature-cell             { border-right: none; border-left: var(--card-border-width) solid var(--border-color); }
 [dir="rtl"] .feature-cell:last-child  { border-left: none; }
 
 .feature-icon-wrap {
@@ -127,15 +127,19 @@
     <x-floating-button :number="$floatingLink->whatsapp_number" />
 @endif
 
-@include('partials.bottombar')
+{{-- The fixed mobile tab bar was removed with the storefront redesign: the
+     reference store has none, and every destination it carried (categories,
+     account, orders, wishlist) now lives in the header's menu, with the cart
+     always visible as the circular button. partials/bottombar.blade.php is
+     kept in the repo so it can be reinstated with a single @include. --}}
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10"
+<div class="sf-container" style="padding-block: var(--section-gap)"
      dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     {{-- Breadcrumb --}}
-    <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-8 flex-wrap">
+    <nav class="flex items-center gap-1.5 mb-8 flex-wrap sf-card__meta" aria-label="Breadcrumb">
         <a href="{{ route('products.index') }}" class="hover:text-gray-800 transition-colors">
             {{ __('app.shop_breadcrumb') }}
         </a>
@@ -164,7 +168,7 @@
              fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
-        <span class="text-gray-900 font-medium">{{ Str::limit($product->name, 40) }}</span>
+        <span class="font-semibold" style="color: var(--text-heading)" aria-current="page">{{ Str::limit($product->name, 40) }}</span>
     </nav>
 
     {{-- ═══ PRODUCT LAYOUT ════════════════════════════════════════════ --}}
@@ -172,8 +176,11 @@
 
         {{-- ── Gallery ─────────────────────────────────────────────── --}}
         <div>
-            <div class="aspect-square rounded-2xl overflow-hidden bg-gray-100
-                        border border-gray-100 main-img-wrap mb-3 relative">
+            <div class="aspect-square overflow-hidden main-img-wrap mb-3 relative"
+                 style="border-radius: var(--radius-card);
+                        background: var(--card-bg);
+                        border: var(--card-border-width) solid var(--border-color);
+                        box-shadow: var(--shadow-card)">
                 <div class="shimmer absolute inset-0 z-0" id="main-img-shimmer"></div>
                 @php
                     $mainImage = $product->getFirstMediaUrl('products')
@@ -183,7 +190,8 @@
                 <img id="main-image"
                      src="{{ $mainImage }}"
                      alt="{{ $product->name }}"
-                     class="w-full h-full object-cover relative z-10 transition-opacity duration-300"
+                     class="w-full h-full relative z-10 transition-opacity duration-300"
+                     style="object-fit: var(--card-image-fit)"
                      onload="document.getElementById('main-img-shimmer').style.display='none'">
             </div>
 
@@ -203,8 +211,10 @@
                 @foreach($allImages as $idx => $imgUrl)
                 <button type="button"
                         onclick="switchImage('{{ $imgUrl }}', this)"
-                        class="thumb-btn flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2
-                               {{ $idx === 0 ? 'border-[var(--brand-color,#0ea5e9)]' : 'border-transparent' }}">
+                        class="thumb-btn flex-shrink-0 w-16 h-16 overflow-hidden"
+                        aria-label="{{ __('app.quantity') }} {{ $idx + 1 }}"
+                        style="border-radius: var(--radius-button);
+                               border: 2px solid {{ $idx === 0 ? 'var(--brand-color)' : 'var(--border-color)' }}">
                     <img src="{{ $imgUrl }}" class="w-full h-full object-cover" loading="lazy" alt="">
                 </button>
                 @endforeach
@@ -219,27 +229,27 @@
             <div class="flex items-center gap-2 mb-3 flex-wrap">
                 @if($product->categories->first())
                 <a href="{{ route('products.index', ['category' => $product->categories->first()->slug]) }}"
-                   class="text-sm font-bold uppercase tracking-wide"
-                   style="color:var(--brand-color,#0ea5e9)">
+                   class="sf-section__link uppercase tracking-wide">
                     {{ $product->categories->first()->name }}
                 </a>
                 @endif
 
                 @if($product->is_on_sale)
-                <span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                <span class="sf-badge">
                     {{ __('app.discount_badge', ['percent' => $product->discount_percentage]) }}
                 </span>
                 @endif
 
                 @if($product->is_featured)
-                <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                <span class="sf-badge sf-badge--brand">
                     {{ __('app.featured_badge_full') }}
                 </span>
                 @endif
             </div>
 
             {{-- Product name --}}
-            <h1 class="font-display text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-3">
+            <h1 class="font-bold leading-tight mb-3"
+                style="font-size: var(--heading-font-size); color: var(--text-heading)">
                 {{ $product->name }}
             </h1>
 
@@ -285,15 +295,17 @@
             {{-- Price --}}
             <div class="flex flex-col mb-5" id="price-wrapper">
                 @if($product->is_on_sale)
-                <span class="text-xs text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded w-fit mb-2">
+                <span class="sf-badge w-fit mb-2">
                     {{ __('app.sale_label') }}
                 </span>
                 <div class="flex items-end gap-3 flex-wrap">
                     <span id="price-current"
-                          class="text-4xl font-black leading-none tabular-nums price-sale">
+                          class="font-black leading-none tabular-nums price-sale"
+                          style="font-size: calc(var(--product-price-font-size) * 2.2); color: var(--text-price)">
                         <x-price :amount="$product->discount_price" />
                     </span>
-                    <span class="text-xl text-gray-400 line-through mb-1 tabular-nums">
+                    <span class="sf-price--old mb-1 tabular-nums"
+                          style="font-size: calc(var(--product-price-font-size) * 1.1)">
                         <x-price :amount="$product->base_price" />
                     </span>
                     @php
@@ -301,13 +313,14 @@
                         $sym     = $activeCurrency->symbol ?? 'د.أ';
                         $savings = round(($product->base_price - $product->discount_price) * $rate, 2);
                     @endphp
-                    <span class="text-sm text-red-500 font-semibold mb-1">
+                    <span class="font-semibold mb-1" style="color: var(--accent-color); font-size: var(--card-font-size)">
                         {{ __('app.savings', ['amount' => number_format($savings, 2), 'symbol' => $sym]) }}
                     </span>
                 </div>
                 @else
                 <span id="price-current"
-                      class="text-4xl font-black leading-none tabular-nums price-normal">
+                      class="font-black leading-none tabular-nums price-normal"
+                      style="font-size: calc(var(--product-price-font-size) * 2.2); color: var(--text-price)">
                     <x-price :amount="$product->base_price" />
                 </span>
                 @endif
@@ -423,40 +436,39 @@
                 <span id="cart-error-text">{{ __('app.cart_error_missing') }}</span>
             </div>
 
-            <p id="variant-sku" class="text-xs text-gray-400 mt-2 mb-4 font-mono"></p>
+            <p id="variant-sku" class="sf-card__meta mt-2 mb-4 font-mono"></p>
             @endif
 
             {{-- Qty + CTA --}}
             @if($product->in_stock)
             <div class="flex items-center gap-3 mb-6 mt-2">
-                <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden flex-shrink-0">
-                    <button type="button" onclick="adjustQty(-1)"
-                            class="w-10 h-12 flex items-center justify-center text-gray-600
-                                   hover:bg-gray-50 transition-colors text-xl select-none">−</button>
+                <div class="sf-qty flex-shrink-0">
+                    <button type="button" onclick="adjustQty(-1)" class="sf-qty__btn"
+                            aria-label="{{ __('app.decrease_quantity') }}">&minus;</button>
                     <input id="qty-input" type="number" value="1"
                            min="1" max="{{ $product->total_stock }}"
-                           class="w-12 h-12 text-center border-x border-gray-200 text-sm font-bold focus:outline-none">
-                    <button type="button" onclick="adjustQty(1)"
-                            class="w-10 h-12 flex items-center justify-center text-gray-600
-                                   hover:bg-gray-50 transition-colors text-xl select-none">+</button>
+                           class="sf-qty__input"
+                           aria-label="{{ __('app.quantity') }}">
+                    <button type="button" onclick="adjustQty(1)" class="sf-qty__btn"
+                            aria-label="{{ __('app.increase_quantity') }}">+</button>
                 </div>
 
                 <button id="add-to-cart-btn"
                         type="button"
                         onclick="addToCart()"
-                        class="flex-1 text-white font-bold px-6 py-3 rounded-xl
-                               transition-all flex items-center justify-center gap-2 text-sm
-                               hover:opacity-90 active:scale-[.97]"
-                        style="background:var(--brand-color,#0ea5e9)">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        class="sf-btn sf-btn--primary sf-btn--lg"
+                        style="flex:1">
+                    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round"
                               d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
                     {{ __('app.add_to_cart') }}
                 </button>
             </div>
             @else
-            <div class="bg-gray-100 text-gray-500 text-center py-4 rounded-xl mb-6 font-medium text-sm">
+            <div class="text-center py-4 mb-6 font-medium"
+                 style="background: var(--subtle-bg); color: var(--text-muted);
+                        border-radius: var(--radius-button); font-size: var(--card-font-size)">
                 {{ __('app.product_unavailable') }}
             </div>
             @endif
@@ -478,7 +490,7 @@
             @endif
 
             @if($product->sku)
-            <p class="text-xs text-gray-400 mt-4">
+            <p class="sf-card__meta mt-4">
                 {{ __('app.product_sku', ['sku' => $product->sku]) }}
             </p>
             @endif
@@ -486,52 +498,15 @@
         </div>
     </div>
 
-    {{-- Related products --}}
+    {{-- Related products — same card component as the listing grid, so a
+         change to card styling propagates everywhere at once. --}}
     @if($related->isNotEmpty())
-    <section class="mb-16">
-        <div class="flex items-center gap-2 mb-6">
-            <span class="w-1 h-5 rounded-full" style="background:var(--brand-color,#0ea5e9)"></span>
-            <h2 class="font-display text-2xl font-bold text-gray-900">
-                {{ __('app.you_may_also_like') }}
-            </h2>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            @foreach($related as $rel)
-            @php
-                $relImg = $rel->getFirstMediaUrl('products')
-                    ?: ($rel->image_url ?? 'https://picsum.photos/seed/'.$rel->id.'/400/400');
-            @endphp
-            <a href="{{ route('products.show', $rel->slug) }}"
-               class="bg-white rounded-2xl overflow-hidden border border-gray-100 group
-                      transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-                <div class="aspect-square overflow-hidden bg-gray-100">
-                    <img src="{{ $relImg }}" alt="{{ $rel->name }}"
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                         loading="lazy">
-                </div>
-                <div class="p-3 {{ $isRtl ? 'text-right' : 'text-left' }}">
-                    <p class="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-1">
-                        {{ $rel->name }}
-                    </p>
-                    @if($rel->is_on_sale)
-                    <div class="flex items-baseline gap-1.5">
-                        <x-price :amount="$rel->discount_price"
-                                 class="text-sm font-black tabular-nums price-sale" />
-                        <x-price :amount="$rel->base_price"
-                                 class="text-[10px] text-gray-400 line-through tabular-nums" />
-                    </div>
-                    @else
-                    <x-price :amount="$rel->base_price"
-                             class="text-sm font-black tabular-nums price-normal" />
-                    @endif
-                </div>
-            </a>
-            @endforeach
-        </div>
-    </section>
+        <x-sf.section :title="__('app.you_may_also_like')">
+            <x-sf.product-grid :products="$related" variant="rail" />
+        </x-sf.section>
     @endif
 
-</div>{{-- /max-w-7xl --}}
+</div>{{-- /sf-container --}}
 
 {{-- ✅ Reviews section — includes partials/reviews.blade.php --}}
 @include('partials.reviews')

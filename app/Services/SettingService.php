@@ -11,16 +11,28 @@ use App\Models\Setting;
 class SettingService
 {
     /** Keys the general settings page manages. */
-    public const KEYS = [
+    public const BASE_KEYS = [
         'primary_color', 'bg_color', 'nav_bg_color',
         'card_bg_color', 'footer_bg_color', 'footer_text_color',
         'footer_link_color', 'footer_bottom_text_color',
-        'footer_text_size', 'site_name',
+        'footer_text_size', 'site_name', 'site_description',
         'splash_title_main', 'splash_title_sub',
         'splash_color_main', 'splash_color_sub',
         'splash_font_size', 'splash_font_family',
         'font_ar', 'font_en',
     ];
+
+    /**
+     * Every key the general settings page manages: the long-standing brand
+     * keys above, plus the storefront design tokens (surfaces, borders,
+     * radii, shadows, product-card geometry) owned by
+     * StorefrontThemeHelper. Declared as a method rather than a constant so
+     * the token list stays defined in exactly one place.
+     */
+    public static function keys(): array
+    {
+        return array_merge(self::BASE_KEYS, \App\Helpers\StorefrontThemeHelper::keys());
+    }
 
     /** Keys the splash settings page manages. */
     public const SPLASH_KEYS = [
@@ -69,7 +81,7 @@ class SettingService
      */
     public function saveSettings(array $input, $logo, $favicon): void
     {
-        foreach (self::KEYS as $key) {
+        foreach (self::keys() as $key) {
             if (array_key_exists($key, $input)) {
                 Setting::updateOrCreate(
                     ['key' => $key],

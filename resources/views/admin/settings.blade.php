@@ -314,6 +314,8 @@
     </div>
 </div>
 </div>
+        @include('admin.partials.storefront-theme')
+
         {{-- أزرار التحكم --}}
         <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-100">
             <button type="reset" class="px-6 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors">
