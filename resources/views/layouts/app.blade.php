@@ -424,7 +424,7 @@
 
     @stack('head')
 </head>
-<body class="bg-gray-50 antialiased">
+<body class="bg-gray-50 antialiased" data-card-align="{{ $tk['card_text_align'] ?? 'center' }}">
 
     @include('partials.navbar')
 
@@ -463,6 +463,8 @@
     <main class="min-h-screen">
         @yield('content')
     </main>
+
+    @include('partials.quick-view')
 
     @include('partials.footer')
 

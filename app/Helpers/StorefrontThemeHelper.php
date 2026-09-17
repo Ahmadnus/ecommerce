@@ -60,6 +60,20 @@ class StorefrontThemeHelper
         //   text — always the store name as a wordmark
         //   both — the logo with the store name beside it
         'header_brand_mode'   => ['auto', ['auto', 'logo', 'text', 'both']],
+
+        // Product card extras. The reference storefront shows a bare card —
+        // image, centred title, centred price, add-to-cart — so both default
+        // to "off"; switch them on for a busier, more promotional grid.
+        'card_show_wishlist'  => ['off', ['off', 'on']],
+        'card_show_badges'    => ['off', ['off', 'on']],
+
+        // Opening a product: "modal" shows the quick-view popup the reference
+        // uses; "page" always navigates to the full product page.
+        'product_open_mode'   => ['modal', ['modal', 'page']],
+
+        // Card text alignment: "center" matches the reference, "start" hugs
+        // the reading edge (right in Arabic, left in English).
+        'card_text_align'     => ['center', ['center', 'start']],
     ];
 
     /** Shadow tokens — free-form CSS box-shadow values. */

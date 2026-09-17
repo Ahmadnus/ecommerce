@@ -44,6 +44,11 @@ class StorefrontPaletteSeeder extends Seeder
         'shadow_card_hover' => '0 0 5px rgba(0,0,0,.20)',
 
         'card_image_fit'       => 'contain',
+        'card_text_align'      => 'center',   // centred title + price
+        'card_show_wishlist'   => 'off',      // reference card has no heart
+        'card_show_badges'     => 'off',      // …and no discount pill
+        'product_open_mode'    => 'modal',    // tapping a card opens the popup
+        'header_brand_mode'    => 'auto',
         'card_image_height'    => '16.3rem',
         'card_image_height_sm' => '11rem',
         'card_border_width'    => '1px',

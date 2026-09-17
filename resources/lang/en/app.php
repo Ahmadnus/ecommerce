@@ -303,6 +303,8 @@ return [
 'cart_error_missing_count'  => 'Please select all required options — :count missing',
 'add_to_cart'               => 'Add to cart',
 'choose_options'            => 'Choose options',
+'product_details' => 'Offer details:',
+'close' => 'Close',
 'subtotal' => 'Subtotal',
 'continue_shopping' => 'Continue shopping',
 'remove' => 'Remove',

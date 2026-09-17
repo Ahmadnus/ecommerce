@@ -304,6 +304,8 @@ return [
 'cart_error_missing_count'  => 'يرجى اختيار جميع الخصائص المطلوبة — :count خصائص ناقصة',
 'add_to_cart'               => 'أضف إلى السلة',
 'choose_options'            => 'اختر الخيارات',
+'product_details' => 'تفاصيل العرض:',
+'close' => 'إغلاق',
 'subtotal' => 'المجموع الفرعي',
 'continue_shopping' => 'مواصلة التسوق',
 'remove' => 'إزالة',

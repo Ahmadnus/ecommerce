@@ -3,8 +3,8 @@
     'product',
     /** Product ids in the current user's wishlist, from the controller. */
     'wishlisted' => [],
-    /** Show the wishlist heart. Off in contexts that already manage it. */
-    'showWishlist' => true,
+    /** Force the wishlist heart on/off; null follows the card_show_wishlist token. */
+    'showWishlist' => null,
     /** Show the add-to-cart action row. */
     'showAction' => true,
     /** Eager-load the image instead of lazy-loading it (above-the-fold rows). */
@@ -12,6 +12,15 @@
 ])
 
 @php
+    $tk = $themeTokens ?? \App\Helpers\StorefrontThemeHelper::all();
+
+    // The reference storefront keeps the card bare — image, centred title,
+    // centred price, one button. The heart and the discount pill are opt-in
+    // from /admin/settings rather than hard-coded either way.
+    $withWishlist = $showWishlist ?? (($tk['card_show_wishlist'] ?? 'off') === 'on');
+    $withBadges   = ($tk['card_show_badges'] ?? 'off') === 'on';
+    $openInModal  = ($tk['product_open_mode'] ?? 'modal') === 'modal';
+
     $isWishlisted = in_array($product->id, is_array($wishlisted) ? $wishlisted : [], true);
 
     // Stock lives entirely on variants in this app: Product::$total_stock is
@@ -20,10 +29,9 @@
     // truth for availability here, whatever the variant shape.
     $soldOut = ! $product->in_stock;
 
-    // A product with more than one active variant has something to choose
-    // (size, colour, …), which the grid has no room for — that card links to
-    // the detail page instead. A single-variant product has nothing to pick,
-    // so it can be added straight from the card.
+    // More than one active variant means there is something to choose, which
+    // neither the card nor the quick-view popup has room for — those go to the
+    // full product page instead.
     $activeVariants = $product->relationLoaded('variants')
         ? $product->variants
         : $product->variants()->where('is_active', true)->get();
@@ -31,32 +39,39 @@
     $needsOptions = $activeVariants->count() > 1;
 
     $url   = route('products.show', $product->slug);
-    // Products are uploaded to the "products" collection, but some older
-    // rows and the home-section blocks use "main" — check both before
-    // falling back to the model accessor and then the shared placeholder.
     $image = $product->getFirstMediaUrl('products')
         ?: $product->getFirstMediaUrl('main')
         ?: ($product->image_url ?: asset('images/placeholder.jpg'));
 @endphp
 
 <article class="sf-card">
-    <a href="{{ $url }}" class="sf-card__media" tabindex="-1" aria-hidden="true">
+    {{-- A real href to the product page, so the card still works with
+         JavaScript off, stays crawlable, and can be opened in a new tab.
+         With quick-view enabled, JS intercepts the click and opens the popup
+         instead — see partials/quick-view.blade.php. --}}
+    <a href="{{ $url }}"
+       class="sf-card__media"
+       tabindex="-1"
+       aria-hidden="true"
+       @if($openInModal) data-quickview="{{ $product->slug }}" @endif>
         <img src="{{ $image }}"
              alt=""
              loading="{{ $eager ? 'eager' : 'lazy' }}"
              decoding="async">
 
-        <div class="sf-card__badges">
-            @if($product->is_on_sale)
-                <span class="sf-badge">-{{ $product->discount_percentage }}%</span>
-            @endif
-            @if($soldOut)
-                <span class="sf-badge sf-badge--muted">{{ __('app.out_of_stock') }}</span>
-            @endif
-        </div>
+        @if($withBadges)
+            <div class="sf-card__badges">
+                @if($product->is_on_sale)
+                    <span class="sf-badge">-{{ $product->discount_percentage }}%</span>
+                @endif
+                @if($soldOut)
+                    <span class="sf-badge sf-badge--muted">{{ __('app.out_of_stock') }}</span>
+                @endif
+            </div>
+        @endif
     </a>
 
-    @if($showWishlist)
+    @if($withWishlist)
         {{-- Hooks into the global toggleWishlist() in layouts/app.blade.php:
              it swaps the two [data-heart] icons and syncs .wishlist-count. --}}
         <button type="button"
@@ -79,9 +94,8 @@
 
     <div class="sf-card__body">
         <h3 class="sf-card__title">
-            {{-- The whole card is reachable from this one link, which keeps a
-                 single tab stop per product and gives the heart its own. --}}
-            <a href="{{ $url }}">{{ $product->name }}</a>
+            <a href="{{ $url }}"
+               @if($openInModal) data-quickview="{{ $product->slug }}" @endif>{{ $product->name }}</a>
         </h3>
 
         <div class="sf-card__prices">

@@ -48,6 +48,8 @@ Route::get('/', function () {
 });
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{slug}/quick-view', [ProductController::class, 'quickView'])
+     ->name('products.quick-view');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/p/{slug}', [PageController::class, 'show'])->name('pages.show');
 
