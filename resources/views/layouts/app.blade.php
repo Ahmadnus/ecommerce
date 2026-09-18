@@ -407,9 +407,20 @@
 
     {{-- Storefront design system. Loaded after the inline :root block above
          so it can consume every token defined there. Versioned by mtime so
-         tenants never serve a stale stylesheet after a redeploy. --}}
-    <link rel="stylesheet"
-          href="{{ asset('css/storefront.css') }}?v={{ @filemtime(public_path('css/storefront.css')) ?: 1 }}">
+         tenants never serve a stale stylesheet after a redeploy.
+
+         The scheme and host are stripped from asset()'s output, leaving a
+         root-relative href. asset() builds on APP_URL, so a deployment whose
+         APP_URL still says http:// (or localhost) emits an absolute http URL
+         that browsers block as mixed content on an https site — the
+         stylesheet silently never loads and the storefront renders unstyled.
+         A root-relative path always matches the page's own scheme and host,
+         while keeping any subdirectory prefix that asset() added. --}}
+    @php
+        $sfCssHref = preg_replace('#^https?://[^/]+#i', '', asset('css/storefront.css'));
+        $sfCssVer  = @filemtime(public_path('css/storefront.css')) ?: 1;
+    @endphp
+    <link rel="stylesheet" href="{{ $sfCssHref }}?v={{ $sfCssVer }}">
 
     @if($faviconUrl)
         <link rel="icon" href="{{ $faviconUrl }}">
