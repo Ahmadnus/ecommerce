@@ -33,7 +33,7 @@ class StorefrontPaletteSeeder extends Seeder
         'badge_bg_color'    => '#f55157',
         'border_color'      => '#f0f0f0',
         'subtle_bg_color'   => '#f6f6f6',  // card add-to-cart rest state
-        'footer_bottom_bg'  => '#ffffff',
+        'footer_bottom_bg'  => 'transparent',  // copyright strip matches the footer
 
         // Square corners, flat cards.
         'radius_card'       => '0px',

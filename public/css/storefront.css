@@ -744,6 +744,8 @@
     color: var(--text-muted);
     text-align: center;
     font-size: calc(var(--footer-font-size) * .92);
+    /* Reads as its own band even when it shares the footer's background. */
+    border-block-start: 1px solid color-mix(in srgb, var(--text-footer) 18%, transparent);
 }
 
 /* ── Mobile bottom bar ──────────────────────────────────────────────────── */

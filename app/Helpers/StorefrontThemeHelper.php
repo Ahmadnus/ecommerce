@@ -30,8 +30,11 @@ class StorefrontThemeHelper
         'subtle_bg_color'     => '#f6f6f6',
         // Badge background (the "-20%" / "new" pills on product cards).
         'badge_bg_color'      => '#f55157',
-        // Footer's lower strip, which the reference inverts against the body.
-        'footer_bottom_bg'    => '#ffffff',
+        // Footer's lower copyright strip. "transparent" lets the footer's own
+        // background show through, so the strip matches it automatically
+        // however the tenant recolours the footer; set a colour here to make
+        // it stand out against the footer instead.
+        'footer_bottom_bg'    => 'transparent',
     ];
 
     /** Geometry tokens — accept a bare number (→px) or any CSS length. */
