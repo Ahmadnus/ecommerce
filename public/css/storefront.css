@@ -852,6 +852,20 @@
 .sf-header .sf-icon-btn__count { color: var(--text-badge) !important; }
 .sf-header .sf-search__input { color: var(--text-input) !important; }
 
+/* layouts/app also paints every <nav> with the header colour:
+
+     nav, .navbar-custom, header { background-color: var(--nav-bg-color) !important }
+
+   That is meant for the header bar, but the selector is a bare element, so
+   it also hits perfectly ordinary navigation landmarks elsewhere — the
+   footer's quick-links list and the breadcrumb on the product page — which
+   then render as solid blocks of brand colour. Restrict the effect to the
+   real bars by clearing the background on navs inside page content and the
+   footer. The header, the menu panel and the mobile tab bar all set their
+   own background, so none of them are affected. */
+main nav,
+.sf-footer nav { background-color: transparent !important; }
+
 /* The fixed mobile tab bar overlaps the end of the page, so any layout that
    renders one reserves room for it. Scoped with :has() so pages without a
    bottom bar keep their natural spacing, and marked !important to beat the
