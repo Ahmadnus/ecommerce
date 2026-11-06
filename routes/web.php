@@ -141,6 +141,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('bookings',           [AdminBookingController::class, 'index'])->name('bookings.index');
     Route::get('bookings/{booking}', [AdminBookingController::class, 'show'])->name('bookings.show');
     Route::put('bookings/{booking}', [AdminBookingController::class, 'update'])->name('bookings.update');
+    Route::get('bookings/{booking}/contract', [AdminBookingController::class, 'contract'])->name('bookings.contract');
     Route::patch('bookings/{booking}/status', [AdminBookingController::class, 'updateStatus'])
         ->name('bookings.status');
     Route::delete('bookings/{booking}', [AdminBookingController::class, 'destroy'])

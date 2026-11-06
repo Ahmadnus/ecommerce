@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\RentalLocation;
 use App\Models\Vehicle;
+use App\Services\RentalContractService;
 use App\Services\RentalPricingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class BookingController extends Controller
     public function __construct(
         private readonly RentalPricingService $pricing,
         private readonly FleetController $fleet,
+        private readonly RentalContractService $contracts,
     ) {
     }
 
@@ -163,6 +165,14 @@ class BookingController extends Controller
             });
         } catch (\RuntimeException) {
             return back()->withInput()->with('error', __('rental.unavailable'));
+        }
+
+        // Build the contract pack (contract + terms + inspection sheet) for the counter.
+        // A PDF problem must never cost the customer their reservation, so it is only logged.
+        try {
+            $this->contracts->generate($booking);
+        } catch (\Throwable $e) {
+            report($e);
         }
 
         return redirect()->route('rental.booking.success', $booking->booking_reference);

@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleCategory;
 use App\Services\RentalPricingService;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -557,4 +558,63 @@ it('lets an admin create, rename, toggle and delete an extra', function () {
 
     $this->delete(route('admin.extras.destroy', $extra))->assertRedirect();
     expect(RentalExtra::count())->toBe(0);
+});
+
+
+// ── Rental contract pack ─────────────────────────────────────────────────────
+
+it('generates the three-page contract pack when a booking is made', function () {
+    Storage::fake('local');
+
+    $vehicle  = makeVehicle(['registration_number' => '12-34567', 'color' => 'White']);
+    $location = makeLocation();
+
+    $this->post("/book/{$vehicle->slug}", [
+        'pickup_location_id'    => $location->id,
+        'return_location_id'    => $location->id,
+        'pickup_date'           => '2030-05-01',
+        'pickup_time'           => '10:00',
+        'return_date'           => '2030-05-04',
+        'return_time'           => '10:00',
+        'driver_name'           => 'أحمد الخليفة',
+        'driver_phone'          => '0791234567',
+        'driver_license_number' => 'LIC-1',
+        'terms'                 => 1,
+    ])->assertRedirect();
+
+    $booking = Booking::first();
+    $path    = "contracts/{$booking->booking_reference}.pdf";
+
+    Storage::disk('local')->assertExists($path);
+
+    $pdf = Storage::disk('local')->get($path);
+
+    expect($pdf)->toStartWith('%PDF')
+        ->and(preg_match_all('/\/Type\s*\/Page[^s]/', $pdf))->toBe(3);
+});
+
+it('lets an admin open a booking contract, building it on demand', function () {
+    Storage::fake('local');
+
+    $admin   = adminUser();
+    $booking = Booking::create([
+        'vehicle_id'            => makeVehicle()->id,
+        'pickup_date_time'      => '2030-01-10 10:00',
+        'return_date_time'      => '2030-01-15 10:00',
+        'total_days'            => 5,
+        'driver_name'           => 'Contract Test',
+        'driver_phone'          => '0505555555',
+        'driver_license_number' => 'L9',
+    ]);
+
+    Storage::disk('local')->assertMissing("contracts/{$booking->booking_reference}.pdf");
+
+    $response = $this->actingAs($admin)->get("/admin/bookings/{$booking->id}/contract");
+
+    $response->assertOk()->assertHeader('content-type', 'application/pdf');
+    Storage::disk('local')->assertExists("contracts/{$booking->booking_reference}.pdf");
+
+    // Not available to the public.
+    auth()->logout();
+    $this->get("/admin/bookings/{$booking->id}/contract")->assertRedirect();
 });

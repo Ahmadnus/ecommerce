@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\RentalLocation;
+use App\Services\RentalContractService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 /**
@@ -83,7 +85,25 @@ class BookingController extends Controller
 
         $booking->update($data);
 
+        // Payment figures are printed on the contract, so rebuild it.
+        try {
+            app(RentalContractService::class)->generate($booking);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return back()->with('success', 'تم حفظ التعديلات');
+    }
+
+    /** The contract pack as a PDF, opened inline so it can be printed straight away. */
+    public function contract(Booking $booking, RentalContractService $contracts)
+    {
+        $path = $contracts->ensure($booking);
+
+        return response()->file(Storage::disk('local')->path($path), [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="contract-' . $booking->booking_reference . '.pdf"',
+        ]);
     }
 
     public function destroy(Booking $booking)

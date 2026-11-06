@@ -13,10 +13,16 @@
             <p class="text-sm text-gray-500 mt-1">أُنشئ في {{ $booking->created_at->format('d/m/Y H:i') }}</p>
         </div>
 
-        <span class="inline-block text-sm font-semibold px-4 py-2 rounded-full
-                     bg-{{ $booking->status_color }}-50 text-{{ $booking->status_color }}-700">
-            {{ $booking->status_label }}
-        </span>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{{ route('admin.bookings.contract', $booking) }}" target="_blank"
+               class="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full bg-brand text-white hover:opacity-90">
+                <i class="fa-solid fa-file-contract"></i> عقد الإيجار (PDF)
+            </a>
+            <span class="inline-block text-sm font-semibold px-4 py-2 rounded-full
+                         bg-{{ $booking->status_color }}-50 text-{{ $booking->status_color }}-700">
+                {{ $booking->status_label }}
+            </span>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
